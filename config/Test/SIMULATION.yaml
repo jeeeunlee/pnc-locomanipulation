@@ -1,0 +1,26 @@
+servo_rate: 0.001 # !!this should be match with controller servo rate!!
+is_record: false
+show_joint_frame: false #false
+show_link_frame: true #false
+plot_mpc_result: false # true
+
+#ground: RobotModel/Ground/ground_terrain.urdf
+#ground: RobotModel/Ground/magneto/ground_climbing.urdf
+#ground: RobotModel/Ground/magneto/ground_inclined.urdf
+#ground: RobotModel/Ground/magneto/ground_inclined02.urdf
+ground: RobotModel/Ground/magneto/ground_inclined03.urdf
+
+initial_pose: [ 0.0, 0.0, 0.09, 0.0, 1.0, 0.0 ]
+#motion_script: Config/CSIRO/MOTIONS/balanceset0.yaml
+#motion_script: Config/CSIRO/MOTIONS/balanceset1.yaml
+#motion_script: Config/CSIRO/MOTIONS/balanceset2.yaml
+motion_script: Config/CSIRO/MOTIONS/balanceset3.yaml
+
+control_configuration:
+  kp: 300
+  kd: 15
+
+magnetic_force: 100. #[N] 
+residual_magnetism: 3.0 #[%]
+
+friction_coeff: 0.8 #1.577

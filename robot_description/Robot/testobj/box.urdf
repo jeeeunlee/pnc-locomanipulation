@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="10kgbox">
+  <!-- Virtual Joints -->
+  <link name="world">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <link name="basePosX">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <joint name="basePosX" type="prismatic">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="world" />
+    <child link="basePosX" />
+    <axis xyz="1 0 0" />
+    <limit effort="200.0" velocity="100.0" lower="-200." upper="200." />
+  </joint>
+  <link name="basePosY">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <joint name="basePosY" type="prismatic">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="basePosX" />
+    <child link="basePosY" />
+    <axis xyz="0 1 0" />
+    <limit effort="200.0" velocity="100.0" lower="-200." upper="200." />
+  </joint>
+
+  <link name="basePosZ">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <joint name="basePosZ" type="prismatic">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="basePosY" />
+    <child link="basePosZ" />
+    <axis xyz="0 0 1" />
+    <limit effort="200.0" velocity="100.0" lower="-200." upper="200." />
+  </joint>
+
+  <link name="baseRotZ">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <joint name="baseRotZ" type="continuous">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="basePosZ" />
+    <child link="baseRotZ" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <link name="baseRotY">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <joint name="baseRotY" type="continuous">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="baseRotZ" />
+    <child link="baseRotY" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <!-- BOX -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.2 0.2 0.1"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 .8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.2 0.2 0.1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="10"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.4"/>
+    </inertial>
+  </link>
+  <joint name="baseRotX" type="continuous">
+    <parent link="baseRotY"/>
+    <child link="base_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="1 0 0" />
+  </joint>
+
+  <!-- virtual link for frame -->
+
+  <link name="boxCOP">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <mass value="0.000001" />
+      <inertia ixx="1E-9" ixy="1E-9" ixz="1E-9" iyy="1E-9" iyz="1E-9" izz="1E-9" />
+    </inertial>
+  </link>
+  <joint name="boxCOMtoCOP" type="fixed">
+    <parent link="base_link"/>
+    <child link="boxCOP"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.05"/>
+    <!--origin rpy="0 0 0.7854" xyz="0 0 -0.05"/-->
+  </joint>
+</robot>
+
