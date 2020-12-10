@@ -1,5 +1,5 @@
 # Planning and Control Algorithms for Robotics
-ros-pnc is a ROS based Software designed for generating trajectories for a robot system
+ros-pnc is a ROS integrated Software designed for generating trajectories for a robot system
 and stabilizing the system over the trajectories.
 
 This software framework is developed by Jee-Eun Lee (https://github.com/jeeeunlee/ros-pnc.git)
