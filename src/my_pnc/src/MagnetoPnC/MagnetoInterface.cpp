@@ -19,7 +19,7 @@ MagnetoInterface::MagnetoInterface() : EnvInterface() {
     my_utils::pretty_constructor(0, "Magneto Interface");
 
     robot_ = new RobotSystem(
-        6+3*4, THIS_COM "RobotModel/Robot/Magneto/MagnetoSim_Dart.urdf");
+        6+3*4, THIS_COM "robot_description/Robot/Magneto/MagnetoSim_Dart.urdf");
 
     // robot_->setRobotMass();
     // robot_->printRobotInfo();

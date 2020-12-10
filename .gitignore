@@ -1,0 +1,60 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Precompiled Headers *.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Editor Setting files
+*.json
+.vscode
+
+# Math tool files
+*.m~
+*_RESULTS.yaml
+*.pyc
+octave-workspace
+
+# folders
+build
+devel
+etc
+RLData
+robot_description/Robot/Magneto
+ExperimentData*
+ExperimentVideo
+
+# etc
+tags
+.DS_Store
+Configuration.h
+drake_binary
+__pycache__
+
+
+
+

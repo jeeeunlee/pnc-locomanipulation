@@ -152,8 +152,8 @@ void MagnetoResidualController::getCommand(void* _cmd) {
   // _PostProcessing_Command(); // unset task and contact
 
   // my_utils::pretty_print(((MagnetoCommand*)_cmd)->jtrq, std::cout, "jtrq");
-  my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
-  my_utils::pretty_print(((MagnetoCommand*)_cmd)->q, std::cout, "q");
+  // my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
+  // my_utils::pretty_print(((MagnetoCommand*)_cmd)->q, std::cout, "q");
   // my_utils::pretty_print(((MagnetoCommand*)_cmd)->qdot, std::cout, "qdot");
 }
 

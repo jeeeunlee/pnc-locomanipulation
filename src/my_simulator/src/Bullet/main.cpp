@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
 
 	// load test
 	//command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/bullet3/data/TwoJointRobot_wo_fixedJoints.urdf");
-    //command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/PnC/RobotModel/Robot/Valkyrie/ValkyrieSim_Dart.urdf");
-	//command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/PnC/RobotModel/Robot/Draco/DracoSim_Dart.urdf");
-    command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/PnC/RobotModel/Robot/Atlas/AtlasSim_Dart.urdf");
+    //command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/PnC/robot_description/Robot/Valkyrie/ValkyrieSim_Dart.urdf");
+	//command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/PnC/robot_description/Robot/Draco/DracoSim_Dart.urdf");
+    command = b3LoadUrdfCommandInit(kPhysClient, "/home/seunghyeonbang/Repository/PnC/robot_description/Robot/Atlas/AtlasSim_Dart.urdf");
 	int flags = URDF_USE_INERTIA_FROM_FILE;
 	b3LoadUrdfCommandSetFlags(command, flags);
 	b3LoadUrdfCommandSetUseFixedBase(command, true);

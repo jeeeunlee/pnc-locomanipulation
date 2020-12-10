@@ -27,6 +27,7 @@ WalkingInterruptLogic::~WalkingInterruptLogic() {}
 // Process Interrupts here
 void WalkingInterruptLogic::processInterrupts() {   
   if(b_button_pressed) {
+    // std::cout << "[Walking Interrupt Logic] button pressed : " << pressed_button << std::endl;
     switch(pressed_button){
       case 's':
         std::cout << "[Walking Interrupt Logic] button S pressed" << std::endl;

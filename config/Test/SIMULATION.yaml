@@ -4,11 +4,11 @@ show_joint_frame: false #false
 show_link_frame: true #false
 plot_mpc_result: false # true
 
-#ground: RobotModel/Ground/ground_terrain.urdf
-#ground: RobotModel/Ground/magneto/ground_climbing.urdf
-#ground: RobotModel/Ground/magneto/ground_inclined.urdf
-#ground: RobotModel/Ground/magneto/ground_inclined02.urdf
-ground: RobotModel/Ground/magneto/ground_inclined03.urdf
+#ground: robot_description/Ground/ground_terrain.urdf
+#ground: robot_description/Ground/magneto/ground_climbing.urdf
+#ground: robot_description/Ground/magneto/ground_inclined.urdf
+#ground: robot_description/Ground/magneto/ground_inclined02.urdf
+ground: robot_description/Ground/magneto/ground_inclined03.urdf
 
 initial_pose: [ 0.0, 0.0, 0.09, 0.0, 1.0, 0.0 ]
 #motion_script: Config/CSIRO/MOTIONS/balanceset0.yaml

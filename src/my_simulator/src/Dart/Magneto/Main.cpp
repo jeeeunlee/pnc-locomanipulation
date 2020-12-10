@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
     dart::dynamics::SkeletonPtr ground = urdfLoader.parseSkeleton(
         ground_file);
     dart::dynamics::SkeletonPtr robot = urdfLoader.parseSkeleton(
-        THIS_COM "RobotModel/Robot/Magneto/MagnetoSim_Dart.urdf");
+        THIS_COM "robot_description/Robot/Magneto/MagnetoSim_Dart.urdf");
 
     world->addSkeleton(ground);
     world->addSkeleton(robot);

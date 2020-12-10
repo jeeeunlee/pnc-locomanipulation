@@ -7,7 +7,7 @@
 #include <my_pnc/MagnetoPnC/MagnetoPlanner/MagnetoGIWCPlanner.hpp>
 #include <my_geometry/Polytope/Polytope.h>
 #include <my_utils/IO/IOUtilities.hpp>
-#include "my_utils/Math/pseudo_inverse.hpp"
+#include <my_utils/Math/pseudo_inverse.hpp>
 #include <random>
 
 
