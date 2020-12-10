@@ -5,6 +5,8 @@ show_link_frame: true #false
 plot_mpc_result: false # true
 plot_result: true # true
 
+robot: robot_description/Robot/Magneto/MagnetoSim_Dart.urdf
+
 #ground: robot_description/Ground/ground_terrain.urdf
 #ground: robot_description/Ground/magneto/ground_climbing.urdf
 #ground: robot_description/Ground/magneto/ground_inclined.urdf
@@ -12,7 +14,7 @@ plot_result: true # true
 ground: robot_description/Ground/magneto/ground_inclined03.urdf
 #ground: robot_description/Ground/magneto/ground_3d.urdf
 
-initial_pose: [ 0.0, 0.0, 0.15, 0.0, 1.0, 0.0 ] # x,y,z, rx,ry,rz
+initial_pose: [ 0.0, 0.0, 0.065, 0.0, 1.0, 0.0 ] # x,y,z, rx,ry,rz
 
 #motion_script: Config/CSIRO/MOTIONS/balanceset0.yaml
 #motion_script: Config/CSIRO/MOTIONS/balanceset1.yaml
