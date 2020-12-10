@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(my_robot_system)
 
+set(CMAKE_BUILD_TYPE "Release")
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
