@@ -45,7 +45,7 @@ devel
 etc
 RLData
 robot_description/Robot/Magneto
-ExperimentData*
+experiment_data*
 ExperimentVideo
 
 # etc
@@ -55,6 +55,6 @@ Configuration.h
 drake_binary
 __pycache__
 
-
+ 
 
 
