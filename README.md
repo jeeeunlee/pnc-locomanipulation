@@ -1,7 +1,9 @@
 # Planning and Control Algorithms for Robotics
-ros-pnc is a ROS based Software designed for generating trajectories for a robot system
+ros-pnc is a ROS integrated Software designed for generating trajectories for a robot system
 and stabilizing the system over the trajectories.
+
 This software framework is developed by Jee-Eun Lee (https://github.com/jeeeunlee/ros-pnc.git)
+
 based on C++ library PnC by junhyeok Ahn(https://github.com/junhyeokahn/PnC.git)
 
 # PnC for Magento
@@ -11,8 +13,8 @@ Simulator environment and Controllers for Magento is available.
 ```
 $ source devel/setup.bash
 $ rosrun my_simulator magneto_ros "config/Magneto/SIMULATIONWALK.yaml"
-
 ```
+
 ### Install Required Dependancies
 - run ```source install_sim.sh``` for [Dart 6.9.0](https://dartsim.github.io/install_dart_on_mac.html) and [pybullet](https://pybullet.org/wordpress/)
 
