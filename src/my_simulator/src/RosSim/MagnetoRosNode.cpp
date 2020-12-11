@@ -114,9 +114,9 @@ void MagnetoRosNode::customPreStep() {
     //          COMPUTE COMMAND - desired joint acc/trq etc
     // --------------------------------------------------------------
     CheckInterrupt_();
-    ROS_INFO("getCommand start");
+    // ROS_INFO("getCommand start");
     ((MagnetoInterface*)interface_)->getCommand(sensor_data_, command_);
-    ROS_INFO("getCommand end");
+    // ROS_INFO("getCommand end");
     
     if (b_plot_result_) {
         bool b_planner = ((MagnetoInterface*)interface_)->IsPlannerUpdated();

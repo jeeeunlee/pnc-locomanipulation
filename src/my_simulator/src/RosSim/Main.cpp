@@ -161,9 +161,18 @@ int main(int argc, char** argv) {
 
     ros::init(argc, argv, "magneto_simulator");
     ros::NodeHandle nh;
+    
+    std::string sim_config_filename; 
+    if(argc < 2) {
+        sim_config_filename = "config/Magneto/SIMULATIONWALK.yaml";
+        ROS_WARN("simulation config file default: %s", sim_config_filename.c_str());
+    } else {
+        sim_config_filename = std::string(argv[1]);
+        ROS_INFO("simulation config file loaded: %s", sim_config_filename.c_str());
+    }
+    SimulatorParameter sim_param(sim_config_filename);
 
-    SimulatorParameter sim_param("config/Magneto/SIMULATIONWALK.yaml");
-
+    
     // Generate world and add skeletons
     dart::simulation::WorldPtr world(new dart::simulation::World);
     setWorld(world, sim_param);
