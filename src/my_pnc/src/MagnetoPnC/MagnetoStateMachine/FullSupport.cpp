@@ -29,7 +29,10 @@ void FullSupport::firstVisit() {
   // ---------------------------------------
   //      Planning
   // ---------------------------------------
+  Eigen::VectorXd q_goal; 
   ctrl_arch_->goal_planner_->computeGoal(mc_curr_);  
+  ctrl_arch_->goal_planner_->getGoalConfiguration(q_goal);
+  ctrl_arch_->trajectory_planner_->compute(q_goal);  
   // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------

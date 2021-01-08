@@ -238,12 +238,32 @@ Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobian(const int& _bn_idx) {
 }
 
 Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const std::string& name_) {
+    Eigen::MatrixXd SpatialDeriv = skel_ptr_->getJacobianSpatialDeriv(
+                            skel_ptr_->getBodyNode(name_),
+                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
+    Eigen::MatrixXd ClassicDeriv = skel_ptr_->getJacobianClassicDeriv(
+                            skel_ptr_->getBodyNode(name_),
+                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
+
+    my_utils::pretty_print(SpatialDeriv, std::cout, "spatial derivative");
+    my_utils::pretty_print(ClassicDeriv, std::cout, "classical derivative");
+    
     return skel_ptr_->getJacobianClassicDeriv(
                             skel_ptr_->getBodyNode(name_),
                             skel_ptr_->getBodyNode(name_)->getLocalCOM());
 }
 
 Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const int& _bn_idx) {
+    Eigen::MatrixXd SpatialDeriv = skel_ptr_->getJacobianSpatialDeriv(
+                            skel_ptr_->getBodyNode(_bn_idx),
+                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
+    Eigen::MatrixXd ClassicDeriv = skel_ptr_->getJacobianClassicDeriv(
+                            skel_ptr_->getBodyNode(_bn_idx),
+                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
+
+    my_utils::pretty_print(SpatialDeriv, std::cout, "spatial derivative");
+    my_utils::pretty_print(ClassicDeriv, std::cout, "classical derivative");
+    
     return skel_ptr_->getJacobianClassicDeriv(
                             skel_ptr_->getBodyNode(_bn_idx),
                             skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());

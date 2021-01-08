@@ -97,5 +97,10 @@ class MagnetoControlArchitecture : public ControlArchitecture {
   SingleWeightTrajectoryManager* weight_residualforce_manager_;
 
   MagnetoGoalPlanner* goal_planner_;
+  MagnetoReachabilityPlanner* trajectory_planner_;
+
+  private:
+    Eigen::VectorXd tau_min_;
+    Eigen::VectorXd tau_max_;
 
 };

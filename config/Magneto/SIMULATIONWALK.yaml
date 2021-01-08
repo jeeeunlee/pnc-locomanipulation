@@ -14,7 +14,7 @@ robot: robot_description/Robot/Magneto/MagnetoSim_Dart.urdf
 ground: robot_description/Ground/magneto/ground_inclined03.urdf
 #ground: robot_description/Ground/magneto/ground_3d.urdf
 
-initial_pose: [ 0.0, 0.0, 0.065, 0.0, 1.0, 0.0 ] # x,y,z, rx,ry,rz
+initial_pose: [ 0.0, 0.0, 0.135, 0.0, 1.0, 0.0 ] # x,y,z, rx,ry,rz
 
 #motion_script: Config/CSIRO/MOTIONS/balanceset0.yaml
 #motion_script: Config/CSIRO/MOTIONS/balanceset1.yaml

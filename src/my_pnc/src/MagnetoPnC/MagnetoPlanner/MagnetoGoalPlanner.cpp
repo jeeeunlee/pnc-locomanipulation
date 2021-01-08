@@ -73,6 +73,10 @@ void MagnetoGoalPlanner::_setDesiredFootPosition(MotionCommand _motion_command) 
   }
 }
 
+void MagnetoGoalPlanner::getGoalConfiguration(Eigen::VectorXd& _q_goal){
+  _q_goal = q_goal_;
+}
+
 void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
 
   _setDesiredFootPosition(_motion_command);
@@ -104,6 +108,8 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
     q_ += delq_;
     err = delq_.norm();
   }
+
+  q_goal_ = q_;
 
   std::cout<<"iter(" << iter << "), err=" << err << std::endl;
   my_utils::pretty_print(q_, std::cout, "q");

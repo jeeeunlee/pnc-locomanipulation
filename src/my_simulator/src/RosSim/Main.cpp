@@ -37,54 +37,6 @@ class OneStepProgress : public osgGA::GUIEventHandler {
     MagnetoRosNode* worldnode_;
 };
 
-class SimulatorParameter{
-  public: 
-    SimulatorParameter(std::string _config_file){
-        
-        // READ PARAMETERS FROM CONFIGURATION FILE
-        _config_file.insert(0, THIS_COM);
-        try {
-            YAML::Node simulation_cfg = YAML::LoadFile(_config_file);
-            my_utils::readParameter(simulation_cfg, "servo_rate", servo_rate_);
-            my_utils::readParameter(simulation_cfg, "is_record", is_record_);
-            my_utils::readParameter(simulation_cfg, "show_joint_frame", b_show_joint_frame_);
-            my_utils::readParameter(simulation_cfg, "show_link_frame", b_show_link_frame_);
-
-            my_utils::readParameter(simulation_cfg, "ground", fp_ground_);
-            my_utils::readParameter(simulation_cfg, "robot", fp_robot_);
-            my_utils::readParameter(simulation_cfg, "initial_pose", q_virtual_init_); 
-            my_utils::readParameter(simulation_cfg, "friction", coeff_fric_);                
-
-        } catch (std::runtime_error& e) {
-            std::cout << "Error reading parameter [" << e.what() << "] at file: ["
-                    << __FILE__ << "]" << std::endl
-                    << std::endl;
-        }        
-
-        // SET DEFAULT VALUES && POST PROCESSING
-        gravity_ << 0.0, 0.0, -9.81;
-        fp_ground_.insert(0, THIS_COM);
-        fp_robot_.insert(0, THIS_COM);
-
-        // CHECK THE VALUES
-        my_utils::pretty_print(q_virtual_init_, std::cout, "q_virtual_init_");  
-        my_utils::pretty_print(gravity_, std::cout, "gravity_");  
-    }
-
-  public:   
-    double servo_rate_;
-    bool is_record_;
-    bool b_show_joint_frame_;
-    bool b_show_link_frame_;
-
-    // file path
-    std::string fp_ground_;
-    std::string fp_robot_;
-
-    Eigen::VectorXd q_virtual_init_;
-    Eigen::Vector3d gravity_;    
-    double coeff_fric_;
-};
 
 void setWorld(dart::simulation::WorldPtr& world, const SimulatorParameter& sim_param) {
 

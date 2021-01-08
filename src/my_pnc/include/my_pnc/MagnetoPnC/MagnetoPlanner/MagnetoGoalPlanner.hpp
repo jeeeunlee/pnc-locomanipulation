@@ -12,10 +12,10 @@ enum MagnetoJointType { COXA, FEMUR, TIBIA, FOOT1, FOOT2, FOOT3 };
 class MagnetoGoalPlanner {
    public:
       MagnetoGoalPlanner(RobotSystem* robot);
-      ~MagnetoGoalPlanner();
-      
-      void _setDesiredFootPosition(MotionCommand _motion_command);
+      ~MagnetoGoalPlanner();      
+     
       void computeGoal(MotionCommand &_motion_command);
+      void getGoalConfiguration(Eigen::VectorXd& _q_goal);
 
    protected:
       RobotSystem* robot_;
@@ -28,6 +28,7 @@ class MagnetoGoalPlanner {
       void _InitConstraints(const std::vector<int> _link_idx_list);
       void _DeleteConstraints();
 
+      void _setDesiredFootPosition(MotionCommand _motion_command);
       void _UpdateConfiguration(const Eigen::VectorXd& q);
       void _UpdateConstraints();
       void _BuildConstraints();
@@ -53,4 +54,5 @@ class MagnetoGoalPlanner {
       Eigen::VectorXd q_;
       Eigen::VectorXd dotq_;
       Eigen::VectorXd delq_;
+      Eigen::VectorXd q_goal_;
 };

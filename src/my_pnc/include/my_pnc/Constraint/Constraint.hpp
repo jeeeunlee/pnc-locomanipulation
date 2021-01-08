@@ -53,6 +53,7 @@ class Constraint {
     Eigen::MatrixXd Jcs_;
     Eigen::VectorXd Pcs_; // position
     Eigen::VectorXd Pcs_err_; // des - act
+    Eigen::VectorXd Jdotqdot_;
 
     Eigen::VectorXd pos_ini_;
     Eigen::Quaternion<double> ori_ini_; // R_wb

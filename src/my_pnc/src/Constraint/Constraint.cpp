@@ -5,9 +5,9 @@
 Constraint::Constraint(RobotSystem* _robot, int _link_idx) {
     robot_ = _robot;
     link_idx_ = _link_idx;
-    dim_constraint_ = 0;
-    dim_position_constraint_ = 0;
-    dim_joint_constraint_ = 0;
+    dim_constraint_ = 6;
+    dim_position_constraint_ = 3;
+    dim_joint_constraint_ = _robot->getNumDofs();
     b_updated_ = false;
 }
 
@@ -38,11 +38,11 @@ void Constraint::_updatePositionError() {
 
 void Constraint::_updatePosition() {
     Pcs_ = robot_->getBodyNodeIsometry(link_idx_).translation();
-    dim_position_constraint_ = Pcs_.size();
+    // dim_position_constraint_ = Pcs_.size();
 }
 
 void Constraint::_updateJacobian() {
     Jcs_ = robot_->getBodyNodeJacobian(link_idx_);
-    dim_constraint_ = Jcs_.rows();
-    dim_joint_constraint_ = Jcs_.cols();
+    // dim_constraint_ = Jcs_.rows(); //6
+    // dim_joint_constraint_ = Jcs_.cols(); //30
 }

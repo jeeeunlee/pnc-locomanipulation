@@ -37,6 +37,7 @@ MagnetoControlArchitecture::MagnetoControlArchitecture(RobotSystem* _robot)
   weight_residualforce_manager_ = new SingleWeightTrajectoryManager(robot_);
 
   goal_planner_ = new MagnetoGoalPlanner(robot_);
+  trajectory_planner_ = new MagnetoReachabilityPlanner(robot_, taf_container_->friction_coeff_);
   // -- Trajctory Planner ?
   // dcm_trajectory_manager_ = new DCMTrajectoryManager(
   //     dcm_planner_, taf_container_->com_task_, taf_container_->base_ori_task_,
@@ -260,6 +261,9 @@ void MagnetoControlArchitecture::_InitializeParameters() {
 
   // Controller initialization
   main_controller_->ctrlInitialization(cfg_["controller_params"]);
+  main_controller_->getTorqueLimit(tau_min_, tau_max_);
+  trajectory_planner_->initTorqueLimit(tau_min_, tau_max_); // todo: cfg_
+
 
   // States Initialization:
   state_machines_[MAGNETO_STATES::SWING]
