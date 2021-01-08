@@ -16,6 +16,11 @@ class MagnetoMainController {
   virtual void ctrlInitialization(const YAML::Node& node);
   virtual void getCommand(void* _cmd);
 
+  void getTorqueLimit(Eigen::VectorXd& tau_min, Eigen::VectorXd& tau_max){ 
+    tau_min = tau_min_;
+    tau_max = tau_max_;
+  }
+
  protected:
   //  Processing Step for first visit
   virtual void firstVisit();
@@ -65,6 +70,8 @@ class MagnetoMainController {
   bool b_first_visit_;
   bool b_enable_torque_limits_;  // Enable IHWBC torque limits
   double torque_limit_;
+  Eigen::VectorXd tau_min_;
+  Eigen::VectorXd tau_max_;
 
  private:
   WBMC* wbmc_;

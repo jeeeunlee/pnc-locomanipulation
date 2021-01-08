@@ -125,6 +125,5 @@ class MagnetoTaskAndForceContainer : public TaskAndForceContainer {
   Eigen::VectorXd W_qddot_; 
   Eigen::VectorXd W_xddot_; // contact dim for all feet in contact
   Eigen::VectorXd W_rf_;
-  
 
 };

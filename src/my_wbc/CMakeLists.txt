@@ -46,12 +46,15 @@ include_directories(
 
 FILE(GLOB_RECURSE sources *.cpp)
 
+FILE(GLOB contact_headers "src/Contact/*.hpp")
+FILE(GLOB task_headers "src/Task/*.hpp")
+
 FILE(GLOB wbc_headers "src/*.hpp")
 FILE(GLOB wbdc_headers "src/WBDC/*.hpp")
 FILE(GLOB wblc_headers "src/WBLC/*.hpp")
 FILE(GLOB wbmc_headers "src/WBMC/*.hpp")
-FILE(GLOB contact_headers "src/Contact/*.hpp")
-FILE(GLOB task_headers "src/Task/*.hpp")
+FILE(GLOB wbqpd_headers "src/WBQPD/*.hpp")
+
 
 
 add_library(my_wbc SHARED ${sources}
@@ -59,6 +62,7 @@ add_library(my_wbc SHARED ${sources}
                          ${wbmc_headers}
                          ${wblc_headers}
                          ${wbdc_headers}
+                         ${wbqpd_headers}
                          ${contact_headers}
                          ${task_headers})
                          

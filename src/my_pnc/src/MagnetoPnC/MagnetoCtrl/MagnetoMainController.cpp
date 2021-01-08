@@ -178,10 +178,10 @@ void MagnetoMainController::ctrlInitialization(const YAML::Node& node) {
   // Set WBC Parameters
   // Enable Torque Limits
 
-  Eigen::VectorXd tau_min =
+  tau_min_ =
       // sp_->getActiveJointValue(robot_->GetTorqueLowerLimits());
       Eigen::VectorXd::Constant(Magneto::n_adof, -torque_limit_); //-2500.
-  Eigen::VectorXd tau_max =
+  tau_max_ =
       // sp_->getActiveJointValue(robot_->GetTorqueUpperLimits());
       Eigen::VectorXd::Constant(Magneto::n_adof, torque_limit_); //-2500.
   wbmc_->setTorqueLimits(tau_min, tau_max);

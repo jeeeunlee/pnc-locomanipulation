@@ -2,7 +2,7 @@
 #include <../my_utils/Configuration.h>
 
 #include <my_robot_system/RobotSystem.hpp>
-#include <my_pnc/Constraint/Constraint.hpp>
+
 #include <my_pnc/MagnetoPnC/MagnetoDefinition.hpp>
 #include <my_pnc/MagnetoPnC/MagnetoInterface.hpp>
 #include <my_pnc/MagnetoPnC/MagnetoMotionAPI.hpp>
@@ -10,315 +10,258 @@
 #include <my_pnc/MagnetoPnC/MagnetoPlanner/MagnetoReachabilityPlanner.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 #include "my_utils/Math/pseudo_inverse.hpp"
+#include <my_wbc/WBQPD/WBQPD.hpp>
 
-
-MagnetoReachabilityPlanner::MagnetoReachabilityPlanner(RobotSystem* robot) {
-    my_utils::pretty_constructor(2, "Magneto Reachablity Planner");
-    // robot system
-    robot_ = robot;    
-    // copy constructor
-    robot_planner_ = new RobotSystem(*robot_);
-
-    // set cost function Matrices
-    _InitCostFunction();
-
-    // set Constraint
-    std::vector<int> foot_idx_list;
-    foot_idx_list.push_back(MagnetoBodyNode::AL_foot_link);
-    foot_idx_list.push_back(MagnetoBodyNode::BL_foot_link);
-    foot_idx_list.push_back(MagnetoBodyNode::AR_foot_link);
-    foot_idx_list.push_back(MagnetoBodyNode::BR_foot_link);
-    _InitConstraints(foot_idx_list);
+MagnetoReachabilityNode::MagnetoReachabilityNode(MagnetoReachabilityContact* contact,
+                                            const Eigen::VectorXd& q,
+                                            const Eigen::VectorXd& dotq) {
+  contact_state_ = contact;
+  q_ = q;
+  dotq_ = dotq;  
 }
 
-MagnetoReachabilityPlanner::~MagnetoReachabilityPlanner() {
-  _DeleteConstraints();
+MagnetoReachabilityNode::~MagnetoReachabilityNode() {}
+
+bool MagnetoReachabilityNode::FindNextNode(const Eigen::VectorXd& ddq_des){
+  contact_state_->update(q_, dotq_);
+
 }
 
-void MagnetoReachabilityPlanner::_InitConstraints(
-              const std::vector<int> _link_idx_list) {
-  _DeleteConstraints();
-  for(auto &link_idx : _link_idx_list)
-    constraint_list.push_back(
-        new Constraint(robot_planner_, link_idx));
+MagnetoReachabilityEdge::MagnetoReachabilityEdge(MagnetoReachabilityNode* src_node,
+                              MagnetoReachabilityNode* dst_node,
+                              const Eigen::VectorXd& trq_atv) {
 }
 
-void MagnetoReachabilityPlanner::_DeleteConstraints() {
-  for(auto &constraint : constraint_list)
-    delete constraint;  
-  constraint_list.clear();
+MagnetoReachabilityEdge::~MagnetoReachabilityEdge() {}
+
+MagnetoReachabilityContact::MagnetoReachabilityContact(RobotSystem* robot_planner)  {
+  // robot system
+  robot_planner_ = robot_planner;
+  is_update_centroid_ = false;
+
+  // dimension
+  dim_joint_ = Magneto::n_dof;
+  dim_contact_ = 0;
+
+  // dyn solver
+  wbqpd_param_ = new WbqpdParam();
+  wbqpd_result_ = new WbqpdResult();
+  wbqpd_ = new WBQPD();
 }
 
-void MagnetoReachabilityPlanner::_setDesiredFootPosition(MotionCommand _motion_command) {
-  // contact class / Task class >> Foot Class ?
+MagnetoReachabilityContact::~MagnetoReachabilityContact() {
+  _deleteContacts();
+}
+
+void MagnetoReachabilityContact::initTorqueLimit(const Eigen::VectorXd& tau_min, 
+                                                const Eigen::VectorXd& tau_max) {
+  wbqpd_->setTorqueLimit(tau_min, tau_max);
+  // wbqpd_->setFrictionCone();
+} 
+
+
+void MagnetoReachabilityContact::_deleteContacts() {
+  for(auto &contact : contact_list_)
+    delete contact;  
+  contact_list_.clear();
+}
+
+void MagnetoReachabilityContact::clearContacts() {
+  contact_list_.clear();
+  dim_contact_=0;
+}
+void MagnetoReachabilityContact::addContacts(ContactSpec* contact) {
+  contact_list_.push_back(contact);
+  dim_contact_ += contact->getDim();
+}
+
+void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
+                                        const Eigen::VectorXd& dotq) {
+  _updateContacts(q, dotq);
+  _buildContactJacobian(Jc_);
+  _buildContactJcDotQdot(Jcdotqdot_); // Jdotqdot
+
+  // update 
+  M_ = robot_planner_->getMassMatrix();
+  MInv_ = robot_planner_->getInvMassMatrix();
+  cori_grav_ = robot_planner_->getCoriolisGravity();
+
+  AInv_ = Jc_ * MInv_ * Jc_.transpose();
+  AMat_ = getPseudoInverse(AInv_);
+  Jc_bar_T_ = AMat_ * Jc_* MInv_; // = Jc_bar.transpose() 
   
-  // initialize joint values
-  q_ = robot_->getQ();
-  dotq_ = robot_->getQdot(); 
-  delq_ = Eigen::VectorXd::Zero(q_.size());
-  _UpdateConfiguration(q_);
-  _InitCostFunction();
+  Q_ = getNullSpaceMatrix(Jc_bar_T_); 
+  Nc_T_ = Eigen::MatrixXd::Identity(dim_joint_,dim_joint_) - Jc_.transpose()*Jc_bar_T_;
 
-  // assume one foot is moving
-  int moving_foot_idx = _motion_command.get_moving_foot();
-  MOTION_DATA motion_data;
-  _motion_command.get_foot_motion_command(motion_data);
+}
 
-  POSE_DATA zero_pose = POSE_DATA();
-  for(auto &constraint : constraint_list){
-    if(constraint->getLinkIdx() == moving_foot_idx) 
-      constraint->setDesired(motion_data.pose);
-    else
-      constraint->setDesired(zero_pose);    
+
+void MagnetoReachabilityContact::_updateContacts(const Eigen::VectorXd& q,
+                                                const Eigen::VectorXd& dotq) {
+  robot_planner_->updateSystem(q, dotq, is_update_centroid_);
+  for(auto &contact : contact_list_) {
+      contact->updateContactSpec();
   }
 }
 
-void MagnetoReachabilityPlanner::computeGoal(MotionCommand &_motion_command) {
+void MagnetoReachabilityContact::_buildContactJacobian(Eigen::MatrixXd& Jc) {
+  // initialize Jc
+  Jc = Eigen::MatrixXd::Zero(dim_contact_, dim_joint_);
 
-  _setDesiredFootPosition(_motion_command);
-
-  double tol = 1e-5;
-  double err = 1e5;
-  int iter(0), max_iter(10000);
-  std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-  my_utils::pretty_print(q_, std::cout, "q");
-  while(err > tol && iter++ < max_iter) {
-    // synchronize robot_planner
-    _UpdateConfiguration(q_);
-    // update constraint with robot_planner
-    _UpdateConstraints();
-    // compute c, Jacob, JacobNS
-    _BuildConstraints();
-    _BuildNSConstraints();
-    // compute optimal delq
-    _UpdateDelQ();
-    // update q
-    // if(iter%20 == 1)
-    // {
-    //   std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-    //   my_utils::pretty_print(q_, std::cout, "q");
-    //   my_utils::pretty_print(delq_, std::cout, "delq");
-    //   my_utils::pretty_print(ceq_, std::cout, "ceq_");
-    // }
-
-    q_ += delq_;
-    err = delq_.norm();
-  }
-
-  std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-  my_utils::pretty_print(q_, std::cout, "q");
-  my_utils::pretty_print(ceq_, std::cout, "ceq_");
-
-  // add com goal
-  MOTION_DATA motion_data;
-  _motion_command.get_foot_motion_command(motion_data);
-  motion_data.pose.pos = robot_planner_->getCoMPosition()
-                          - robot_->getCoMPosition();
-  motion_data.pose.is_bodyframe = false;
-  motion_data.swing_height = 0.0;
-  _motion_command.add_motion(-1, motion_data);
-}
-
-void MagnetoReachabilityPlanner::_UpdateDelQ() {
-  // change the problem:
-  // q'A q + b'q -> z'Aprime z + bprime'z
-  Eigen::MatrixXd Aprime, AprimeInv;
-  Eigen::VectorXd bprime;
-  _computeCostWeight(Aprime,bprime);
-  my_utils::pseudoInverse(Aprime, 0.0001, AprimeInv);
-
-  // get optimal z
-  Eigen::VectorXd z = - 0.5 * AprimeInv * bprime;
-  // get optimal delq
-  delq_ = 0.1 * (- cJacobInv_ * ceq_ + cJacobNull_ * z);
-}
-
-void MagnetoReachabilityPlanner::_computeCostWeight(
-                          Eigen::MatrixXd& _Aprime,
-                          Eigen::VectorXd& _bprime) {
-
-  _Aprime = cJacobNull_.transpose() * A_ * cJacobNull_;
-  _bprime = 2.0*cJacobNull_.transpose() * A_ * (q_ - cJacobInv_ *ceq_)
-            + cJacobNull_.transpose() * b_;
-}
-
-void MagnetoReachabilityPlanner::_UpdateConstraints() {
-  for(auto &constraint : constraint_list) {
-      constraint->update();
-  }
-}
-
-void MagnetoReachabilityPlanner::_BuildConstraints() {
-  // only consider position _BuildConstraints
-
-  // check Size
-  int dim_J(0), dim_Jc(0), dim_c(0);
-  for(auto &constraint : constraint_list) {
-    dim_Jc = constraint->getJointDim();
-    dim_J += constraint->getPositionDim();
-    dim_c += constraint->getPositionDim();
-  }
-
-  // vercat ceq_, cJacobian_
-  cJacobian_ = Eigen::MatrixXd::Zero(dim_J, dim_Jc);
-  ceq_ = Eigen::VectorXd::Zero(dim_c);
-
-  int dim_Ji(0), dim_ci(0);
+  // vercat Jc
   Eigen::MatrixXd Ji;
-  Eigen::VectorXd ci;
-  dim_J = 0;   dim_c = 0;
-  for(auto &constraint : constraint_list) {
-    constraint->getPositionJacobian(Ji);
-    constraint->getPositionError(ci);
-
-    dim_Ji = constraint->getPositionDim();
-    dim_ci = constraint->getPositionDim();
-
-    cJacobian_.block(dim_J,0, dim_Ji,dim_Jc) = Ji;
-    ceq_.segment(dim_c, dim_ci) = ci;
-
+  int dim_Ji(0), dim_J(0);
+  for(auto &contact : contact_list_) {
+    contact->getContactJacobian(Ji);
+    dim_Ji = contact->getDim();
+    Jc.block(dim_J, 0, dim_Ji, dim_joint_) = Ji;
     dim_J += dim_Ji;
-    dim_c += dim_ci;
   }
+}
 
-  my_utils::pseudoInverse(cJacobian_, 0.0001, cJacobInv_); 
+void MagnetoReachabilityContact::_buildContactJcDotQdot(
+                                  Eigen::VectorXd&  Jcdotqdot) {
+  Jcdotqdot = Eigen::VectorXd::Zero(dim_contact_, dim_joint_);
+  // vercat Jcdotqdot
+  Eigen::VectorXd Ji;
+  int dim_Ji(0), dim_J(0);
+  for(auto &contact : contact_list_) {
+    contact->getJcDotQdot(Ji);
+    dim_Ji = contact->getDim();
+    Jcdotqdot.segment(dim_J, dim_Ji) = Ji;
+    dim_J += dim_Ji;
+  }
 }
 
 
-void MagnetoReachabilityPlanner::_BuildNSConstraints() {
-  // build null space of constraint jacobian
-  // cJacobian_ * cJacobNull_ = 0
+Eigen::MatrixXd MagnetoReachabilityContact::getPseudoInverse(const Eigen::MatrixXd& Mat) {
+  Eigen::MatrixXd MatInv;
+  my_utils::pseudoInverse(Mat, 0.0001, MatInv);
+  return MatInv;
+}
+
+
+Eigen::MatrixXd MagnetoReachabilityContact::getNullSpaceMatrix(const Eigen::MatrixXd& A) {
   Eigen::JacobiSVD<Eigen::MatrixXd> svd(
-    cJacobian_, 
-    Eigen::ComputeThinU | Eigen::ComputeFullV);
-  // matrixV(), matrixU(), singularValues()
+      A, Eigen::ComputeThinU | Eigen::ComputeFullV);
+  int nrows(svd.singularValues().rows());
+  int Vrows(svd.matrixV().rows());
+  int Vcols(svd.matrixV().cols());
 
-  int const nrows(svd.singularValues().rows());
-  int const Vrows(svd.matrixV().rows());
-  int const Vcols(svd.matrixV().cols());
-
-  cJacobNull_ = svd.matrixV().
-                  block(0, nrows, Vrows, Vcols-nrows);
+  Eigen::MatrixXd NullA = svd.matrixV().block(0, nrows, Vrows, Vcols-nrows);
 
   // if there are more singular value
   double const tol = 1e-5;
   for(int ii=0; ii<nrows; ++ii) {
     if(svd.singularValues().coeff(ii) < tol) {
-      cJacobNull_ = svd.matrixV().
-                  block(0, ii, Vrows, Vcols-ii);
+      NullA = svd.matrixV().block(0, ii, Vrows, Vcols-ii);
       break;
     }
   }
+  return NullA;
+}
+
+
+MagnetoReachabilityPlanner::MagnetoReachabilityPlanner(RobotSystem* robot, 
+                                                      double fric_coeff)
+    : mu_(fric_coeff) {
+    my_utils::pretty_constructor(2, "Magneto Reachablity Planner");
+    std::cout<<"fric coeff = " << mu_ << std::endl;
+    // robot system
+    robot_ = robot;    
+    // copy constructor
+    robot_planner_ = new RobotSystem(*robot_);
+
+    // Set virtual & actuated selection matrix
+    dim_joint_ = Magneto::n_dof;
+    Sa_ = Eigen::MatrixXd::Zero(Magneto::n_adof, Magneto::n_dof);
+    Sv_ = Eigen::MatrixXd::Zero(Magneto::n_vdof, Magneto::n_dof);
+    
+    for(int i(0); i<Magneto::n_adof; ++i)
+      Sa_(i, Magneto::idx_adof[i]) = 1.;
+    for(int i(0); i<Magneto::n_vdof; ++i)
+      Sv_(i, Magneto::idx_vdof[i]) = 1.;
+    
+    // etc
+    q_zero_dof_ = Eigen::VectorXd::Zero(Magneto::n_dof);
+    is_update_centroid_ = false; // used when to update robotsystem
+
+    // set contact
+    alfoot_contact_ = new BodyFramePointContactSpec(robot_planner_,
+                                MagnetoBodyNode::AL_foot_link, mu_);
+    blfoot_contact_ = new BodyFramePointContactSpec(robot_planner_,
+                                MagnetoBodyNode::BL_foot_link, mu_);                          
+    arfoot_contact_ = new BodyFramePointContactSpec(robot_planner_,
+                                MagnetoBodyNode::AR_foot_link, mu_);
+    brfoot_contact_ = new BodyFramePointContactSpec(robot_planner_,
+                                MagnetoBodyNode::BR_foot_link, mu_);
+
+    full_contact_list_.clear();
+    full_contact_list_.push_back(alfoot_contact_); 
+    full_contact_list_.push_back(blfoot_contact_);
+    full_contact_list_.push_back(arfoot_contact_);
+    full_contact_list_.push_back(brfoot_contact_);
+
+    swing_contact_state_ = new MagnetoReachabilityContact(robot_planner_);
+    full_contact_state_ = new MagnetoReachabilityContact(robot_planner_);
+    
+    full_contact_state_->clearContacts();
+    for(auto &contact : full_contact_list_)
+      full_contact_state_->addContacts(contact);
+  
+}
+
+
+MagnetoReachabilityPlanner::~MagnetoReachabilityPlanner() {
+  full_contact_list_.clear();
+  delete alfoot_contact_;
+  delete blfoot_contact_;
+  delete arfoot_contact_;
+  delete brfoot_contact_;
+
+  delete robot_planner_;
+  delete full_contact_state_;
+  delete swing_contact_state_;
+}
+
+void MagnetoReachabilityPlanner::initTorqueLimit(const Eigen::VectorXd& tau_min, 
+                                                const Eigen::VectorXd& tau_max) {
+  tau_min_ = tau_min; 
+  tau_max_ = tau_max;
+  full_contact_state_->initTorqueLimit(tau_min_, tau_max_);
+  swing_contact_state_->initTorqueLimit(tau_min_, tau_max_);
 } 
 
-void MagnetoReachabilityPlanner::_UpdateConfiguration(
-                        const Eigen::VectorXd& q) {
-    bool b_centroidal = false;
-    robot_planner_->updateSystem(q, 
-                              dotq_, 
-                              b_centroidal);   
-}
-
-void MagnetoReachabilityPlanner::_InitCostFunction() {
-  // J(q) = (q2+q3+pi/2)^2 + a*(q3+pi/2)^2
-  double alpha = 1.;
-  // FEMUR:2, TIBIA:3
-  num_joint_dof_ = robot_->getNumDofs();
-  A_ = Eigen::MatrixXd::Zero(num_joint_dof_,num_joint_dof_);
-  b_ = Eigen::VectorXd::Zero(num_joint_dof_);
-
-  // base ori
-  double beta = 0.1;
-  q_ = robot_->getQ();
-  A_(MagnetoDoF::baseRotZ, MagnetoDoF::baseRotZ) = beta;
-  A_(MagnetoDoF::baseRotY, MagnetoDoF::baseRotY) = beta;
-  A_(MagnetoDoF::_base_joint, MagnetoDoF::_base_joint) = beta;
-  b_(MagnetoDoF::baseRotZ) = -2.0*beta*q_(MagnetoDoF::baseRotZ);
-  b_(MagnetoDoF::baseRotY) = -2.0*beta*q_(MagnetoDoF::baseRotY);
-  b_(MagnetoDoF::_base_joint) = -2.0*beta*q_(MagnetoDoF::_base_joint);
-
-  // leg 
-  for(int ii(0); ii<num_joint_dof_; ++ii) {
-    // active
-    if(_checkJoint(ii, MagnetoJointType::FEMUR)) {
-      b_(ii) = M_PI;
-      A_(ii,ii) = 1.;
-      A_(ii,ii+1) = 1.;
-      // for(int jj(0); jj<num_joint_dof_; ++jj) {
-      //   if(_checkJoint(jj, MagnetoJointType::FEMUR))
-      //     A_(ii,jj) = 1.;
-      //   if(_checkJoint(jj, MagnetoJointType::TIBIA))
-      //     A_(ii,jj) = 1.;
-      // }
-    } else if(_checkJoint(ii, MagnetoJointType::TIBIA)) {
-      b_(ii) = (1.+alpha)*M_PI;
-      A_(ii,ii) = 1.+ alpha;
-      A_(ii,ii-1) = 1.;
-      // for(int jj(0); jj<num_joint_dof_; ++jj) {
-      //   if(_checkJoint(jj, MagnetoJointType::TIBIA))
-      //     A_(ii,jj) = 1. + alpha;
-      //   if(_checkJoint(jj, MagnetoJointType::FEMUR))
-      //     A_(ii,jj) = 1.;
-      // }
-    }
-
-    // passive
-    double gamma = 0.5;
-    if(_checkJoint(ii, MagnetoJointType::FOOT1) ||
-        _checkJoint(ii, MagnetoJointType::FOOT2) ||
-        _checkJoint(ii, MagnetoJointType::FOOT3) ) {
-          A_(ii,ii) = gamma;
-    }
+void MagnetoReachabilityPlanner::setMovingFoot(int moving_foot) {
+  moving_foot_idx_ = moving_foot;
+  // set contact list
+  swing_contact_state_->clearContacts();
+  for(auto &contact : full_contact_list_){
+    if( ((BodyFramePointContactSpec*)contact)->getLinkIdx() != moving_foot_idx_ )
+      swing_contact_state_->addContacts(contact);
   }
 }
 
+void MagnetoReachabilityPlanner::compute(const Eigen::VectorXd& q_goal) {
+  _setInitGoal(q_goal, q_zero_dof_); // assume zero velocity goal
 
+  q_ = q_init_;
+  dotq_ = dotq_init_;
 
-bool MagnetoReachabilityPlanner::_checkJoint(int joint_idx, MagnetoJointType joint_type)
-{
-  switch(joint_type){
-    case MagnetoJointType::COXA:
-    if( joint_idx==MagnetoDoF::AL_coxa_joint ||
-        joint_idx==MagnetoDoF::AR_coxa_joint ||
-        joint_idx==MagnetoDoF::BL_coxa_joint ||
-        joint_idx==MagnetoDoF::BR_coxa_joint)
-      return true;
-    break;
-    case MagnetoJointType::FEMUR:
-    if( joint_idx==MagnetoDoF::AL_femur_joint ||
-        joint_idx==MagnetoDoF::AR_femur_joint ||
-        joint_idx==MagnetoDoF::BL_femur_joint ||
-        joint_idx==MagnetoDoF::BR_femur_joint)
-      return true;
-    break;
-    case MagnetoJointType::TIBIA:
-    if( joint_idx==MagnetoDoF::AL_tibia_joint ||
-        joint_idx==MagnetoDoF::AR_tibia_joint ||
-        joint_idx==MagnetoDoF::BL_tibia_joint ||
-        joint_idx==MagnetoDoF::BR_tibia_joint)
-      return true;
-    break;
-    case MagnetoJointType::FOOT1:
-    if( joint_idx==MagnetoDoF::AL_foot_joint_1 ||
-        joint_idx==MagnetoDoF::AR_foot_joint_1 ||
-        joint_idx==MagnetoDoF::BL_foot_joint_1 ||
-        joint_idx==MagnetoDoF::BR_foot_joint_1)
-      return true;
-    break;
-    case MagnetoJointType::FOOT2:
-    if( joint_idx==MagnetoDoF::AL_foot_joint_2 ||
-        joint_idx==MagnetoDoF::AR_foot_joint_2 ||
-        joint_idx==MagnetoDoF::BL_foot_joint_2 ||
-        joint_idx==MagnetoDoF::BR_foot_joint_2)
-      return true;
-    break;
-    case MagnetoJointType::FOOT3:
-    if( joint_idx==MagnetoDoF::AL_foot_joint_3 ||
-        joint_idx==MagnetoDoF::AR_foot_joint_3 ||
-        joint_idx==MagnetoDoF::BL_foot_joint_3 ||
-        joint_idx==MagnetoDoF::BR_foot_joint_3)
-      return true;
-    break;
-  }
-  return false;
+  // full contact node
+  MagnetoReachabilityNode node_fc_init(full_contact_state_, 
+                                        q_init_, dotq_init_);
+  // swing contact node
+  MagnetoReachabilityNode node_sc_init(swing_contact_state_, 
+                                        q_init_, dotq_init_);
+
 }
+
+void MagnetoReachabilityPlanner::_setInitGoal(const Eigen::VectorXd& q_goal,
+                                              const Eigen::VectorXd& qdot_goal) {
+  q_goal_ = q_goal;
+  dotq_goal_ = qdot_goal;
+  q_init_ = robot_->getQ();
+  dotq_init_ = robot_->getQdot();
+}
+
