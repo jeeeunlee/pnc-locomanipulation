@@ -307,7 +307,7 @@ void WBRMRC::_GetSolution(Eigen::VectorXd& cmd) {
     cmd = Sa_ * tau;
 
     Eigen::VectorXd fr = data_->Fr_.head(6);
-    my_utils::saveVector(fr, "Fr_WBRMRC");
+    //0112 my_utils::saveVector(fr, "Fr_WBRMRC");
     
     // my_utils::pretty_print(qddot_, std::cout, "qddot_");
     // my_utils::pretty_print(delta_qddot, std::cout, "delta_qddot");

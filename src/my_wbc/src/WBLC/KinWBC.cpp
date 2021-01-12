@@ -74,8 +74,8 @@ bool KinWBC::FindConfiguration(const Eigen::VectorXd& curr_config,
     _PseudoInverse(JtPre, JtPre_pinv);
     delta_q = JtPre_pinv * (task->pos_err);
 
-    // my_utils::saveVector(delta_q, "delta_q0");
-    // my_utils::saveVector(task->pos_err, "delta_x0");
+    // //0112 my_utils::saveVector(delta_q, "delta_q0");
+    // //0112 my_utils::saveVector(task->pos_err, "delta_x0");
 
     qdot = JtPre_pinv * (task->vel_des);
     qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
@@ -118,11 +118,11 @@ bool KinWBC::FindConfiguration(const Eigen::VectorXd& curr_config,
         _PseudoInverse(JtPre, JtPre_pinv);
         delta_q =
             prev_delta_q + JtPre_pinv * (task->pos_err - Jt * prev_delta_q);
-        // my_utils::saveVector(delta_q, "delta_q" + std::to_string(i));
-        // my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i));
+        // //0112 my_utils::saveVector(delta_q, "delta_q" + std::to_string(i));
+        // //0112 my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i));
 
         // for(int j=0; j<JtPre_pinv.rows(); ++j)  {
-        //     my_utils::saveVector(JtPre_pinv.row(j), "JtPre_pinv"+ std::to_string(i) );
+        //     //0112 my_utils::saveVector(JtPre_pinv.row(j), "JtPre_pinv"+ std::to_string(i) );
         // }
 
 
@@ -195,8 +195,8 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
 
-    my_utils::saveVector(delta_q, "delta_q0");
-    my_utils::saveVector(task->pos_err, "delta_x0");
+    //0112 my_utils::saveVector(delta_q, "delta_q0");
+    //0112 my_utils::saveVector(task->pos_err, "delta_x0");
 
     Eigen::VectorXd prev_delta_q = delta_q;
     Eigen::VectorXd prev_qdot = qdot;
@@ -220,8 +220,8 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         qddot = prev_qddot +
                     JtPre_pinv * (task->acc_des - JtDotQdot - Jt * prev_qddot);
 
-        my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-        my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        //0112 my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        //0112 my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
 
 
         // For the next task

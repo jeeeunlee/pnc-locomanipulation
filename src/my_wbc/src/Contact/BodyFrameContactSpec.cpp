@@ -10,6 +10,8 @@ BodyFramePointContactSpec::BodyFramePointContactSpec(RobotSystem* robot, int _li
     max_Fz_ = 500.;
     // mu_ = _mu/ sqrt(2);
     setFrictionCoeff(_mu);
+    updateContactSpec();
+
 }
 
 BodyFramePointContactSpec::~BodyFramePointContactSpec() {}
@@ -82,6 +84,7 @@ BodyFrameSurfaceContactSpec::BodyFrameSurfaceContactSpec(RobotSystem* robot, int
     setFrictionCoeff(_mu);
     x_ = _x;
     y_ = _y;
+    updateContactSpec();
 }
 
 BodyFrameSurfaceContactSpec::~BodyFrameSurfaceContactSpec() {}

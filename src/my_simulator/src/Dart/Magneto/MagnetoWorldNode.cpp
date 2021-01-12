@@ -176,21 +176,21 @@ void MagnetoWorldNode::customPreStep() {
      
 
     // SAVE DATA
-    my_utils::saveVector(sensor_data_->alf_wrench, "alf_wrench");
-    my_utils::saveVector(sensor_data_->blf_wrench, "blf_wrench");
-    my_utils::saveVector(sensor_data_->arf_wrench, "arf_wrench");
-    my_utils::saveVector(sensor_data_->brf_wrench, "brf_wrench");
+    //0112 my_utils::saveVector(sensor_data_->alf_wrench, "alf_wrench");
+    //0112 my_utils::saveVector(sensor_data_->blf_wrench, "blf_wrench");
+    //0112 my_utils::saveVector(sensor_data_->arf_wrench, "arf_wrench");
+    //0112 my_utils::saveVector(sensor_data_->brf_wrench, "brf_wrench");
 
     Eigen::VectorXd trq_act_cmd = Eigen::VectorXd::Zero(Magneto::n_adof);
     for(int i=0; i< Magneto::n_adof; ++i)
         trq_act_cmd[i] = trq_cmd_[Magneto::idx_adof[i]];
     
-    my_utils::saveVector(trq_act_cmd, "trq_fb");
-    my_utils::saveVector(command_->jtrq, "trq_ff");
+    //0112 my_utils::saveVector(trq_act_cmd, "trq_fb");
+    //0112 my_utils::saveVector(command_->jtrq, "trq_ff");
 
 
-    my_utils::saveVector(command_->q, "q_cmd");
-    my_utils::saveVector(sensor_data_->q, "q_sen");
+    //0112 my_utils::saveVector(command_->q, "q_cmd");
+    //0112 my_utils::saveVector(sensor_data_->q, "q_sen");
 
 
     count_++;
@@ -234,7 +234,7 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
         robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);
         // robot_->getBodyNode(it.first)->addExtForce(force_w, location, is_force_global);
 
-        my_utils::saveVector(force, "force_" + robot_->getBodyNode(it.first)->getName() );
+        //0112 my_utils::saveVector(force, "force_" + robot_->getBodyNode(it.first)->getName() );
         // std::cout<< robot_->getBodyNode(it.first)->getName().c_str()
         //          << " : " << force_w.transpose() << std::endl;
         // std::cout << "--------------------------" << std::endl;

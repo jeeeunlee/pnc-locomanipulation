@@ -238,6 +238,11 @@ Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobian(const int& _bn_idx) {
 }
 
 Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const std::string& name_) {
+    
+    Eigen::MatrixXd Jacob = skel_ptr_->getJacobian(
+                            skel_ptr_->getBodyNode(name_),
+                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
+    
     Eigen::MatrixXd SpatialDeriv = skel_ptr_->getJacobianSpatialDeriv(
                             skel_ptr_->getBodyNode(name_),
                             skel_ptr_->getBodyNode(name_)->getLocalCOM());
@@ -245,15 +250,26 @@ Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const std::string& na
                             skel_ptr_->getBodyNode(name_),
                             skel_ptr_->getBodyNode(name_)->getLocalCOM());
 
-    my_utils::pretty_print(SpatialDeriv, std::cout, "spatial derivative");
-    my_utils::pretty_print(ClassicDeriv, std::cout, "classical derivative");
-    
+    Eigen::VectorXd JacobVec(Eigen::Map<Eigen::VectorXd>(Jacob.data(), Jacob.cols()*Jacob.rows()));
+    Eigen::VectorXd SpatialDerivVec(Eigen::Map<Eigen::VectorXd>(SpatialDeriv.data(), SpatialDeriv.cols()*SpatialDeriv.rows()));
+    Eigen::VectorXd ClassicDerivVec(Eigen::Map<Eigen::VectorXd>(ClassicDeriv.data(), ClassicDeriv.cols()*ClassicDeriv.rows()));
+
+
+    my_utils::saveVector(JacobVec, "JacobVec");
+    my_utils::saveVector(SpatialDerivVec, "SpatialDerivVec");
+    my_utils::saveVector(ClassicDerivVec, "ClassicDerivVec");
+        
     return skel_ptr_->getJacobianClassicDeriv(
                             skel_ptr_->getBodyNode(name_),
                             skel_ptr_->getBodyNode(name_)->getLocalCOM());
 }
 
 Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const int& _bn_idx) {
+    
+        Eigen::MatrixXd Jacob = skel_ptr_->getJacobian(
+                            skel_ptr_->getBodyNode(_bn_idx),
+                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
+    
     Eigen::MatrixXd SpatialDeriv = skel_ptr_->getJacobianSpatialDeriv(
                             skel_ptr_->getBodyNode(_bn_idx),
                             skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
@@ -261,8 +277,14 @@ Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const int& _bn_idx) {
                             skel_ptr_->getBodyNode(_bn_idx),
                             skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
 
-    my_utils::pretty_print(SpatialDeriv, std::cout, "spatial derivative");
-    my_utils::pretty_print(ClassicDeriv, std::cout, "classical derivative");
+    Eigen::VectorXd JacobVec(Eigen::Map<Eigen::VectorXd>(Jacob.data(), Jacob.cols()*Jacob.rows()));
+    Eigen::VectorXd SpatialDerivVec(Eigen::Map<Eigen::VectorXd>(SpatialDeriv.data(), SpatialDeriv.cols()*SpatialDeriv.rows()));
+    Eigen::VectorXd ClassicDerivVec(Eigen::Map<Eigen::VectorXd>(ClassicDeriv.data(), ClassicDeriv.cols()*ClassicDeriv.rows()));
+
+
+    my_utils::saveVector(JacobVec, "JacobVec");
+    my_utils::saveVector(SpatialDerivVec, "SpatialDerivVec");
+    my_utils::saveVector(ClassicDerivVec, "ClassicDerivVec");
     
     return skel_ptr_->getJacobianClassicDeriv(
                             skel_ptr_->getBodyNode(_bn_idx),

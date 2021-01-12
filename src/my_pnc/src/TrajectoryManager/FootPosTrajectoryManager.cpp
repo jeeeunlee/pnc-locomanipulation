@@ -122,8 +122,8 @@ void FootPosTrajectoryManager::updateFootPosTrajectory(const double current_time
     foot_vel_des_ = pos_traj_mid_to_end_.evaluateFirstDerivative(s);
     foot_acc_des_ = pos_traj_mid_to_end_.evaluateSecondDerivative(s);
   }
-  my_utils::saveVector(foot_pos_des_, "foot_pos_des_");
-  // my_utils::saveVector(foot_quat_des_, "foot_quat_des_");
+  //0112 my_utils::saveVector(foot_pos_des_, "foot_pos_des_");
+  // //0112 my_utils::saveVector(foot_quat_des_, "foot_quat_des_");
 
 }
 

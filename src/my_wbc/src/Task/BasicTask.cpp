@@ -113,7 +113,7 @@ bool BasicTask::_UpdateCommand(const Eigen::VectorXd& _pos_des,
             // vel_act
             vel_act = robot_->getBodyNodeCoMSpatialVelocity(link_idx_).tail(3);
 
-            my_utils::saveVector(pos_err, "pos_err");
+            //0112 my_utils::saveVector(pos_err, "pos_err");
             break;
         }
         case BasicTaskType::CENTROID: {

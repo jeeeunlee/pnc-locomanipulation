@@ -58,9 +58,9 @@ void MagnetoResidualController::_PreProcessing_Command() {
   wbrmc_param_->F_residual_ = - taf_container_->w_res_ * taf_container_->F_residual_;
   wbrmc_param_->J_residual_ = taf_container_->J_residual_;
   
-  my_utils::saveVector(wbrmc_param_->F_residual_,"wbc_F_residual");
+  //0112 my_utils::saveVector(wbrmc_param_->F_residual_,"wbc_F_residual");
   Eigen::VectorXd wrf = wbrmc_param_->W_rf_.head(6);
-  my_utils::saveVector(wrf,"W_rf_");
+  //0112 my_utils::saveVector(wrf,"W_rf_");
   // my_utils::pretty_print(wbrmc_param_->W_qddot_, std::cout, "W_qddot_");
   // my_utils::pretty_print(wbrmc_param_->W_xddot_, std::cout, "W_xddot_");
   // my_utils::pretty_print(wbrmc_param_->W_rf_, std::cout, "W_rf_");
@@ -121,8 +121,8 @@ void MagnetoResidualController::getCommand(void* _cmd) {
   // my_utils::pretty_print(jacc_des_, std::cout, "jacc_des_");
   // my_utils::pretty_print(jacc_des_cmd, std::cout, "jacc_des_cmd");
   // exit(0);
-  my_utils::saveVector(jpos_des_,"jpos_des_");
-  my_utils::saveVector(jvel_des_,"jvel_des_");
+  //0112 my_utils::saveVector(jpos_des_,"jpos_des_");
+  //0112 my_utils::saveVector(jvel_des_,"jvel_des_");
   
                                 
   // wbmc

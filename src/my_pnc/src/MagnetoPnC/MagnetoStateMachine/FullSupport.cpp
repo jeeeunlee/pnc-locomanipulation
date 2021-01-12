@@ -32,7 +32,11 @@ void FullSupport::firstVisit() {
   Eigen::VectorXd q_goal; 
   ctrl_arch_->goal_planner_->computeGoal(mc_curr_);  
   ctrl_arch_->goal_planner_->getGoalConfiguration(q_goal);
-  ctrl_arch_->trajectory_planner_->compute(q_goal);  
+
+  ctrl_arch_->trajectory_planner_->setMovingFoot(mc_curr_.get_moving_foot());
+  std::cout<<"I'm here::::::::: 1" << std::endl;
+  ctrl_arch_->trajectory_planner_->compute(q_goal); 
+  std::cout<<"I'm here::::::::: 2" << std::endl; 
   // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------

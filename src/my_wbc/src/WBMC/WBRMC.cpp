@@ -313,7 +313,7 @@ void WBRMC::_GetSolution(Eigen::VectorXd& cmd) {
     cmd = Sa_ * tau;
 
     
-    my_utils::saveVector(data_->Fr_, "Fr_WBRMC");
+    //0112 my_utils::saveVector(data_->Fr_, "Fr_WBRMC");
     
     // my_utils::pretty_print(qddot_, std::cout, "qddot_");
     // my_utils::pretty_print(delta_qddot, std::cout, "delta_qddot");
