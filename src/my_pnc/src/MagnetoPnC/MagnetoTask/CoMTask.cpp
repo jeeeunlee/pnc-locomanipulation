@@ -28,7 +28,7 @@ bool CoMTask::_UpdateCommand(const Eigen::VectorXd & _pos_des,
     vel_des = _vel_des;
     acc_des = _acc_des;
 
-    my_utils::saveVector(pos_err, "com_pos_err");
+    //0112 my_utils::saveVector(pos_err, "com_pos_err");
     // my_utils::pretty_print(_pos_des, std::cout, "_pos_des  @  _UpdateCommand");
     // my_utils::pretty_print(_vel_des, std::cout, "_vel_des  @  _UpdateCommand");
     // my_utils::pretty_print(_acc_des, std::cout, "_acc_des  @  _UpdateCommand");

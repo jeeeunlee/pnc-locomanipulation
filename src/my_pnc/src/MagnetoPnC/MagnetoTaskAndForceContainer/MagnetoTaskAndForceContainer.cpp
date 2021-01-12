@@ -60,7 +60,7 @@ void MagnetoTaskAndForceContainer::_InitializeTasks() {
 
 void MagnetoTaskAndForceContainer::_InitializeContacts() {
 
-  friction_coeff_ = 0.7;
+  friction_coeff_ = 0.7; // updated later in setContactFriction 
   
   double foot_x = 0.02; // 0.05; 
   double foot_y = 0.02; 

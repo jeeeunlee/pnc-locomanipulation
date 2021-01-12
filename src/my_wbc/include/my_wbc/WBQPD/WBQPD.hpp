@@ -1,3 +1,4 @@
+#pragma once
 // Whole Body Quadratic Programming Dynamics
 
 #include <my_utils/IO/IOUtilities.hpp>

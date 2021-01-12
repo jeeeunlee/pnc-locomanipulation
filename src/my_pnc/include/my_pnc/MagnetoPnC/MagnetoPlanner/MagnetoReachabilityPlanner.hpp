@@ -3,22 +3,25 @@
 #include <Eigen/Dense>
 #include <my_pnc/Constraint/Constraint.hpp>
 #include <my_wbc/Contact/BodyFrameContactSpec.hpp>
+#include <my_wbc/WBQPD/WBQPD.hpp>
 
 class RobotSystem;
-class ContactSpec;   
-
+class ContactSpec;
 
 class MagnetoReachabilityContact {
    public:
       MagnetoReachabilityContact(RobotSystem* robot_planner);
       ~MagnetoReachabilityContact();
+      void initialization(const YAML::Node& node);
 
       void update(const Eigen::VectorXd& q,
-                  const Eigen::VectorXd& dotq);
+                  const Eigen::VectorXd& dotq,
+                  const Eigen::VectorXd& ddotq);
+      void solveContactDyn(Eigen::VectorXd& tau);
 
       void clearContacts();
       void addContacts(ContactSpec* contact);
-      void setWbqpd();
+      void FinishContactSet(); // set friction cone in wbqpd
 
    private:
       void _deleteContacts();
@@ -33,6 +36,9 @@ class MagnetoReachabilityContact {
    private:       
       RobotSystem* robot_planner_;
       std::vector<ContactSpec*> contact_list_;
+
+      Eigen::MatrixXd Sa_;
+      Eigen::MatrixXd Sv_;
 
       // updated variables
       Eigen::MatrixXd Jc_;
@@ -55,6 +61,7 @@ class MagnetoReachabilityContact {
 
       // wbqpd
       bool b_wbqpd_set;
+      double magnetic_force_;
       WbqpdParam* wbqpd_param_;
       WbqpdResult* wbqpd_result_;
       WBQPD* wbqpd_;
@@ -69,12 +76,14 @@ class MagnetoReachabilityNode {
                               const Eigen::VectorXd& dotq);
       ~MagnetoReachabilityNode();
 
-      bool FindNextNode(const Eigen::VectorXd& ddq_des);
+      bool FindNextNode(const Eigen::VectorXd& ddq_des,
+                        Eigen::VectorXd& tau_a);
 
    private:
       Eigen::VectorXd q_;
       Eigen::VectorXd dotq_;
       MagnetoReachabilityContact* contact_state_;
+      std::vector<std::pair<std::shared_ptr<MagnetoReachabilityNode>, double >> next_node_set_;
 };
 
 class MagnetoReachabilityEdge {
@@ -90,13 +99,13 @@ class MagnetoReachabilityEdge {
       Eigen::VectorXd trq_atv_;
 };
 
+
 class MagnetoReachabilityPlanner {
    public:
-      MagnetoReachabilityPlanner(RobotSystem* robot, double fric_coeff);
+      MagnetoReachabilityPlanner(RobotSystem* robot);
       ~MagnetoReachabilityPlanner();
       
-      void initTorqueLimit(const Eigen::VectorXd& tau_min, 
-                          const Eigen::VectorXd& tau_max);
+      void initialization(const YAML::Node& node);
       void setMovingFoot(int moving_foot);
       void compute(const Eigen::VectorXd& q_goal);
 
@@ -124,11 +133,8 @@ class MagnetoReachabilityPlanner {
       // constant
       Eigen::MatrixXd Sa_;
       Eigen::MatrixXd Sv_;      
-      Eigen::VectorXd q_zero_dof_;
+      Eigen::VectorXd q_zero_;
       bool is_update_centroid_;
-
-      Eigen::VectorXd tau_min_;
-      Eigen::VectorXd tau_max_;
 
       // boundary conditions
       Eigen::VectorXd q_init_;
@@ -144,8 +150,6 @@ class MagnetoReachabilityPlanner {
 
       // contact
       double mu_;
-      int dim_joint_;
-      int dim_contact_;
       int moving_foot_idx_;
 
       

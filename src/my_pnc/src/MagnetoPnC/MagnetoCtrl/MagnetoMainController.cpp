@@ -184,7 +184,7 @@ void MagnetoMainController::ctrlInitialization(const YAML::Node& node) {
   tau_max_ =
       // sp_->getActiveJointValue(robot_->GetTorqueUpperLimits());
       Eigen::VectorXd::Constant(Magneto::n_adof, torque_limit_); //-2500.
-  wbmc_->setTorqueLimits(tau_min, tau_max);
+  wbmc_->setTorqueLimits(tau_min_, tau_max_);
 
   // Set Joint Integrator Parameters
 }

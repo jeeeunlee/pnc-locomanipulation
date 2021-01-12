@@ -26,9 +26,9 @@ void WBQPD::_updateCostParam() {
     Gmat_ = param_->A.transpose() * param_->Wq.asDiagonal() * param_->A
             + param_->B.transpose() * param_->Wf.asDiagonal() * param_->B ;
     gvec_ = param_->A.transpose() * param_->Wq.asDiagonal() * (param_->a0 - param_->ddq_des)
-            +  param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;
-    
+            +  param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;    
 }
+
 void WBQPD::_updateInequalityParam() {
     // Cieq*x + dieq >= 0
     Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
@@ -47,15 +47,19 @@ void WBQPD::_updateInequalityParam() {
 }
 
 void WBQPD::_updateOptParam() {
-    _updateCostParam();
-    _updateInequalityParam();
-
     dim_opt_ = param_->A.cols();
     dim_eq_cstr_ = 0;    
     dim_ieq_cstr_ = dim_fric_ieq_cstr_;
+
+    std::cout<< "_updateOptParam - 1 "<< std::endl;
+    _updateCostParam();
+    std::cout<< "_updateOptParam - 2 "<< std::endl;
+    _updateInequalityParam();
+    std::cout<< "_updateOptParam - 3 "<< std::endl;
+
     if(b_torque_limit_)
         dim_ieq_cstr_ += 2*dim_opt_; // lower & upper limit
-
+    std::cout<< "_updateOptParam - 4 "<< std::endl;
     // cost
     // 0.5 x'*G*x + g0'*x
     G.resize(dim_opt_, dim_opt_);
@@ -66,11 +70,17 @@ void WBQPD::_updateOptParam() {
         }
         g0[i] = gvec_[i];
     }
+    std::cout<< "_updateOptParam - 5 "<< std::endl;
 
     // equality
-    CE.resize(dim_opt_, dim_eq_cstr_);
-    ce0.resize(dim_eq_cstr_);
-    
+    // CE.resize(dim_opt_, dim_eq_cstr_);
+    // ce0.resize(dim_eq_cstr_);
+    CE.resize(dim_opt_, 1);
+    ce0.resize(1);
+    for(int i(0); i<dim_opt_; ++i) CE[i][0] = 0.;
+    ce0[0] = 0.;
+
+    std::cout<< "_updateOptParam - 6 "<< std::endl;
 
     // inequality
     // CI'*x + ci0 >= 0    
@@ -83,16 +93,29 @@ void WBQPD::_updateOptParam() {
         }
         ci0[i] = dieq_[i];
     } 
+    std::cout<< "_updateOptParam - 7 "<< std::endl;
 }
 
 void WBQPD::computeTorque(void* result){
+    std::cout<< "computeTorque - 1 "<< std::endl;
+
     if (result) 
         result_ = static_cast<WbqpdResult*>(result);
 
+    std::cout<< "computeTorque - 2 "<< std::endl;
+
+
     if(b_updatedparam_) _updateOptParam();
+
+    std::cout<< "computeTorque - 3 "<< std::endl;
+
 
     // 
     double f = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+
+    std::cout<< "computeTorque - 4 "<< std::endl;
+
+
     if(f == std::numeric_limits<double>::infinity())  {
         std::cout << "Infeasible Solution f: " << f << std::endl;
         std::cout << "x: " << x << std::endl;
@@ -102,9 +125,10 @@ void WBQPD::computeTorque(void* result){
     else{
         result_->b_reachable = true;
         for (int i(0); i < dim_opt_; ++i) result_->tau[i] = x[i];
-    }
+    }    
 
-    
+    std::cout<< "computeTorque - 5 "<< std::endl;
+
 }
 
 void WBQPD::setTorqueLimit(const Eigen::VectorXd& tau_l,
