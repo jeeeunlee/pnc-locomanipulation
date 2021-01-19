@@ -85,6 +85,9 @@ MagnetoControlArchitecture::~MagnetoControlArchitecture() {
   delete state_machines_[MAGNETO_STATES::SWING_START_TRANS];
   delete state_machines_[MAGNETO_STATES::SWING];
   delete state_machines_[MAGNETO_STATES::SWING_END_TRANS];
+  
+  delete goal_planner_;
+  delete trajectory_planner_;
 }
 
 void MagnetoControlArchitecture::ControlArchitectureInitialization() {}

@@ -5,7 +5,10 @@
 
 #include <my_wbc/WBQPD/WBQPD.hpp>
 
-WBQPD::WBQPD() {
+WBQPD::WBQPD(const Eigen::MatrixXd& Sa, 
+            const Eigen::MatrixXd& Sv) {
+    Sa_ = Sa;
+    Sv_ = Sv;
     b_updatedparam_ = false;
     b_torque_limit_ = false;
 }
@@ -21,45 +24,17 @@ void WBQPD::updateSetting(void* param){
         param_ = static_cast<WbqpdParam*>(param);
 }
 
-void WBQPD::_updateCostParam() {
-    // 0.5 x'*G*x + g0'*x
-    Gmat_ = param_->A.transpose() * param_->Wq.asDiagonal() * param_->A
-            + param_->B.transpose() * param_->Wf.asDiagonal() * param_->B ;
-    gvec_ = param_->A.transpose() * param_->Wq.asDiagonal() * (param_->a0 - param_->ddq_des)
-            +  param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;    
-}
-
-void WBQPD::_updateInequalityParam() {
-    // Cieq*x + dieq >= 0
-    Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
-    dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
-    int row_idx(0);
-    Cieq_.block(row_idx, 0, dim_fric_ieq_cstr_, dim_opt_) = -U_*param_->B;
-    dieq_.head(dim_fric_ieq_cstr_) = u0_;
-    row_idx+=dim_fric_ieq_cstr_;
-    if(b_torque_limit_) {        
-        Cieq_.block(row_idx, 0, dim_opt_, dim_opt_) = Eigen::MatrixXd::Identity(dim_opt_,dim_opt_);
-        dieq_.segment(row_idx, dim_opt_) = -tau_l_;
-        row_idx+=dim_opt_;
-        Cieq_.block(row_idx, 0, dim_opt_, dim_opt_) = -Eigen::MatrixXd::Identity(dim_opt_,dim_opt_);
-        dieq_.segment(row_idx, dim_opt_) = tau_u_;
-    }
-}
-
 void WBQPD::_updateOptParam() {
     dim_opt_ = param_->A.cols();
-    dim_eq_cstr_ = 0;    
+    dim_eq_cstr_ = Sv_.rows();    
     dim_ieq_cstr_ = dim_fric_ieq_cstr_;
-
-    std::cout<< "_updateOptParam - 1 "<< std::endl;
-    _updateCostParam();
-    std::cout<< "_updateOptParam - 2 "<< std::endl;
-    _updateInequalityParam();
-    std::cout<< "_updateOptParam - 3 "<< std::endl;
-
     if(b_torque_limit_)
-        dim_ieq_cstr_ += 2*dim_opt_; // lower & upper limit
-    std::cout<< "_updateOptParam - 4 "<< std::endl;
+        dim_ieq_cstr_ += 2*dim_trqact_ieq_cstr_; // lower & upper limit
+
+    _updateCostParam();
+    _updateEqualityParam();    
+    _updateInequalityParam();
+
     // cost
     // 0.5 x'*G*x + g0'*x
     G.resize(dim_opt_, dim_opt_);
@@ -70,17 +45,16 @@ void WBQPD::_updateOptParam() {
         }
         g0[i] = gvec_[i];
     }
-    std::cout<< "_updateOptParam - 5 "<< std::endl;
 
     // equality
-    // CE.resize(dim_opt_, dim_eq_cstr_);
-    // ce0.resize(dim_eq_cstr_);
-    CE.resize(dim_opt_, 1);
-    ce0.resize(1);
-    for(int i(0); i<dim_opt_; ++i) CE[i][0] = 0.;
-    ce0[0] = 0.;
-
-    std::cout<< "_updateOptParam - 6 "<< std::endl;
+    CE.resize(dim_opt_, dim_eq_cstr_);
+    ce0.resize(dim_eq_cstr_);
+    for (int i(0); i < dim_eq_cstr_; ++i) {
+        for (int j(0); j < dim_opt_; ++j) {
+            CE[j][i] = Ceq_(i,j);
+        }
+        ce0[i] = 0.;
+    }
 
     // inequality
     // CI'*x + ci0 >= 0    
@@ -93,28 +67,49 @@ void WBQPD::_updateOptParam() {
         }
         ci0[i] = dieq_[i];
     } 
-    std::cout<< "_updateOptParam - 7 "<< std::endl;
+}
+
+
+void WBQPD::_updateCostParam() {
+    // 0.5 x'*G*x + g0'*x
+    Gmat_ = param_->A.transpose() * param_->Wq.asDiagonal() * param_->A
+            + param_->B.transpose() * param_->Wf.asDiagonal() * param_->B ;
+    gvec_ = param_->A.transpose() * param_->Wq.asDiagonal() * (param_->a0 - param_->ddq_des)
+            +  param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;    
+}
+
+void WBQPD::_updateEqualityParam() {
+    Ceq_ = Sv_;
+    deq_ = Eigen::VectorXd::Zero(dim_eq_cstr_);
+}
+
+void WBQPD::_updateInequalityParam() {
+    // Cieq*x + dieq >= 0
+    Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
+    dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
+    int row_idx(0);
+    Cieq_.block(row_idx, 0, dim_fric_ieq_cstr_, dim_opt_) = U_*param_->B;
+    dieq_.head(dim_fric_ieq_cstr_) = U_*param_->b0 - u0_;
+
+    row_idx+=dim_fric_ieq_cstr_;
+    if(b_torque_limit_) {        
+        Cieq_.block(row_idx, 0, dim_trqact_ieq_cstr_, dim_opt_) = Sa_;
+        dieq_.segment(row_idx, dim_trqact_ieq_cstr_) = -tau_l_;
+        row_idx+=dim_trqact_ieq_cstr_;
+        Cieq_.block(row_idx, 0, dim_trqact_ieq_cstr_, dim_opt_) = -Sa_;
+        dieq_.segment(row_idx, dim_trqact_ieq_cstr_) = tau_u_;
+    }
 }
 
 void WBQPD::computeTorque(void* result){
-    std::cout<< "computeTorque - 1 "<< std::endl;
-
     if (result) 
         result_ = static_cast<WbqpdResult*>(result);
 
-    std::cout<< "computeTorque - 2 "<< std::endl;
-
-
+    // update G, g0, CE, ce0, CI, ci0
     if(b_updatedparam_) _updateOptParam();
 
-    std::cout<< "computeTorque - 3 "<< std::endl;
-
-
-    // 
+    // solve QP, x=tau
     double f = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
-
-    std::cout<< "computeTorque - 4 "<< std::endl;
-
 
     if(f == std::numeric_limits<double>::infinity())  {
         std::cout << "Infeasible Solution f: " << f << std::endl;
@@ -124,10 +119,48 @@ void WBQPD::computeTorque(void* result){
     }
     else{
         result_->b_reachable = true;
+        result_->tau = Eigen::VectorXd::Zero(dim_opt_);
         for (int i(0); i < dim_opt_; ++i) result_->tau[i] = x[i];
-    }    
+    }
+}
 
-    std::cout<< "computeTorque - 5 "<< std::endl;
+bool WBQPD::computeDdotq(Eigen::VectorXd& tau,
+                        Eigen::VectorXd& ddotq) {
+    // check the tau is feasible and compute ddotq
+
+    // set passive torque to be zero
+    Eigen::VectorXd tau_a = Sa_ * tau;
+    tau = Sa_.transpose() * tau_a;
+
+    
+    Eigen::VectorXd Uf_Fc = U_*( param_->B * tau + param_->b0);
+
+    // check joint limit
+    bool b_joint_limit = true;
+    for(int i(0); i<dim_trqzct_ieq_cstr_; ++i) {
+        if(tau_a[i] < tau_l_[i])
+            b_joint_limit = false;
+        if(tau_a[i] > tau_u_[i])
+            b_joint_limit = false;
+    }
+    
+    // check friction constraint
+    bool b_friction_constraint = true;
+    Eigen::
+    for(int i(0); i<dim_fric_ieq_cstr_; ++i) {
+        if(Uf_Fc[i] < u0_[i])
+            b_friction_constraint = false;
+    }
+
+    if(b_joint_limit && b_friction_constraint){
+        ddotq = param_->A * tau + param_->a0;
+        return true;
+    }
+    else{
+        ddotq = Eigen::VectorXd::Zero(dim_opt_);
+        return false;
+    }
+    
 
 }
 
@@ -136,6 +169,7 @@ void WBQPD::setTorqueLimit(const Eigen::VectorXd& tau_l,
     b_torque_limit_ = true;
     tau_l_ = tau_l;
     tau_u_ = tau_u;    
+    dim_trqact_ieq_cstr_ = tau_l_.size();
 }
 
 void WBQPD::setFrictionCone(const Eigen::MatrixXd& U,

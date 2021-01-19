@@ -14,11 +14,16 @@ class MagnetoReachabilityContact {
       ~MagnetoReachabilityContact();
       void initialization(const YAML::Node& node);
 
+      // solve
       void update(const Eigen::VectorXd& q,
                   const Eigen::VectorXd& dotq,
                   const Eigen::VectorXd& ddotq);
       void solveContactDyn(Eigen::VectorXd& tau);
+      void computeNextState(const Eigen::VectorXd& tau_a,
+                           Eigen::VectorXd& q_next,
+                           Eigen::VectorXd& dotq_next);
 
+      // setting
       void clearContacts();
       void addContacts(ContactSpec* contact);
       void FinishContactSet(); // set friction cone in wbqpd
@@ -62,6 +67,7 @@ class MagnetoReachabilityContact {
       // wbqpd
       bool b_wbqpd_set;
       double magnetic_force_;
+      double residual_ratio_;
       WbqpdParam* wbqpd_param_;
       WbqpdResult* wbqpd_result_;
       WBQPD* wbqpd_;
