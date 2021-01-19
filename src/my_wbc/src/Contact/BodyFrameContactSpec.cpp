@@ -30,7 +30,7 @@ bool BodyFramePointContactSpec::_UpdateJcDotQdot() {
         robot_->getBodyNodeCoMBodyJacobianDot(link_idx_) * robot_->getQdot();
     JcDotQdot_ = JcDotQdot_tmp.tail(dim_contact_);
 
-    JcDotQdot_.setZero();
+    // JcDotQdot_.setZero();
     return true;
 }
 

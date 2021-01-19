@@ -34,9 +34,8 @@ void FullSupport::firstVisit() {
   ctrl_arch_->goal_planner_->getGoalConfiguration(q_goal);
 
   ctrl_arch_->trajectory_planner_->setMovingFoot(mc_curr_.get_moving_foot());
-  std::cout<<"I'm here::::::::: 1" << std::endl;
   ctrl_arch_->trajectory_planner_->compute(q_goal); 
-  std::cout<<"I'm here::::::::: 2" << std::endl; 
+
   // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
@@ -58,7 +57,7 @@ void FullSupport::firstVisit() {
   ctrl_arch_->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
                                 ctrl_duration_);
-
+ 
   // -- set task_list in taf with hierachy
   ctrl_arch_->taf_container_->clear_task_list();
   ctrl_arch_->taf_container_->add_task_list(ctrl_arch_->taf_container_->com_task_);
@@ -75,6 +74,7 @@ void FullSupport::firstVisit() {
   ctrl_arch_->taf_container_->set_residual_magnetic_force(-1);
   ctrl_arch_->taf_container_->set_contact_magnetic_force(-1);
   ctrl_arch_->taf_container_->w_res_ = 0.0;
+
 
   // ---------------------------------------
   //      CONTACT LIST
@@ -101,6 +101,7 @@ void FullSupport::firstVisit() {
                       ctrl_arch_->taf_container_->W_rf_contact_,
                       ctrl_arch_->taf_container_->W_rf_nocontact_,
                       ctrl_arch_->taf_container_->W_rf_);
+
 }
 
 void FullSupport::_taskUpdate() {

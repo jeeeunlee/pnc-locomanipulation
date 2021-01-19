@@ -84,8 +84,6 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
   double tol = 1e-5;
   double err = 1e5;
   int iter(0), max_iter(10000);
-  std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-  my_utils::pretty_print(q_, std::cout, "q");
   while(err > tol && iter++ < max_iter) {
     // synchronize robot_planner
     _UpdateConfiguration(q_);
@@ -111,9 +109,9 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
 
   q_goal_ = q_;
 
-  std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-  my_utils::pretty_print(q_, std::cout, "q");
-  my_utils::pretty_print(ceq_, std::cout, "ceq_");
+  // std::cout<<"iter(" << iter << "), err=" << err << std::endl;
+  // my_utils::pretty_print(q_, std::cout, "q");
+  // my_utils::pretty_print(ceq_, std::cout, "ceq_");
 
   // add com goal
   MOTION_DATA motion_data;

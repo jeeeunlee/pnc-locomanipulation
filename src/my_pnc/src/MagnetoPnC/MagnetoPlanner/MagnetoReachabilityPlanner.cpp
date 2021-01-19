@@ -25,13 +25,10 @@ MagnetoReachabilityNode::MagnetoReachabilityNode(MagnetoReachabilityContact* con
 MagnetoReachabilityNode::~MagnetoReachabilityNode() {}
 
 bool MagnetoReachabilityNode::FindNextNode(const Eigen::VectorXd& ddq_des,
-                                          Eigen::VectorXd& tau_a){                                             
-  std::cout<< "FindNextNode - 1 "<< std::endl;
+                                          Eigen::VectorXd& tau){                                             
   contact_state_->update(q_, dotq_, ddq_des);
-  std::cout<< "FindNextNode - 2 "<< std::endl;
-  contact_state_->solveContactDyn(tau_a);
-  std::cout<< "FindNextNode - 3 "<< std::endl;
-  // contact_state_->computeNextState(tau_a, q_next, dotq_next); 
+  contact_state_->solveContactDyn(tau);
+  contact_state_->computeNextState(tau, q_next, dotq_next); 
 }
 
 MagnetoReachabilityEdge::MagnetoReachabilityEdge(MagnetoReachabilityNode* src_node,
@@ -50,18 +47,20 @@ MagnetoReachabilityContact::MagnetoReachabilityContact(RobotSystem* robot_planne
   dim_joint_ = Magneto::n_dof;
   dim_contact_ = 0;
 
-  // dyn solver
-  wbqpd_param_ = new WbqpdParam();
-  wbqpd_result_ = new WbqpdResult();
-  wbqpd_ = new WBQPD();
-
   Sa_ = Eigen::MatrixXd::Zero(Magneto::n_adof, Magneto::n_dof);
   Sv_ = Eigen::MatrixXd::Zero(Magneto::n_vdof, Magneto::n_dof);
-  
   for(int i(0); i<Magneto::n_adof; ++i)
     Sa_(i, Magneto::idx_adof[i]) = 1.;
   for(int i(0); i<Magneto::n_vdof; ++i)
     Sv_(i, Magneto::idx_vdof[i]) = 1.;
+
+  // dyn solver
+  wbqpd_param_ = new WbqpdParam();
+  wbqpd_result_ = new WbqpdResult();
+  wbqpd_ = new WBQPD(Sa_, Sv_);
+
+
+
 }
 
 MagnetoReachabilityContact::~MagnetoReachabilityContact() {
@@ -71,15 +70,14 @@ MagnetoReachabilityContact::~MagnetoReachabilityContact() {
 void MagnetoReachabilityContact::initialization(const YAML::Node& node) {
   // torque limit, magnetic force
   double torque_limit(0.);
-  double magnetic_force(0.), residual_ratio(0.);
   try {
     my_utils::readParameter(node["controller_params"], 
                           "torque_limit", torque_limit);
 
     my_utils::readParameter(node["magnetism_params"], 
-                          "magnetic_force", magnetic_force);  
+                          "magnetic_force", magnetic_force_);  
     my_utils::readParameter(node["magnetism_params"], 
-                          "residual_ratio", residual_ratio);
+                          "residual_ratio", residual_ratio_);
    
   } catch (std::runtime_error& e) {
     std::cout << "Error reading parameter [" << e.what() << "] at file: ["
@@ -133,6 +131,7 @@ void MagnetoReachabilityContact::FinishContactSet() {
     Uf_row_dim+= Uf_i.rows();
     Uf_col_dim+= Uf_i.cols();
   }
+  std::cout << "magnetic_force_ = " << magnetic_force_ << std::endl;
 
   // 2. contact friction cone
   Uf = Eigen::MatrixXd::Zero(Uf_row_dim, Uf_col_dim);
@@ -173,36 +172,45 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
   M_ = robot_planner_->getMassMatrix();
   MInv_ = robot_planner_->getInvMassMatrix();
   cori_grav_ = robot_planner_->getCoriolisGravity();
-
   AInv_ = Jc_ * MInv_ * Jc_.transpose();
   AMat_ = getPseudoInverse(AInv_);
   Jc_bar_T_ = AMat_ * Jc_* MInv_; // = Jc_bar.transpose() 
-  
+
+
   Q_ = getNullSpaceMatrix(Jc_bar_T_); 
   Nc_T_ = Eigen::MatrixXd::Identity(dim_joint_,dim_joint_) - Jc_.transpose()*Jc_bar_T_;
 
-  wbqpd_param_->A = MInv_*Nc_T_*Sa_.transpose();
-  wbqpd_param_->a0 = MInv_*(- Nc_T_*cori_grav_ -Jc_.transpose()*AMat_*Jcdotqdot_);
-  wbqpd_param_->B = -Jc_bar_T_*Sa_.transpose();
-  wbqpd_param_->b0 = -AMat_*Jcdotqdot_+Jc_bar_T_*cori_grav_;
+  wbqpd_param_->A = MInv_*Nc_T_;
+  wbqpd_param_->a0 = MInv_*(- Nc_T_*cori_grav_ - Jc_.transpose()*AMat_*Jcdotqdot_);
+  wbqpd_param_->B = - Jc_bar_T_;
+  wbqpd_param_->b0 = - AMat_*Jcdotqdot_ + Jc_bar_T_*cori_grav_;
   
   wbqpd_param_->ddq_des = ddotq;
   wbqpd_param_->Wq = Eigen::VectorXd::Constant(dim_joint_, 1000.);
-  wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 1.0);
+  wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 1.);
+
   int fz_idx(0), contact_idx(0);
   for(auto &it : contact_list_) {
     fz_idx = contact_idx + ((BodyFramePointContactSpec*)(it))->getFzIndex();  
     wbqpd_param_->Wf[fz_idx] = 0.0001; // Fz no cost
     contact_idx += it->getDim();
   }
-
   wbqpd_->updateSetting(wbqpd_param_);
 }
 
 void MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau){
   wbqpd_->computeTorque(wbqpd_result_);
   bool b_reachable = wbqpd_result_->b_reachable;
-  tau = wbqpd_result_->tau;  
+  tau = wbqpd_result_->tau;
+}
+
+void MagnetoReachabilityContact::computeNextState(const Eigen::VectorXd& tau,
+                                                Eigen::VectorXd& q_next,
+                                                Eigen::VectorXd& dotq_next) {
+  timestep = 0.01;
+  bool b_feasible = wbqpd_->computeDdotq(tau,ddotq);
+  q_next = q_ + dotq_*timestep;
+  dotq_next = dotq_ + ddotq*timestep;
 }
 
 
@@ -313,9 +321,7 @@ MagnetoReachabilityPlanner::MagnetoReachabilityPlanner(RobotSystem* robot) {
   
   full_contact_state_->clearContacts();
   for(auto &contact : full_contact_list_)
-    full_contact_state_->addContacts(contact);
-  full_contact_state_->FinishContactSet();
-
+    full_contact_state_->addContacts(contact); 
 }
 
 
@@ -347,6 +353,8 @@ void MagnetoReachabilityPlanner::initialization(const YAML::Node& node){
 
 
   full_contact_state_->initialization(node);
+  full_contact_state_->FinishContactSet();
+
   swing_contact_state_->initialization(node);
 } 
 
@@ -366,17 +374,14 @@ void MagnetoReachabilityPlanner::compute(const Eigen::VectorXd& q_goal) {
 
   q_ = q_init_;
   dotq_ = dotq_init_;
-  std::cout<< "compute - 1 "<< std::endl;
   // full contact node
   MagnetoReachabilityNode* node_fc_init =
                 new MagnetoReachabilityNode(full_contact_state_, 
                                         q_init_, dotq_init_);
   //  
   Eigen::VectorXd tau_a;
-  std::cout<< "compute - 2 "<< std::endl;
   node_fc_init->FindNextNode(q_zero_, tau_a);
   // 
-  std::cout<< "compute - 3 "<< std::endl;
   // swing contact node
   MagnetoReachabilityNode* node_sc_init = 
               new MagnetoReachabilityNode(swing_contact_state_, 

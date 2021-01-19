@@ -222,7 +222,7 @@ void MagnetoTaskAndForceContainer::set_residual_magnetic_force(int moving_cop, d
 }
 
 void MagnetoTaskAndForceContainer::set_contact_magnetic_force(int moving_cop) {
-  // set F_magnetic_ based on b_magnetism_map_  
+  // set F_magnetic_ based on b_magnetism_mabp_  
   F_magnetic_ = Eigen::VectorXd::Zero(full_dim_contact_);
 
   int contact_link_idx(0), dim_contact(0), fz_idx;

@@ -10,7 +10,8 @@ let contact dynamics at the moment be described as:
     ddq = A*tau + a0
     Fc = B*tau + b0
 s.t.
-    tau_l < tau < tau_u
+    Sp*tau = 0
+    tau_l < Sa*tau < tau_u
     U*(Fc) < ui0
 
 Let the cost function for the problem be formulated as:
@@ -45,10 +46,13 @@ struct WbqpdResult{
 
 class WBQPD{
     public:
-        WBQPD();
+        WBQPD(const Eigen::MatrixXd& Sa, 
+            const Eigen::MatrixXd& Sv);
         ~WBQPD();
         void updateSetting(void* param=NULL);
         void computeTorque(void* result);
+        void computeDdotq(Eigen::VectorXd& tau,
+                            Eigen::VectorXd& ddotq)
 
         void setTorqueLimit(const Eigen::VectorXd& tau_l,
                             const Eigen::VectorXd& tau_u);
@@ -58,12 +62,15 @@ class WBQPD{
     private:
         void _updateOptParam();    
         void _updateCostParam();
+        void _updateEqualityParam();
         void _updateInequalityParam();
-
 
     protected:
         bool b_updatedparam_;
         bool b_torque_limit_;
+
+        Eigen::MatrixXd Sa_;
+        Eigen::MatrixXd Sv_;
 
         Eigen::VectorXd tau_l_;
         Eigen::VectorXd tau_u_;
@@ -71,13 +78,16 @@ class WBQPD{
         Eigen::MatrixXd U_;
         Eigen::VectorXd u0_;
 
-        int dim_opt_;
+        int dim_opt_; // n_dof
         int dim_eq_cstr_; // equality constraints
         int dim_ieq_cstr_; // inequality constraints
         int dim_fric_ieq_cstr_; // friction constraints
+        int dim_trqact_ieq_cstr_; // active torque limit constraints
 
         Eigen::MatrixXd Gmat_;
         Eigen::VectorXd gvec_;
+        Eigen::MatrixXd Ceq_;
+        Eigen::VectorXd deq_;
         Eigen::MatrixXd Cieq_;
         Eigen::VectorXd dieq_;
 
