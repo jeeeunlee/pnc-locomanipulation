@@ -137,7 +137,7 @@ bool WBQPD::computeDdotq(Eigen::VectorXd& tau,
 
     // check joint limit
     bool b_joint_limit = true;
-    for(int i(0); i<dim_trqzct_ieq_cstr_; ++i) {
+    for(int i(0); i<dim_trqact_ieq_cstr_; ++i) {
         if(tau_a[i] < tau_l_[i])
             b_joint_limit = false;
         if(tau_a[i] > tau_u_[i])
@@ -146,7 +146,6 @@ bool WBQPD::computeDdotq(Eigen::VectorXd& tau,
     
     // check friction constraint
     bool b_friction_constraint = true;
-    Eigen::
     for(int i(0); i<dim_fric_ieq_cstr_; ++i) {
         if(Uf_Fc[i] < u0_[i])
             b_friction_constraint = false;

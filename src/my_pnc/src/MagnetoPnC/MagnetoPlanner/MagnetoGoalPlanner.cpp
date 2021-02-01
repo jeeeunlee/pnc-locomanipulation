@@ -60,9 +60,9 @@ void MagnetoGoalPlanner::_setDesiredFootPosition(MotionCommand _motion_command) 
   _InitCostFunction();
 
   // assume one foot is moving
-  int moving_foot_idx = _motion_command.get_moving_foot();
+  int moving_foot_idx;
   MOTION_DATA motion_data;
-  _motion_command.get_foot_motion_command(motion_data);
+  _motion_command.get_foot_motion_command(motion_data, moving_foot_idx);
 
   POSE_DATA zero_pose = POSE_DATA();
   for(auto &constraint : constraint_list){

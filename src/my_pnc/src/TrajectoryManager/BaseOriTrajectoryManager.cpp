@@ -18,7 +18,9 @@ BaseOriTrajectoryManager::BaseOriTrajectoryManager(RobotSystem* _robot)
 
 BaseOriTrajectoryManager::~BaseOriTrajectoryManager() {}
 
-void BaseOriTrajectoryManager::updateTask(Task* _base_ori_task) {
+void BaseOriTrajectoryManager::updateTask(const double& current_time, 
+                                          Task* _base_ori_task) {
+  updateBaseOriTrajectory(current_time);
   _base_ori_task->updateTask(base_ori_pos_des_, 
                             base_ori_vel_des_, 
                             base_ori_acc_des_);
@@ -26,8 +28,8 @@ void BaseOriTrajectoryManager::updateTask(Task* _base_ori_task) {
 
 // Initialize the swing base_ori trajectory
 
-void BaseOriTrajectoryManager::setBaseOriTrajectory(const double _start_time, 
-                          const double _duration,
+void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time, 
+                          const double& _duration,
                           const Eigen::Quaterniond &_base_quat_des) {
   
   traj_start_time_ = _start_time;
@@ -42,8 +44,8 @@ void BaseOriTrajectoryManager::setBaseOriTrajectory(const double _start_time,
                                  base_quat_des_, zero_vel_);
 }
 
-void BaseOriTrajectoryManager::setBaseOriTrajectory(const double _start_time, 
-                          const double _duration) {
+void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time, 
+                          const double& _duration) {
   Eigen::Quaterniond _base_quat_des 
                         = Eigen::Quaternion<double>(
                           robot_->getBodyNodeIsometry(
@@ -52,7 +54,7 @@ void BaseOriTrajectoryManager::setBaseOriTrajectory(const double _start_time,
 }
 
 // Computes the swing base_ori trajectory
-void BaseOriTrajectoryManager::updateBaseOriTrajectory(const double current_time) {
+void BaseOriTrajectoryManager::updateBaseOriTrajectory(const double& current_time) {
   double s = (current_time - traj_start_time_) / traj_duration_;
 
   quat_hermite_curve_.evaluate(s, base_quat_des_);

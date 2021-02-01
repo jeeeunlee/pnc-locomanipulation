@@ -41,9 +41,6 @@ class MagnetoTaskAndForceContainer : public TaskAndForceContainer {
   Task* get_foot_pos_task(int moving_cop);
   Task* get_foot_ori_task(int moving_cop);
 
-
-
-
  protected:
   void _InitializeTasks();
   void _InitializeContacts();

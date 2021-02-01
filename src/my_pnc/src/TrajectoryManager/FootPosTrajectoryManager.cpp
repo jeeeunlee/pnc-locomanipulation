@@ -22,13 +22,17 @@ FootPosTrajectoryManager::FootPosTrajectoryManager(RobotSystem* _robot)
 
 FootPosTrajectoryManager::~FootPosTrajectoryManager() {}
 
-void FootPosTrajectoryManager::updateTask(Task* _foot_pos_task) {
+void FootPosTrajectoryManager::updateTask(const double& current_time, 
+                                           Task* _foot_pos_task) {
+  updateFootPosTrajectory(current_time);
   _foot_pos_task->updateTask(foot_pos_des_, 
                             foot_vel_des_, 
                             foot_acc_des_);
 }
-void FootPosTrajectoryManager::updateTask(Task* _foot_pos_task,
+void FootPosTrajectoryManager::updateTask(const double& current_time,
+                                           Task* _foot_pos_task,
                                            Task* _foot_ori_task) {
+  updateFootPosTrajectory(current_time);
   _foot_pos_task->updateTask(foot_pos_des_, 
                             foot_vel_des_, 
                             foot_acc_des_);                                
@@ -40,15 +44,17 @@ void FootPosTrajectoryManager::updateTask(Task* _foot_pos_task,
 }
 
 // Initialize the swing foot trajectory
-void FootPosTrajectoryManager::setFootPosTrajectory(const double _start_time,
-                                            MotionCommand* _motion_cmd) {
+void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
+                                            MotionCommand* _motion_cmd,
+                                              const double& swing_x_ratio) {
   MOTION_DATA motion_cmd_data;
   Eigen::VectorXd pos_dev_b;
-  if(_motion_cmd->get_foot_motion_command(motion_cmd_data, link_idx_)){
+  if(_motion_cmd->get_foot_motion_command(motion_cmd_data, link_idx_)) {
       // if com motion command is given
       traj_duration_ = motion_cmd_data.motion_period;
       pos_dev_b = motion_cmd_data.pose.pos;
       swing_height_ = motion_cmd_data.swing_height;
+      swing_xhratio_ = swing_x_ratio;
   } else {
     // heuristic computation
     std::cout<< "NOOOOO!! no foot motion cmd?" << std::endl;
@@ -77,7 +83,7 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double _start_time,
   else // absolute coordinate
     foot_pos_des_ = foot_pos_ini_ + pos_dev_b;
   
-  setSwingPosCurve(foot_pos_ini_,foot_pos_des_,swing_height_);
+  setSwingPosCurve(foot_pos_ini_,foot_pos_des_,swing_height_, swing_xhratio_);
 
   //-----------------------------------------
   //            SET FOOT ORI
@@ -102,7 +108,7 @@ double FootPosTrajectoryManager::getTrajHeight() {
 }
 
 // Computes the swing foot trajectory
-void FootPosTrajectoryManager::updateFootPosTrajectory(const double current_time) {
+void FootPosTrajectoryManager::updateFootPosTrajectory(const double& current_time) {
   double s = (current_time - traj_start_time_) / traj_duration_;
   quat_hermite_curve_.evaluate(s, foot_quat_des_);
   quat_hermite_curve_.getAngularVelocity(s, foot_ori_vel_des_);
@@ -129,12 +135,13 @@ void FootPosTrajectoryManager::updateFootPosTrajectory(const double current_time
 
 void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 
                                               const Eigen::VectorXd& foot_pos_des,
-                                              const double swing_height) {
+                                              const double& swing_height,
+                                              const double& swing_x_ratio) {
   // Set Middle Swing Position/Velocity for Swing
   Eigen::Vector3d foot_pos_mid, foot_vel_mid;
   Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
   Eigen::Vector3d p_b(0, 0, swing_height);
-  foot_pos_mid = 0.5*(foot_pos_des + foot_pos_ini) + R_wb*p_b;
+  foot_pos_mid = (swing_x_ratio)*foot_pos_des + (1.-swing_x_ratio)*foot_pos_ini + R_wb*p_b;
   foot_vel_mid = (foot_pos_des - foot_pos_ini) / traj_duration_;
 
   // Construct Position trajectories

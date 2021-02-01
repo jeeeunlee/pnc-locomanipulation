@@ -33,15 +33,16 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   Eigen::Vector3d foot_ori_acc_des_; 
 
   // Updates the task desired values
-  void updateTask(Task* _foot_pos_task);
-  void updateTask(Task* _foot_pos_task, Task* _foot_ori_task);
+  void updateTask(const double& current_time, Task* _foot_pos_task);
+  void updateTask(const double& current_time, Task* _foot_pos_task, Task* _foot_ori_task);
 
   // Initialize the swing foot trajectory
-  void setFootPosTrajectory(const double _start_time,
-                            MotionCommand* _motion_cmd);
+  void setFootPosTrajectory(const double& _start_time,
+                            MotionCommand* _motion_cmd,
+                            const double& swing_x_ratio=0.5);
 
   // Computes the swing foot trajectory
-  void updateFootPosTrajectory(const double current_time);
+  void updateFootPosTrajectory(const double& current_time);
 
   double getTrajEndTime() {  return traj_end_time_; };
   double getTrajDuration() {  return traj_duration_; };
@@ -51,7 +52,8 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
 
 
  private:
-  double swing_height_;
+  double swing_height_; // swing height where the middle point will be located
+  double swing_xhratio_; // the x ratio where the middle point will be located
   MotionCommand* mp_curr_;
   Eigen::VectorXd zero_vel_;
 
@@ -65,5 +67,6 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
                               Eigen::VectorXd& ori_out);
   void setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 
                         const Eigen::VectorXd& foot_pos_des,
-                        const double swing_height);
+                        const double& swing_height,
+                        const double& swing_x_ratio);
 };

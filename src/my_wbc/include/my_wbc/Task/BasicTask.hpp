@@ -4,7 +4,7 @@
 
 #include <my_wbc/Task/Task.hpp>
 
-enum BasicTaskType { JOINT, LINKXYZ, LINKORI, CENTROID, COM };
+enum BasicTaskType { FULLJOINT, JOINT, LINKXYZ, LINKORI, CENTROID, COM };
 
 class BasicTask : public Task {
    public:

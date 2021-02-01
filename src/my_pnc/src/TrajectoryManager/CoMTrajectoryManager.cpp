@@ -14,7 +14,8 @@ CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
 
 CoMTrajectoryManager::~CoMTrajectoryManager() {}
 
-void CoMTrajectoryManager::updateTask(Task* _com_pos_task) {
+void CoMTrajectoryManager::updateTask(const double&  current_time, Task* _com_pos_task) {
+  updateCoMTrajectory(current_time);
   _com_pos_task->updateTask(com_pos_des_, 
                             com_vel_des_, 
                             com_acc_des_);

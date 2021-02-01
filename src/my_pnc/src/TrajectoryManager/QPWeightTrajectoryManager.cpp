@@ -10,8 +10,8 @@ QPWeightTrajectoryManager::QPWeightTrajectoryManager(RobotSystem* _robot)
 }
 
 
-void QPWeightTrajectoryManager::setQPWeightTrajectory(const double _start_time, 
-                                                  const double _duration,
+void QPWeightTrajectoryManager::setQPWeightTrajectory(const double& _start_time, 
+                                                  const double& _duration,
                                                   const Eigen::VectorXd _init,
                                                   const Eigen::VectorXd _target) {
   setQPWeightInitTarget(_init, _target);
@@ -25,14 +25,14 @@ void QPWeightTrajectoryManager::setQPWeightInitTarget(const Eigen::VectorXd _ini
   weight_dim_ =  weight_init_.size(); 
 }
 
-void QPWeightTrajectoryManager::setQPWeightTime(const double _start_time, 
-                                                  const double _duration) {
+void QPWeightTrajectoryManager::setQPWeightTime(const double& _start_time, 
+                                                  const double& _duration) {
   traj_start_time_ = _start_time;
   traj_duration_ = _duration;
   traj_end_time_ = traj_start_time_ + traj_duration_;
 }
 
-void QPWeightTrajectoryManager::updateQPWeight(const double current_time,
+void QPWeightTrajectoryManager::updateQPWeight(const double& current_time,
                                           Eigen::VectorXd &_weight) {
   double ts = (current_time - traj_start_time_) / traj_duration_; // 0~1
   ts = 0. > ts ? 0. : ts;

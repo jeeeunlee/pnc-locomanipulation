@@ -51,8 +51,8 @@ class WBQPD{
         ~WBQPD();
         void updateSetting(void* param=NULL);
         void computeTorque(void* result);
-        void computeDdotq(Eigen::VectorXd& tau,
-                            Eigen::VectorXd& ddotq)
+        bool computeDdotq(Eigen::VectorXd& tau,
+                            Eigen::VectorXd& ddotq);
 
         void setTorqueLimit(const Eigen::VectorXd& tau_l,
                             const Eigen::VectorXd& tau_u);
