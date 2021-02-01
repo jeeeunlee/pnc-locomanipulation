@@ -10,6 +10,18 @@ BasicTask::BasicTask(RobotSystem* _robot, const BasicTaskType& _taskType,
     task_type_ = _taskType;
     link_idx_ = _link_idx;
     switch (task_type_) {
+        case BasicTaskType::FULLJOINT:
+            assert(dim_task_ = robot_->getNumDofs());
+            task_type_string_ = "FullJoint";
+            kp_.resize(dim_task_);
+            kd_.resize(dim_task_);
+            for (int i = 0; i < dim_task_; ++i) {
+                // kp_[i] = 100.;
+                // kd_[i] = 5.;
+                kp_[i] = 0.;
+                kd_[i] = 0.;
+            }
+            break;
         case BasicTaskType::JOINT:
             assert(dim_task_ = robot_->getNumActuatedDofs());
             task_type_string_ = "Joint";
@@ -99,6 +111,14 @@ bool BasicTask::_UpdateCommand(const Eigen::VectorXd& _pos_des,
             // my_utils::pretty_print(pos_err, std::cout, "pos_err in ori");
             break;
         }
+        
+        case BasicTaskType::FULLJOINT: {
+            // pos_err
+            pos_err = _pos_des - robot_->getQ();
+            // vel_act
+            vel_act = robot_->getQdot();
+            break;
+        }
         case BasicTaskType::JOINT: {
             // pos_err
             pos_err = _pos_des - robot_->getActiveQ();
@@ -147,7 +167,11 @@ bool BasicTask::_UpdateCommand(const Eigen::VectorXd& _pos_des,
 }
 
 bool BasicTask::_UpdateTaskJacobian() {
-    switch (task_type_) {
+    switch (task_type_) {        
+        case BasicTaskType::FULLJOINT: {
+            Jt_ = Eigen::MatrixXd::Identity(dim_task_, dim_task_);
+            break;
+        }
         case BasicTaskType::JOINT: {
             // Jt_ :  ZERO(_dim(numActuatedDofs) X robot_->getNumDofs() )
             //(Jt_.block(0, robot_->getNumVirtualDofs(), 
@@ -186,6 +210,10 @@ bool BasicTask::_UpdateTaskJacobian() {
 
 bool BasicTask::_UpdateTaskJDotQdot() {
     switch (task_type_) {
+        case BasicTaskType::FULLJOINT: {
+            JtDotQdot_.setZero();
+            break;
+        }
         case BasicTaskType::JOINT: {
             JtDotQdot_.setZero();
             break;

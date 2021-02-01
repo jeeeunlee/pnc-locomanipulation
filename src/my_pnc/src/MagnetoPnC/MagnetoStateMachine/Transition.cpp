@@ -134,14 +134,14 @@ void Transition::firstVisit() {
 }
 
 void Transition::_taskUpdate() {
-  ctrl_arch_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
-  ctrl_arch_->com_trajectory_manager_->updateTask(
+  // ctrl_arch_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  ctrl_arch_->com_trajectory_manager_->updateTask(sp_->curr_time,
                                   ctrl_arch_->taf_container_->com_task_);
-  ctrl_arch_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
-  ctrl_arch_->base_ori_trajectory_manager_->updateTask(
+  // ctrl_arch_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  ctrl_arch_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
                                   ctrl_arch_->taf_container_->base_ori_task_);
-  ctrl_arch_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
-  ctrl_arch_->joint_trajectory_manager_->updateTask(
+  // ctrl_arch_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  ctrl_arch_->joint_trajectory_manager_->updateTask(sp_->curr_time,
                                   ctrl_arch_->taf_container_->joint_task_);
 }
 

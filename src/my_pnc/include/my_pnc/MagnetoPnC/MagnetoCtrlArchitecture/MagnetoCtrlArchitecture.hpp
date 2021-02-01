@@ -12,6 +12,7 @@
 #include <my_pnc/TrajectoryManager/TrajectoryManagerSet.hpp>
 #include <my_pnc/MagnetoPnC/MagnetoPlanner/MagnetoPlannerSet.hpp>
 
+
 typedef std::pair<StateIdentifier, MotionCommand> StatePair;
 typedef std::deque<StatePair> StatePairSequence;
 
@@ -97,7 +98,8 @@ class MagnetoControlArchitecture : public ControlArchitecture {
   SingleWeightTrajectoryManager* weight_residualforce_manager_;
 
   MagnetoGoalPlanner* goal_planner_;
-  MagnetoReachabilityPlanner* trajectory_planner_;
+  MagnetoReachabilityPlanner* reachability_planner_;
+  MagnetoTrajectoryManager* trajectory_planner_;
 
   private:
     Eigen::VectorXd tau_min_;

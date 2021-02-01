@@ -13,18 +13,18 @@ class SingleWeightTrajectoryManager : public TrajectoryManagerBase {
   double weight_target_;
 
   // Initialize the joint trajectory
-  void setSingleWeightTrajectory(const double _start_time, 
-                          const double _duration,
-                          const double _init,
-                          const double _target);
+  void setSingleWeightTrajectory(const double& _start_time, 
+                          const double& _duration,
+                          const double& _init,
+                          const double& _target);
 
-  void setSingleWeightInitTarget(const double _init,
-                            const double _target);
+  void setSingleWeightInitTarget(const double& _init,
+                            const double& _target);
   
-  void setSingleWeightTime(const double _start_time, 
-                      const double _duration);
+  void setSingleWeightTime(const double& _start_time, 
+                      const double& _duration);
 
-  void updateSingleWeight(const double current_time,
+  void updateSingleWeight(const double& current_time,
                       double &_weight);
 
   void paramInitialization(const YAML::Node& node){};

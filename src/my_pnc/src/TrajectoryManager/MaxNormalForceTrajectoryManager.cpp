@@ -9,10 +9,10 @@ MaxNormalForceTrajectoryManager::MaxNormalForceTrajectoryManager(RobotSystem* _r
 }
 
 void MaxNormalForceTrajectoryManager::setMaxNormalForceTrajectory(
-                                          const double _start_time, 
-                                          const double _duration,
-                                          const double _init,
-                                          const double _target) {
+                                          const double& _start_time, 
+                                          const double& _duration,
+                                          const double& _init,
+                                          const double& _target) {
   traj_start_time_ = _start_time;
   traj_duration_ = _duration;
   traj_end_time_ = traj_start_time_ + traj_duration_;
@@ -21,7 +21,7 @@ void MaxNormalForceTrajectoryManager::setMaxNormalForceTrajectory(
 }
 
 void MaxNormalForceTrajectoryManager::updateMaxNormalForce(
-                                          const double current_time,
+                                          const double& current_time,
                                           double &max_rf) {
   double ts = (current_time - traj_start_time_) / traj_duration_; // 0~1
   ts = 0. > ts ? 0. : ts;

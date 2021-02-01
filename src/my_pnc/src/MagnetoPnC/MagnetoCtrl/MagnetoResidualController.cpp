@@ -99,7 +99,7 @@ void MagnetoResidualController::getCommand(void* _cmd) {
   _PreProcessing_Command();
 
   kin_wbc_->FindFullConfiguration(sp_->q, task_list_, contact_list_, 
-                                jpos_des_, jvel_des_, jacc_des_); 
+                                    jpos_des_, jvel_des_, jacc_des_); 
     
   Eigen::VectorXd jacc_des_cmd = jacc_des_;
   // for(int i(0); i<Magneto::n_adof; ++i) {

@@ -14,18 +14,18 @@ class QPWeightTrajectoryManager : public TrajectoryManagerBase {
   Eigen::VectorXd weight_target_;
 
   // Initialize the joint trajectory
-  void setQPWeightTrajectory(const double _start_time, 
-                          const double _duration,
+  void setQPWeightTrajectory(const double& _start_time, 
+                          const double& _duration,
                           const Eigen::VectorXd _init,
                           const Eigen::VectorXd _target);
 
   void setQPWeightInitTarget(const Eigen::VectorXd _init,
                             const Eigen::VectorXd _target);
   
-  void setQPWeightTime(const double _start_time, 
-                      const double _duration);
+  void setQPWeightTime(const double& _start_time, 
+                      const double& _duration);
 
-  void updateQPWeight(const double current_time,
+  void updateQPWeight(const double& current_time,
                       Eigen::VectorXd &_weight);
 
   void paramInitialization(const YAML::Node& node){};

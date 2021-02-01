@@ -24,7 +24,7 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
   Eigen::Vector3d com_acc_des_;
 
   // Updates the task desired values
-  void updateTask(Task* _com_pos_task);
+  void updateTask(const double& current_time, Task* _com_pos_task);
 
   // Initialize the swing com trajectory
   void setCoMTrajectory(double  _start_time,
@@ -34,7 +34,7 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
   void setCoMTrajectory(double _start_time,
                         double _duration);
 // Initialize the swing com trajectory
-//   void setCoMTrajectory(const double _start_time,
+//   void setCoMTrajectory(const double& _start_time,
 //                         std::vector<ContactSpec*> &contact_list);
 
   // Computes the swing com trajectory

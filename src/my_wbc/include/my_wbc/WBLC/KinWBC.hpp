@@ -41,6 +41,8 @@ class KinWBC {
         void _BuildProjectionMatrix(const Eigen::MatrixXd & J, Eigen::MatrixXd & N);
         void _BuildJacobianFromContacts(const std::vector<ContactSpec*> & contact_list,
                                     Eigen::MatrixXd& Jc); 
+        void _BuildJdotQdotFromContacts(const std::vector<ContactSpec*> & contact_list,
+                                    Eigen::VectorXd& JcDotQdot); 
 
         double threshold_;
         int num_qdot_;

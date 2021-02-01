@@ -7,6 +7,14 @@
 
 class RobotSystem;
 class ContactSpec;
+class MagnetoControlArchitecture;
+
+struct ReachabilityState{
+   Eigen::VectorXd q;
+   Eigen::VectorXd dq;
+   Eigen::VectorXd ddq;
+   bool is_swing;
+};
 
 class MagnetoReachabilityContact {
    public:
@@ -18,7 +26,7 @@ class MagnetoReachabilityContact {
       void update(const Eigen::VectorXd& q,
                   const Eigen::VectorXd& dotq,
                   const Eigen::VectorXd& ddotq);
-      void solveContactDyn(Eigen::VectorXd& tau);
+      bool solveContactDyn(Eigen::VectorXd& tau);
       void computeNextState(const Eigen::VectorXd& tau_a,
                            Eigen::VectorXd& q_next,
                            Eigen::VectorXd& dotq_next);
@@ -82,7 +90,7 @@ class MagnetoReachabilityNode {
                               const Eigen::VectorXd& dotq);
       ~MagnetoReachabilityNode();
 
-      bool FindNextNode(const Eigen::VectorXd& ddq_des,
+      bool computeTorque(const Eigen::VectorXd& ddq_des,
                         Eigen::VectorXd& tau_a);
 
    private:
@@ -108,18 +116,21 @@ class MagnetoReachabilityEdge {
 
 class MagnetoReachabilityPlanner {
    public:
-      MagnetoReachabilityPlanner(RobotSystem* robot);
+      MagnetoReachabilityPlanner(RobotSystem* robot, MagnetoControlArchitecture* _ctrl_arch);
       ~MagnetoReachabilityPlanner();
       
       void initialization(const YAML::Node& node);
       void setMovingFoot(int moving_foot);
       void compute(const Eigen::VectorXd& q_goal);
+      void addGraph(const std::vector<RechabilityState> &state_list);
 
    private:      
       void _setInitGoal(const Eigen::VectorXd& q_goal,
                         const Eigen::VectorXd& qdot_goal);  
 
    protected:
+      MagnetoControlArchitecture* ctrl_arch_;
+
       RobotSystem* robot_;
       RobotSystem* robot_planner_;
 

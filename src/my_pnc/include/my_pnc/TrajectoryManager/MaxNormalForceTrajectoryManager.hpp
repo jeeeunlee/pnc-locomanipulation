@@ -13,12 +13,12 @@ class MaxNormalForceTrajectoryManager : public TrajectoryManagerBase {
   double max_rf_z_target_;
 
   // Initialize the joint trajectory
-  void setMaxNormalForceTrajectory(const double _start_time, 
-                          const double _duration,
-                          const double _init,
-                          const double _target);
+  void setMaxNormalForceTrajectory(const double& _start_time, 
+                          const double& _duration,
+                          const double& _init,
+                          const double& _target);
 
-  void updateMaxNormalForce(const double current_time,
+  void updateMaxNormalForce(const double& current_time,
                             double &max_rf_z);
 
   void paramInitialization(const YAML::Node& node){};

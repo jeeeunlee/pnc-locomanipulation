@@ -7,6 +7,7 @@
 #include <my_pnc/MagnetoPnC/MagnetoInterface.hpp>
 #include <my_pnc/MagnetoPnC/MagnetoMotionAPI.hpp>
 
+#include <my_pnc/MagnetoPnC/MagnetoCtrlArchitecture/MagnetoCtrlArchitecture.hpp>
 #include <my_pnc/MagnetoPnC/MagnetoPlanner/MagnetoReachabilityPlanner.hpp>
 
 #include <my_utils/IO/IOUtilities.hpp>
@@ -24,12 +25,15 @@ MagnetoReachabilityNode::MagnetoReachabilityNode(MagnetoReachabilityContact* con
 
 MagnetoReachabilityNode::~MagnetoReachabilityNode() {}
 
-bool MagnetoReachabilityNode::FindNextNode(const Eigen::VectorXd& ddq_des,
+bool MagnetoReachabilityNode::computeTorque(const Eigen::VectorXd& ddq_des,
                                           Eigen::VectorXd& tau){                                             
   contact_state_->update(q_, dotq_, ddq_des);
-  contact_state_->solveContactDyn(tau);
-  contact_state_->computeNextState(tau, q_next, dotq_next); 
+  return contact_state_->solveContactDyn(tau);
 }
+
+// void MagnetoReachabilityNode::computeNextState() {
+//   contact_state_->computeNextState(tau, q_next, dotq_next);
+// }
 
 MagnetoReachabilityEdge::MagnetoReachabilityEdge(MagnetoReachabilityNode* src_node,
                               MagnetoReachabilityNode* dst_node,
@@ -57,10 +61,7 @@ MagnetoReachabilityContact::MagnetoReachabilityContact(RobotSystem* robot_planne
   // dyn solver
   wbqpd_param_ = new WbqpdParam();
   wbqpd_result_ = new WbqpdResult();
-  wbqpd_ = new WBQPD(Sa_, Sv_);
-
-
-
+  wbqpd_ = new WBQPD(Sa_, Sv_); 
 }
 
 MagnetoReachabilityContact::~MagnetoReachabilityContact() {
@@ -198,7 +199,7 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
   wbqpd_->updateSetting(wbqpd_param_);
 }
 
-void MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau){
+bool MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau){
   wbqpd_->computeTorque(wbqpd_result_);
   bool b_reachable = wbqpd_result_->b_reachable;
   tau = wbqpd_result_->tau;
@@ -207,10 +208,10 @@ void MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau){
 void MagnetoReachabilityContact::computeNextState(const Eigen::VectorXd& tau,
                                                 Eigen::VectorXd& q_next,
                                                 Eigen::VectorXd& dotq_next) {
-  timestep = 0.01;
-  bool b_feasible = wbqpd_->computeDdotq(tau,ddotq);
-  q_next = q_ + dotq_*timestep;
-  dotq_next = dotq_ + ddotq*timestep;
+  // double timestep = 0.01;
+  // bool b_feasible = wbqpd_->computeDdotq(tau, ddotq);
+  // q_next = q_ + dotq_*timestep;
+  // dotq_next = dotq_ + ddotq*timestep;
 }
 
 
@@ -279,12 +280,14 @@ Eigen::MatrixXd MagnetoReachabilityContact::getNullSpaceMatrix(const Eigen::Matr
   return NullA;
 }
 
-MagnetoReachabilityPlanner::MagnetoReachabilityPlanner(RobotSystem* robot) {
+MagnetoReachabilityPlanner::MagnetoReachabilityPlanner(RobotSystem* robot, MagnetoControlArchitecture* _ctrl_arch) {
   my_utils::pretty_constructor(2, "Magneto Reachablity Planner");
   // robot system
   robot_ = robot;    
   // copy constructor
   robot_planner_ = new RobotSystem(*robot_);
+
+  ctrl_arch_ = ((MagnetoControlArchitecture*)_ctrl_arch);
 
   // Set virtual & actuated selection matrix
   Sa_ = Eigen::MatrixXd::Zero(Magneto::n_adof, Magneto::n_dof);
@@ -380,14 +383,47 @@ void MagnetoReachabilityPlanner::compute(const Eigen::VectorXd& q_goal) {
                                         q_init_, dotq_init_);
   //  
   Eigen::VectorXd tau_a;
-  node_fc_init->FindNextNode(q_zero_, tau_a);
+  node_fc_init->computeTorque(q_zero_, tau_a);
   // 
   // swing contact node
   MagnetoReachabilityNode* node_sc_init = 
               new MagnetoReachabilityNode(swing_contact_state_, 
                                         q_init_, dotq_init_);
-
 }
+
+
+void MagnetoReachabilityPlanner::addGraph(const std::vector<ReachabilityState> &state_list){
+  // state = (q, dq, ddq, is_swing)
+
+  // method 1 : generate all nodes in trajectory -> check edge
+  std::vector<MagnetoReachabilityNode*> node_list;
+  std::vector<MagnetoReachabilityEdge*> edge_list;
+  Eigen::VectorXd tau_a;
+  for( auto &state : state_list ){
+    MagnetoReachabilityNode* node;
+    
+    if(state.is_swing)
+      node = new MagnetoReachabilityNode(swing_contact_state_, state.q, state.dq);
+    else
+      node = new MagnetoReachabilityNode(full_contact_state_, state.q, state.dq);
+    
+    // check edge with the previous node
+    bool b_feasible;
+    if(!node_list.empty()) {
+      MagnetoReachabilityNode* prev_node = node_list.back();
+      b_feasible = prev_node->computeTorque(state.ddq, tau_a);
+      if(b_feasible) {
+        MagnetoReachabilityEdge* edge = new MagnetoReachabilityEdge(prev_node, node, tau_a);
+        edge_list.push_back(edge);
+      }
+    }
+    node_list.push_back(node);
+  }
+
+  // method 2 : node -> find edge -> next node
+  
+}
+
 
 void MagnetoReachabilityPlanner::_setInitGoal(const Eigen::VectorXd& q_goal,
                                               const Eigen::VectorXd& qdot_goal) {

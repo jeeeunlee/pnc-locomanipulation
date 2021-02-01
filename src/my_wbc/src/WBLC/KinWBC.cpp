@@ -173,13 +173,20 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
                                 Eigen::VectorXd& jvel_cmd,
                                 Eigen::VectorXd& jacc_cmd) {
 
-    Eigen::MatrixXd Jc, Nc;
-    if(contact_list.empty())    
-        Nc = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_); // num_qdot_ : num active joint    
-    else {  
+    Eigen::MatrixXd Jc, Nc, Jc_pinv;
+    Eigen::VectorXd JcDotQdot, JcpinvJcDotQdot;
+    if(contact_list.empty()){
+        Nc = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_); // num_qdot_ : num active joint
+        JcpinvJcDotQdot = Eigen::VectorXd::Zero(num_qdot_);
+    } else {  
         _BuildJacobianFromContacts(contact_list, Jc);
+        _BuildJdotQdotFromContacts(contact_list, JcDotQdot);
+        _PseudoInverse(Jc, Jc_pinv);
+        JcpinvJcDotQdot = Jc_pinv*JcDotQdot;
         _BuildProjectionMatrix(Jc, Nc);    
-    }   
+    }
+    
+
     Eigen::VectorXd delta_q, qdot, qddot, JtDotQdot;
     Eigen::MatrixXd Jt, JtPre, JtPre_pinv, N_nx, N_pre;
 
@@ -192,7 +199,8 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     _PseudoInverse(JtPre, JtPre_pinv);
     delta_q = JtPre_pinv * (task->pos_err);
     qdot = JtPre_pinv * (task->vel_des);
-    qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
+    // qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
+    qddot = JtPre_pinv * (task->acc_des + Jt * JcpinvJcDotQdot - JtDotQdot); // modified 2021.1.23
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
 
     //0112 my_utils::saveVector(delta_q, "delta_q0");
@@ -244,17 +252,33 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
 void KinWBC::_BuildJacobianFromContacts(const std::vector<ContactSpec*> & contact_list,
                                     Eigen::MatrixXd& Jc) {
 
-        contact_list[0]->getContactJacobian(Jc);
-        Eigen::MatrixXd Jc_i;
-        int num_rows , num_new_rows;
-        for (int i(1); i < contact_list.size(); ++i) {
-            contact_list[i]->getContactJacobian(Jc_i);
-            num_rows = Jc.rows();
-            num_new_rows = Jc_i.rows();
-            Jc.conservativeResize(num_rows + num_new_rows, num_qdot_);
-            Jc.block(num_rows, 0, num_new_rows, num_qdot_) = Jc_i;
-        } 
+    contact_list[0]->getContactJacobian(Jc);
+    Eigen::MatrixXd Jc_i;
+    int num_rows , num_new_rows;
+    for (int i(1); i < contact_list.size(); ++i) {
+        contact_list[i]->getContactJacobian(Jc_i);
+        num_rows = Jc.rows();
+        num_new_rows = Jc_i.rows();
+        Jc.conservativeResize(num_rows + num_new_rows, num_qdot_);
+        Jc.block(num_rows, 0, num_new_rows, num_qdot_) = Jc_i;
+    } 
 }
+
+void KinWBC::_BuildJdotQdotFromContacts(const std::vector<ContactSpec*> & contact_list,
+                                    Eigen::VectorXd& JcDotQdot){
+
+    contact_list[0]->getJcDotQdot(JcDotQdot);
+    Eigen::VectorXd Jc_i;
+    int num_rows , num_new_rows;
+    for (int i(1); i < contact_list.size(); ++i) {
+        contact_list[i]->getJcDotQdot(Jc_i);
+        num_rows = JcDotQdot.size();
+        num_new_rows = Jc_i.size();
+        JcDotQdot.conservativeResize(num_rows + num_new_rows);
+        JcDotQdot.segment(num_rows, num_new_rows) = Jc_i;
+    } 
+}
+
 
 void KinWBC::_BuildProjectionMatrix(const Eigen::MatrixXd& J,
                                     Eigen::MatrixXd& N) {
