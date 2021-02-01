@@ -30,8 +30,8 @@ MagnetoTrajectoryManager::MagnetoTrajectoryManager(MagnetoControlArchitecture* _
 
     foot_contact_map_ = {
         {MagnetoBodyNode::AL_foot_link,  alfoot_contact_},
-        {MagnetoBodyNode::AR_foot_link,  blfoot_contact_},
-        {MagnetoBodyNode::BL_foot_link,  arfoot_contact_},
+        {MagnetoBodyNode::AR_foot_link,  arfoot_contact_},
+        {MagnetoBodyNode::BL_foot_link,  blfoot_contact_},
         {MagnetoBodyNode::BR_foot_link,  brfoot_contact_}
     };
 
@@ -106,42 +106,49 @@ void MagnetoTrajectoryManager::update(const double& curr_time,
                                       bool is_swing) {
 
     std::cout<<" here : curr_time=" << curr_time <<  std::endl;
-    std::cout<<" t0 = " << t0_ <<" t1 = " << t1_ << ", t2 = " << t2_ << ", t3 = " << t3_ << std::endl;
+    // std::cout<<" t0 = " << t0_ <<" t1 = " << t1_ << ", t2 = " << t2_ << ", t3 = " << t3_ << std::endl;
     // update task
     task_list_.clear();
     if(curr_time < t0_){ // before start
         q = q_init_;
         dotq = dotq_init_;
+        ddotq = Eigen::VectorXd::Zero(n_dim_);
+        is_swing = false;
         return;
     }else if(curr_time < t1_){ // full support
         ctrl_arch_->joint_trajectory_manager_->updateTask(curr_time, joint_task_);
         task_list_.push_back(joint_task_);
         updateContact(-1); //full contact
+        is_swing = false;
     }else if(curr_time < t2_){ // swing
         ctrl_arch_->foot_trajectory_manager_->updateTask(curr_time, foot_pos_task_); 
         ctrl_arch_->joint_trajectory_manager_->updateTask(curr_time, joint_task_);
         task_list_.push_back(foot_pos_task_);
         task_list_.push_back(joint_task_);
         updateContact(moving_foot_idx_); // swing contact
+        is_swing = true;
     }else if(curr_time < t3_){ // support
         ctrl_arch_->joint_trajectory_manager_->updateTask(curr_time, joint_task_);
         task_list_.push_back(joint_task_);
         updateContact(-1); //full contact
+        is_swing = false;
     }else{ // after end
         q = q_goal_;
         dotq = dotq_goal_;
+        ddotq = Eigen::VectorXd::Zero(n_dim_);
+        is_swing = false;
         return;
     }
 
-    std::cout<<"here 1 : contact=" << contact_list_.size() << ", task=" << task_list_.size() << std::endl;
+    // std::cout<<"here 1 : contact=" << contact_list_.size() << ", task=" << task_list_.size() << std::endl;
     Eigen::VectorXd q_curr = robot_manager_->getQ();
     if(!task_list_.empty()) {
           kin_wbc_->FindFullConfiguration(q_curr, task_list_, contact_list_, 
-                                        q, dotq, jacc_des_); 
+                                        q, dotq, ddotq); 
     }
     Eigen::VectorXd f_err = foot_pos_task_->pos_err;
-    my_utils::pretty_print(f_err, std::cout, "f_err");
-    std::cout<<"here 2 " << std::endl;
+    // my_utils::pretty_print(f_err, std::cout, "f_err");
+    // std::cout<<"here 2 : foot_pos_task_.getIdx =  " << ((BasicTask*)foot_pos_task_)->getLinkIdx() << ", moving_foot_idx_=" << moving_foot_idx_ << std::endl;
 
     robot_manager_->updateSystem(q, dotq, false);
     

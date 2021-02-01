@@ -50,7 +50,7 @@ class WBQPD{
             const Eigen::MatrixXd& Sv);
         ~WBQPD();
         void updateSetting(void* param=NULL);
-        void computeTorque(void* result);
+        double computeTorque(void* result);
         bool computeDdotq(Eigen::VectorXd& tau,
                             Eigen::VectorXd& ddotq);
 

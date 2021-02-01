@@ -122,7 +122,7 @@ class MagnetoReachabilityPlanner {
       void initialization(const YAML::Node& node);
       void setMovingFoot(int moving_foot);
       void compute(const Eigen::VectorXd& q_goal);
-      void addGraph(const std::vector<RechabilityState> &state_list);
+      void addGraph(const std::vector<ReachabilityState> &state_list);
 
    private:      
       void _setInitGoal(const Eigen::VectorXd& q_goal,

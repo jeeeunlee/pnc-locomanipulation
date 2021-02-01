@@ -37,29 +37,30 @@ void FullSupport::firstVisit() {
   // ctrl_arch_->reachability_planner_->compute(q_goal); 
   // ctrl_arch_->reachability_planner_->addGraph
 
-
-  if(ctrl_arch_->trajectory_planner_->ParameterizeTrajectory(mc_curr_, 0.3, 0.2, 0.3, 0.2)){
-    std::vector<std::pair<Eigen::VectorXd,Eigen::VectorXd>> state_list;
+  std::vector<ReachabilityState> state_list;
+  if(ctrl_arch_->trajectory_planner_->ParameterizeTrajectory(mc_curr_, 0.3, 0.2, 0.3, 0.2)){    
     double t;
-    Eigen::VectorXd q, dotq;
+    Eigen::VectorXd q, dotq, ddotq;
+    bool is_swing;
     ReachabilityState rchstate;
     for(int i=0; i<702; ++i){
       t = (double)i * 0.001;
-      ctrl_arch_->trajectory_planner_->update(t, q, dotq);
+      ctrl_arch_->trajectory_planner_->update(t, q, dotq, ddotq, is_swing);
       // my_utils::pretty_print(q, std::cout, "q");
       // my_utils::pretty_print(dotq, std::cout, "dotq");
       my_utils::saveVector(q,"Planner_q");
       my_utils::saveVector(dotq,"Planner_dotq");
-      ReachabilityState.q = q;
-      ReachabilityState.dq = dotq;
-      ReachabilityState.ddq = (dotq - dotq_prev)/0.001;
-      ReachabilityState.is_swing = ;
+      my_utils::saveVector(ddotq,"Planner_ddotq");
+      rchstate.q = q;
+      rchstate.dq = dotq;
+      rchstate.ddq = ddotq;
+      rchstate.is_swing = is_swing;
 
-      state_list.push_back(std::make_pair(q,dotq));
+      state_list.push_back(rchstate);
     }
 
     ctrl_arch_->reachability_planner_->setMovingFoot(mc_curr_.get_moving_foot());
-    // ctrl_arch_->reachability_planner_->addGraph()
+    ctrl_arch_->reachability_planner_->addGraph(state_list);
   }
 
 
