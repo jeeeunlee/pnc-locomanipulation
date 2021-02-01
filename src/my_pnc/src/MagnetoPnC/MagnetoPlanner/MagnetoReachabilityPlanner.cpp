@@ -200,9 +200,12 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
 }
 
 bool MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau){
-  wbqpd_->computeTorque(wbqpd_result_);
-  bool b_reachable = wbqpd_result_->b_reachable;
+  double f = wbqpd_->computeTorque(wbqpd_result_);  
   tau = wbqpd_result_->tau;
+  std::cout << " cost = " << f << std::endl;
+  bool b_reachable = wbqpd_result_->b_reachable;
+  // if(f > MAX_COST) b_reachable= false;
+  return b_reachable;
 }
 
 void MagnetoReachabilityContact::computeNextState(const Eigen::VectorXd& tau,
@@ -412,9 +415,14 @@ void MagnetoReachabilityPlanner::addGraph(const std::vector<ReachabilityState> &
     if(!node_list.empty()) {
       MagnetoReachabilityNode* prev_node = node_list.back();
       b_feasible = prev_node->computeTorque(state.ddq, tau_a);
+      
       if(b_feasible) {
+        // my_utils::pretty_print(tau_a, std::cout, "tau_a");
         MagnetoReachabilityEdge* edge = new MagnetoReachabilityEdge(prev_node, node, tau_a);
         edge_list.push_back(edge);
+      }
+      else{
+        std::cout << "feasible dyn? : " << b_feasible <<" / " << std::endl;
       }
     }
     node_list.push_back(node);

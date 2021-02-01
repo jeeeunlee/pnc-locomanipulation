@@ -68,11 +68,7 @@ class MagnetoTrajectoryManager {
         Eigen::VectorXd dotq_init_; 
         Eigen::VectorXd dotq_goal_;
 
-        Eigen::VectorXd jpos_des_;
-        Eigen::VectorXd jvel_des_;
-        Eigen::VectorXd jacc_des_;
-
-        int moving_foot_idx_;
+         int moving_foot_idx_;
         MOTION_DATA foot_motion_data_;
 
         double t0_;

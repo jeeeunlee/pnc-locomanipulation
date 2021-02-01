@@ -101,7 +101,7 @@ void WBQPD::_updateInequalityParam() {
     }
 }
 
-void WBQPD::computeTorque(void* result){
+double WBQPD::computeTorque(void* result){
     if (result) 
         result_ = static_cast<WbqpdResult*>(result);
 
@@ -122,6 +122,8 @@ void WBQPD::computeTorque(void* result){
         result_->tau = Eigen::VectorXd::Zero(dim_opt_);
         for (int i(0); i < dim_opt_; ++i) result_->tau[i] = x[i];
     }
+
+    return f;
 }
 
 bool WBQPD::computeDdotq(Eigen::VectorXd& tau,
