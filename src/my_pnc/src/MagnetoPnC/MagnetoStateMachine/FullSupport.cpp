@@ -78,8 +78,7 @@ void FullSupport::firstVisit() {
   ctrl_end_time_ = ctrl_arch_->com_trajectory_manager_->getTrajEndTime();
   // -- set base ori traj
   ctrl_arch_->base_ori_trajectory_manager_
-            ->setBaseOriTrajectory(ctrl_start_time_,
-                                  ctrl_duration_);
+            ->setBaseOriTrajectory(ctrl_start_time_, ctrl_duration_);
 
   // -- set joint traj
   ctrl_arch_->joint_trajectory_manager_

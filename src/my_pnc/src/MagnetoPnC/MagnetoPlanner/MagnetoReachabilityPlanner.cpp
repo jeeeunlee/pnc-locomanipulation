@@ -26,9 +26,10 @@ MagnetoReachabilityNode::MagnetoReachabilityNode(MagnetoReachabilityContact* con
 MagnetoReachabilityNode::~MagnetoReachabilityNode() {}
 
 bool MagnetoReachabilityNode::computeTorque(const Eigen::VectorXd& ddq_des,
+                                          Eigen::VectorXd& ddq_plan,
                                           Eigen::VectorXd& tau){                                             
   contact_state_->update(q_, dotq_, ddq_des);
-  return contact_state_->solveContactDyn(tau);
+  return contact_state_->solveContactDyn(tau, ddq_plan);
 }
 
 // void MagnetoReachabilityNode::computeNextState() {
@@ -165,6 +166,9 @@ b0 = -AMat_*Jcdotqdot_+Jc_bar_T_(b+g)
 void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
                                         const Eigen::VectorXd& dotq,
                                         const Eigen::VectorXd& ddotq) {
+
+  robot_planner_->updateSystem(q, dotq, is_update_centroid_);
+
   _updateContacts(q, dotq);
   _buildContactJacobian(Jc_);
   _buildContactJcDotQdot(Jcdotqdot_); // Jdotqdot
@@ -187,7 +191,7 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
   wbqpd_param_->b0 = - AMat_*Jcdotqdot_ + Jc_bar_T_*cori_grav_;
   
   wbqpd_param_->ddq_des = ddotq;
-  wbqpd_param_->Wq = Eigen::VectorXd::Constant(dim_joint_, 1000.);
+  wbqpd_param_->Wq = Eigen::VectorXd::Constant(dim_joint_, 10000000.);
   wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 1.);
 
   int fz_idx(0), contact_idx(0);
@@ -199,9 +203,11 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
   wbqpd_->updateSetting(wbqpd_param_);
 }
 
-bool MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau){
+bool MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau, 
+                                                Eigen::VectorXd& ddq_plan){
   double f = wbqpd_->computeTorque(wbqpd_result_);  
   tau = wbqpd_result_->tau;
+  ddq_plan = wbqpd_result_->ddq;
   std::cout << " cost = " << f << std::endl;
   bool b_reachable = wbqpd_result_->b_reachable;
   // if(f > MAX_COST) b_reachable= false;
@@ -219,8 +225,7 @@ void MagnetoReachabilityContact::computeNextState(const Eigen::VectorXd& tau,
 
 
 void MagnetoReachabilityContact::_updateContacts(const Eigen::VectorXd& q,
-                                                const Eigen::VectorXd& dotq) {
-  robot_planner_->updateSystem(q, dotq, is_update_centroid_);
+                                                const Eigen::VectorXd& dotq) {  
   for(auto &contact : contact_list_) {
       contact->updateContactSpec();
   }
@@ -385,8 +390,8 @@ void MagnetoReachabilityPlanner::compute(const Eigen::VectorXd& q_goal) {
                 new MagnetoReachabilityNode(full_contact_state_, 
                                         q_init_, dotq_init_);
   //  
-  Eigen::VectorXd tau_a;
-  node_fc_init->computeTorque(q_zero_, tau_a);
+  Eigen::VectorXd tau_a, ddq;
+  node_fc_init->computeTorque(q_zero_, ddq, tau_a);
   // 
   // swing contact node
   MagnetoReachabilityNode* node_sc_init = 
@@ -412,9 +417,11 @@ void MagnetoReachabilityPlanner::addGraph(const std::vector<ReachabilityState> &
     
     // check edge with the previous node
     bool b_feasible;
+    Eigen::VectorXd ddq;
     if(!node_list.empty()) {
       MagnetoReachabilityNode* prev_node = node_list.back();
-      b_feasible = prev_node->computeTorque(state.ddq, tau_a);
+      b_feasible = prev_node->computeTorque(state.ddq, ddq, tau_a);
+      my_utils::saveVector(ddq, "ddq_planner");
       
       if(b_feasible) {
         // my_utils::pretty_print(tau_a, std::cout, "tau_a");

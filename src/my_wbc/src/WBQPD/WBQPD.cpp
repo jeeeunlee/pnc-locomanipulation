@@ -71,9 +71,9 @@ void WBQPD::_updateOptParam() {
 
 
 void WBQPD::_updateCostParam() {
-    // 0.5 x'*G*x + g0'*x
+    // 0.5 x'*G*x + g0'*x = 0.5*(Ax+a0-dq_des)*Wq*(Ax+a0-ddq_des)
     Gmat_ = param_->A.transpose() * param_->Wq.asDiagonal() * param_->A
-            + param_->B.transpose() * param_->Wf.asDiagonal() * param_->B ;
+            + param_->B.transpose() * param_->Wf.asDiagonal() * param_->B;
     gvec_ = param_->A.transpose() * param_->Wq.asDiagonal() * (param_->a0 - param_->ddq_des)
             +  param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;    
 }
@@ -121,6 +121,8 @@ double WBQPD::computeTorque(void* result){
         result_->b_reachable = true;
         result_->tau = Eigen::VectorXd::Zero(dim_opt_);
         for (int i(0); i < dim_opt_; ++i) result_->tau[i] = x[i];
+
+        result_->ddq = param_->A * result_->tau + param_->a0;
     }
 
     return f;
