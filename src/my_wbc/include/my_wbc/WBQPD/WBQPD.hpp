@@ -41,7 +41,7 @@ struct WbqpdResult{
     bool b_reachable;
     Eigen::VectorXd tau;
     // Eigen::VectorXd Fc;
-    // Eigen::VectorXd ddq;
+    Eigen::VectorXd ddq;
 };
 
 class WBQPD{
