@@ -18,7 +18,7 @@ File $Id: QuadProg++.cc 232 2007-06-21 12:29:00Z digasper $
 #include <sstream>
 #include <stdexcept>
 #include "QuadProg++.hh"
-#define TRACE_SOLVER
+// #define TRACE_SOLVER
 
 // Utility functions for updating some data needed by the solution method
 void compute_d(GVect<double>& d, const GMatr<double>& J, const GVect<double>& np);
