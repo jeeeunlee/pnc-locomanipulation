@@ -24,16 +24,25 @@ void WBQPD::updateSetting(void* param){
         param_ = static_cast<WbqpdParam*>(param);
 }
 
+// int dim_opt_; // n_adof
+// int dim_eq_cstr_; // equality constraints
+// int dim_ieq_cstr_; // inequality constraints
+// int dim_fric_ieq_cstr_; // friction constraints
+// int dim_trqact_ieq_cstr_; // active torque limit constraints
+
 void WBQPD::_updateOptParam() {
-    dim_opt_ = param_->A.cols();
-    dim_eq_cstr_ = Sv_.rows();    
+
+    std::cout<<"hi 1 " << std::endl;
+
+    dim_opt_ = Sa_.rows();
+    dim_eq_cstr_ = Sa_.cols();    
     dim_ieq_cstr_ = dim_fric_ieq_cstr_;
     if(b_torque_limit_)
         dim_ieq_cstr_ += 2*dim_trqact_ieq_cstr_; // lower & upper limit
 
-    _updateCostParam();
-    _updateEqualityParam();    
-    _updateInequalityParam();
+    _updateCostParam(); std::cout<<"hi 2 " << std::endl;
+    _updateEqualityParam(); std::cout<<"hi 3 " << std::endl;
+    _updateInequalityParam(); std::cout<<"hi 4 " << std::endl;
 
     // cost
     // 0.5 x'*G*x + g0'*x
@@ -45,6 +54,7 @@ void WBQPD::_updateOptParam() {
         }
         g0[i] = gvec_[i];
     }
+    std::cout<<"hi 5 " << std::endl;
 
     // equality
     CE.resize(dim_opt_, dim_eq_cstr_);
@@ -55,6 +65,7 @@ void WBQPD::_updateOptParam() {
         }
         ce0[i] = 0.;
     }
+    std::cout<<"hi 6 " << std::endl;
 
     // inequality
     // CI'*x + ci0 >= 0    
@@ -66,21 +77,22 @@ void WBQPD::_updateOptParam() {
             CI[j][i] = Cieq_(i, j);
         }
         ci0[i] = dieq_[i];
-    } 
+    }
+
+    std::cout<<"hi 7 " << std::endl; 
 }
 
 
 void WBQPD::_updateCostParam() {
     // 0.5 x'*G*x + g0'*x = 0.5*(Ax+a0-dq_des)*Wq*(Ax+a0-ddq_des)
-    Gmat_ = param_->A.transpose() * param_->Wq.asDiagonal() * param_->A
-            + param_->B.transpose() * param_->Wf.asDiagonal() * param_->B;
-    gvec_ = param_->A.transpose() * param_->Wq.asDiagonal() * (param_->a0 - param_->ddq_des)
-            +  param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;    
+    Gmat_ = Sa_ * param_->B.transpose() * param_->Wf.asDiagonal() * param_->B * Sa_.transpose();
+    gvec_ = Sa_ * param_->B.transpose() * param_->Wf.asDiagonal() * param_->b0;    
 }
 
 void WBQPD::_updateEqualityParam() {
-    Ceq_ = Sv_;
-    deq_ = Eigen::VectorXd::Zero(dim_eq_cstr_);
+    // Ceq_*x + deq_ = 0
+    Ceq_ = param_->A * Sa_.transpose();
+    deq_ = param_->a0 - param_->ddq_des;
 }
 
 void WBQPD::_updateInequalityParam() {
@@ -88,15 +100,18 @@ void WBQPD::_updateInequalityParam() {
     Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
     dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
     int row_idx(0);
-    Cieq_.block(row_idx, 0, dim_fric_ieq_cstr_, dim_opt_) = U_*param_->B;
+    Cieq_.block(row_idx, 0, dim_fric_ieq_cstr_, dim_opt_) 
+                            = U_*param_->B * Sa_.transpose();
     dieq_.head(dim_fric_ieq_cstr_) = U_*param_->b0 - u0_;
 
     row_idx+=dim_fric_ieq_cstr_;
     if(b_torque_limit_) {        
-        Cieq_.block(row_idx, 0, dim_trqact_ieq_cstr_, dim_opt_) = Sa_;
+        Cieq_.block(row_idx, 0, dim_trqact_ieq_cstr_, dim_opt_)
+            = Eigen::VectorXd::Identity(dim_opt_, dim_opt_);
         dieq_.segment(row_idx, dim_trqact_ieq_cstr_) = -tau_l_;
         row_idx+=dim_trqact_ieq_cstr_;
-        Cieq_.block(row_idx, 0, dim_trqact_ieq_cstr_, dim_opt_) = -Sa_;
+        Cieq_.block(row_idx, 0, dim_trqact_ieq_cstr_, dim_opt_) 
+            = - Eigen::VectorXd::Identity(dim_opt_, dim_opt_);
         dieq_.segment(row_idx, dim_trqact_ieq_cstr_) = tau_u_;
     }
 }
@@ -108,8 +123,9 @@ double WBQPD::computeTorque(void* result){
     // update G, g0, CE, ce0, CI, ci0
     if(b_updatedparam_) _updateOptParam();
 
-    // solve QP, x=tau
+    // solve QP, x=tau    
     double f = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+    std::cout<<"hi 8 " << std::endl;
 
     if(f == std::numeric_limits<double>::infinity())  {
         std::cout << "Infeasible Solution f: " << f << std::endl;
@@ -119,12 +135,14 @@ double WBQPD::computeTorque(void* result){
     }
     else{
         result_->b_reachable = true;
-        result_->tau = Eigen::VectorXd::Zero(dim_opt_);
-        for (int i(0); i < dim_opt_; ++i) result_->tau[i] = x[i];
+        Eigen::VectorXd tau_a = Eigen::VectorXd::Zero(dim_opt_);
+        for (int i(0); i < dim_opt_; ++i) tau_a[i] = x[i];
 
+        result_->tau = Sa_.transpose() * tau_a;
         result_->ddq = param_->A * result_->tau + param_->a0;
     }
 
+    std::cout<<"hi 9 " << std::endl;
     return f;
 }
 

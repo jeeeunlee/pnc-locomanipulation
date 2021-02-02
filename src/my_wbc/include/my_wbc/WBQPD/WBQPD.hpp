@@ -7,21 +7,24 @@
 
 /*
 let contact dynamics at the moment be described as:
-    ddq = A*tau + a0
-    Fc = B*tau + b0
+    ddq = A*Sa^T*tau_a + a0
+    Fc = B*Sa^T*tau_a + b0
 s.t.
-    Sp*tau = 0
-    tau_l < Sa*tau < tau_u
-    U*(Fc) < ui0
+    tau_l < tau_a < tau_u
+    U*(Fc) > ui0
 
 Let the cost function for the problem be formulated as:
-min 0.5*(ddq-ddq_des)'Wq(ddq-ddq_des) + 0.5*(Fc)'Wf(Fc)
+min 0.5*(Fc)'Wf(Fc)
 
 Then problem is in the form:
-tau = argmin(tau) 0.5*(A*tau+a0-ddq_des)'Wq(~) + 0.5*(B*tau + b0)'Wf(~)
+tau = argmin(tau_a) 0.5*(B*Sa^T*tau_a + b0)'Wf(~)
 s.t.
-    tau_l < tau < tau_u
-    U*(B*tau + b0) < ui0
+    EQ : A*Sa^T*tau_a + a0 = ddq_des
+    IEQ [Cieq*x + dieq >= 0] :
+    U*B*Sa^T*tau_a + U*b0 - ui0 > 0
+    tau_a - tau_l > 0
+    -tau_a + tau_u > 0
+    
 */
 
 struct WbqpdParam{
@@ -78,7 +81,7 @@ class WBQPD{
         Eigen::MatrixXd U_;
         Eigen::VectorXd u0_;
 
-        int dim_opt_; // n_dof
+        int dim_opt_; // n_adof
         int dim_eq_cstr_; // equality constraints
         int dim_ieq_cstr_; // inequality constraints
         int dim_fric_ieq_cstr_; // friction constraints
