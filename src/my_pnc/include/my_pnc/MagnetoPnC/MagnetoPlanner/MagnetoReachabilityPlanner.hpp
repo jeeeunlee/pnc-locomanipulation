@@ -111,7 +111,7 @@ class MagnetoReachabilityEdge {
 
    private:
       MagnetoReachabilityNode* src_node_; // source
-      MagnetoReachabilityNode* dst_node_; // destiny
+      MagnetoReachabilityNode* dst_node_; // destination
       Eigen::VectorXd trq_atv_;
 };
 

@@ -39,6 +39,9 @@ bool MagnetoReachabilityNode::computeTorque(const Eigen::VectorXd& ddq_des,
 MagnetoReachabilityEdge::MagnetoReachabilityEdge(MagnetoReachabilityNode* src_node,
                               MagnetoReachabilityNode* dst_node,
                               const Eigen::VectorXd& trq_atv) {
+      src_node_ = src_node; // source
+      dst_node_ = dst_node; // destination
+      trq_atv_ = trq_atv;
 }
 
 MagnetoReachabilityEdge::~MagnetoReachabilityEdge() {}
@@ -205,8 +208,8 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
 
 bool MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau, 
                                                 Eigen::VectorXd& ddq_plan){
-  double f = wbqpd_->computeTorque(wbqpd_result_);  
-  tau = wbqpd_result_->tau;
+  double f = wbqpd_->computeTorque(wbqpd_result_); 
+  tau = wbqpd_result_->tau; 
   ddq_plan = wbqpd_result_->ddq;
   std::cout << " cost = " << f << std::endl;
   bool b_reachable = wbqpd_result_->b_reachable;

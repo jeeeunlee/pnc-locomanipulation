@@ -1,6 +1,8 @@
 #pragma once
 // Whole Body Quadratic Programming Dynamics
 
+#include <Eigen/Dense>
+
 #include <my_utils/IO/IOUtilities.hpp>
 #include <my_utils/Math/pseudo_inverse.hpp>
 #include "Goldfarb/QuadProg++.hh"
@@ -67,6 +69,11 @@ class WBQPD{
         void _updateCostParam();
         void _updateEqualityParam();
         void _updateInequalityParam();
+
+        bool _checkInequaility(const Eigen::VectorXd& x1,
+                            const Eigen::VectorXd& x2,
+                            double& min,
+                            double& max);
 
     protected:
         bool b_updatedparam_;
