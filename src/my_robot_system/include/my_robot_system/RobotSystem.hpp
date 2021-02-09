@@ -101,6 +101,9 @@ class RobotSystem {
     Eigen::Vector3d getCoMVelocity(
         dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
         dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
+    Eigen::Vector3d getCoMAcceleration(
+        dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
+        dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
     Eigen::MatrixXd getCoMJacobian(
         dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
     void updateSystem(const Eigen::VectorXd& q_, const Eigen::VectorXd& qdot_,
@@ -117,6 +120,14 @@ class RobotSystem {
         dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
         dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
     Eigen::Vector6d getBodyNodeCoMSpatialVelocity(
+        const std::string& name_,
+        dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
+        dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
+    Eigen::Vector6d getBodyNodeSpatialAcceleration(
+        const std::string& name_,
+        dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
+        dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
+    Eigen::Vector6d getBodyNodeCoMSpatialAcceleration(
         const std::string& name_,
         dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
         dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
@@ -148,6 +159,14 @@ class RobotSystem {
         dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
         dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
     Eigen::Vector6d getBodyNodeCoMSpatialVelocity(
+        const int& _bn_idx,
+        dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
+        dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
+    Eigen::Vector6d getBodyNodeSpatialAcceleration(
+        const int& _bn_idx,
+        dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
+        dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
+    Eigen::Vector6d getBodyNodeCoMSpatialAcceleration(
         const int& _bn_idx,
         dart::dynamics::Frame* rl_ = dart::dynamics::Frame::World(),
         dart::dynamics::Frame* wrt_ = dart::dynamics::Frame::World());
