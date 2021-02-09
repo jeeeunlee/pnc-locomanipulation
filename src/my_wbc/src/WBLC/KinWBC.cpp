@@ -200,8 +200,10 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     delta_q = JtPre_pinv * (task->pos_err);
     qdot = JtPre_pinv * (task->vel_des);
     // qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
-    qddot = JtPre_pinv * (task->acc_des + Jt * JcpinvJcDotQdot - JtDotQdot); // modified 2021.1.23
+    // qddot = JtPre_pinv * (task->acc_des + Jt * JcpinvJcDotQdot - JtDotQdot); // modified 2021.1.23
+    qddot = - JcpinvJcDotQdot + JtPre_pinv * (task->acc_des - JtDotQdot); // modified 2021.2.7
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
+
 
     //0112 my_utils::saveVector(delta_q, "delta_q0");
     //0112 my_utils::saveVector(task->pos_err, "delta_x0");
@@ -239,7 +241,7 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         prev_qdot = qdot;
         prev_qddot = qddot;
     }
-    
+
     // my_utils::pretty_print(xdot_c, std::cout, "contact vel");
     jpos_cmd = curr_config + delta_q;
     jvel_cmd = qdot;

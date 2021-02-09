@@ -103,7 +103,7 @@ void MagnetoTrajectoryManager::update(const double& curr_time,
                                       Eigen::VectorXd& q,
                                       Eigen::VectorXd& dotq,
                                       Eigen::VectorXd& ddotq,
-                                      bool is_swing) {
+                                      bool& is_swing) {
 
     std::cout<<" here : curr_time=" << curr_time <<  std::endl;
     // std::cout<<" t0 = " << t0_ <<" t1 = " << t1_ << ", t2 = " << t2_ << ", t3 = " << t3_ << std::endl;

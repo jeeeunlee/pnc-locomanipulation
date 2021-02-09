@@ -51,9 +51,11 @@ class RobotSystem {
 
     Eigen::VectorXd getQ() { return skel_ptr_->getPositions(); };
     Eigen::VectorXd getQdot() { return skel_ptr_->getVelocities(); };
+    Eigen::VectorXd getQddot() { return skel_ptr_->getAccelerations(); };
 
     Eigen::VectorXd getActiveQ() { return getActiveJointValue(skel_ptr_->getPositions()); };
     Eigen::VectorXd getActiveQdot() { return getActiveJointValue(skel_ptr_->getVelocities()); };
+    Eigen::VectorXd getActiveQddot() { return getActiveJointValue(skel_ptr_->getAccelerations()); };
 
     Eigen::VectorXd getActiveJointValue(const Eigen::VectorXd& q_full);
 
