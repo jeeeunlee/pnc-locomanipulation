@@ -26,10 +26,16 @@ bool BodyFramePointContactSpec::_UpdateJc() {
 }
 
 bool BodyFramePointContactSpec::_UpdateJcDotQdot() {
-    Eigen::VectorXd JcDotQdot_tmp =
-        robot_->getBodyNodeCoMBodyJacobianDot(link_idx_) * robot_->getQdot();
-    JcDotQdot_ = JcDotQdot_tmp.tail(dim_contact_);
 
+    // Eigen::VectorXd JcDotQdot_tmp =
+    //     robot_->getBodyNodeCoMBodyJacobianDot(link_idx_) * robot_->getQdot();
+    // JcDotQdot_ = JcDotQdot_tmp.tail(dim_contact_);
+
+    // Assum xc_ddot = Jc*qddot + JcdotQdot = 0
+    Eigen::MatrixXd Jtmp = robot_->getBodyNodeCoMBodyJacobian(link_idx_);
+    Eigen::VectorXd Jcqddot = Jtmp.block(dim_contact_, 0, dim_contact_, robot_->getNumDofs()) * robot_->getQddot();
+
+    JcDotQdot_= -Jcqddot;
     // JcDotQdot_.setZero();
     return true;
 }

@@ -30,7 +30,7 @@ class MagnetoTrajectoryManager {
                     Eigen::VectorXd& q,
                     Eigen::VectorXd& dotq,
                     Eigen::VectorXd& ddotq,
-                    bool is_swing);
+                    bool& is_swing);
         void updateContact(int moving_foot_idx);
 
         

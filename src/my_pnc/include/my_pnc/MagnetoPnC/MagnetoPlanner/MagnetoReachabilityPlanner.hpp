@@ -113,6 +113,7 @@ class MagnetoReachabilityEdge {
       MagnetoReachabilityNode* src_node_; // source
       MagnetoReachabilityNode* dst_node_; // destination
       Eigen::VectorXd trq_atv_;
+      double duration_;
 };
 
 
