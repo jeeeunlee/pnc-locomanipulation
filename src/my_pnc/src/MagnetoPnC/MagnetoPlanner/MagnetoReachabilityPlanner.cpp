@@ -160,9 +160,9 @@ ddq = MInv_*(Nc_T_*Sa_T*tau - NC_T(b+g) -Jc_T_*AMat_*Jcdotqdot_)
 Fc = -AMat_*Jcdotqdot_+Jc_bar_T_(b+g) - Jc_bar_T_*Sa_T*tau
     = B*tau + b0
 
-A = MInv_*Nc_T_*Sa_T
+A = MInv_*Nc_T_(*Sa_T)
 a0 = MInv_*(- NC_T(b+g) -Jc_T_*AMat_*Jcdotqdot_)
-B = -Jc_bar_T_*Sa_T
+B = -Jc_bar_T_(*Sa_T)
 b0 = -AMat_*Jcdotqdot_+Jc_bar_T_(b+g)
 */
 
@@ -192,15 +192,17 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
   wbqpd_param_->a0 = MInv_*(- Nc_T_*cori_grav_ - Jc_.transpose()*AMat_*Jcdotqdot_);
   wbqpd_param_->B = - Jc_bar_T_;
   wbqpd_param_->b0 = - AMat_*Jcdotqdot_ + Jc_bar_T_*cori_grav_;
+
+  my_utils::saveVector(wbqpd_param_->a0, "a0");
   
   wbqpd_param_->ddq_des = ddotq;
-  wbqpd_param_->Wq = Eigen::VectorXd::Constant(dim_joint_, 1000.);
-  wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 0.1);
+  wbqpd_param_->Wq = Eigen::VectorXd::Constant(dim_joint_, 10.);
+  wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 1.0);
 
   int fz_idx(0), contact_idx(0);
   for(auto &it : contact_list_) {
     fz_idx = contact_idx + ((BodyFramePointContactSpec*)(it))->getFzIndex();  
-    wbqpd_param_->Wf[fz_idx] = 0.0001; // Fz no cost
+    wbqpd_param_->Wf[fz_idx] = 0.001; // Fz no cost
     contact_idx += it->getDim();
   }
   wbqpd_->updateSetting(wbqpd_param_);
@@ -211,6 +213,8 @@ bool MagnetoReachabilityContact::solveContactDyn(Eigen::VectorXd& tau,
   double f = wbqpd_->computeTorque(wbqpd_result_); 
   tau = wbqpd_result_->tau; 
   ddq_plan = wbqpd_result_->ddq;
+  Eigen::VectorXd Fr_plan =  wbqpd_result_->Fr;
+  my_utils::saveVector(Fr_plan, "Fr_plan");
   // std::cout << " cost = " << f << std::endl;
   bool b_reachable = wbqpd_result_->b_reachable;
   // if(f > MAX_COST) b_reachable= false;

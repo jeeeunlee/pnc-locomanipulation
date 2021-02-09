@@ -5,6 +5,18 @@
 #include <my_utils/Math/pseudo_inverse.hpp>
 #include "Goldfarb/QuadProg++.hh"
 
+/* Dynamics parameters
+ddq = MInv_*(Nc_T_*Sa_T*tau - NC_T(b+g) -Jc_T_*AMat_*Jcdotqdot_)
+    = A*tau + a0
+Fc = -AMat_*Jcdotqdot_+Jc_bar_T_(b+g) - Jc_bar_T_*Sa_T*tau
+    = B*tau + b0
+
+A = MInv_*Nc_T_(*Sa_T)
+a0 = MInv_*(- NC_T(b+g) -Jc_T_*AMat_*Jcdotqdot_)
+B = -Jc_bar_T_(*Sa_T)
+b0 = -AMat_*Jcdotqdot_+Jc_bar_T_(b+g)
+*/
+
 /*
 let contact dynamics at the moment be described as:
     ddq = A*tau + a0
@@ -40,7 +52,7 @@ struct WbqpdParam{
 struct WbqpdResult{
     bool b_reachable;
     Eigen::VectorXd tau;
-    // Eigen::VectorXd Fc;
+    Eigen::VectorXd Fr;
     Eigen::VectorXd ddq;
 };
 

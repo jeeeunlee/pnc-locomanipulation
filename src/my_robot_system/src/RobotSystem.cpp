@@ -78,6 +78,11 @@ Eigen::Vector3d RobotSystem::getCoMVelocity(dart::dynamics::Frame* rl_,
     return skel_ptr_->getCOMLinearVelocity(rl_, wrt_);
 }
 
+Eigen::Vector3d RobotSystem::getCoMAcceleration(dart::dynamics::Frame* rl_,
+                                            dart::dynamics::Frame* wrt_) {
+    return skel_ptr_->getCOMLinearAcceleration(rl_, wrt_);
+}
+
 Eigen::Isometry3d RobotSystem::getBodyNodeIsometry(
     const std::string& name_, dart::dynamics::Frame* wrt_) {
     return skel_ptr_->getBodyNode(name_)->getTransform(wrt_);
@@ -128,6 +133,32 @@ Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialVelocity(
     return skel_ptr_->getBodyNode(_bn_idx)->getCOMSpatialVelocity(rl_, wrt_);
 }
 
+// JE added 2020/2/9
+Eigen::Vector6d RobotSystem::getBodyNodeSpatialAcceleration(
+    const std::string& name_, dart::dynamics::Frame* rl_,
+    dart::dynamics::Frame* wrt_) {
+    return skel_ptr_->getBodyNode(name_)->getSpatialAcceleration(rl_, wrt_);
+}
+
+Eigen::Vector6d RobotSystem::getBodyNodeSpatialAcceleration(
+    const int& _bn_idx, dart::dynamics::Frame* rl_,
+    dart::dynamics::Frame* wrt_) {
+    return skel_ptr_->getBodyNode(_bn_idx)->getSpatialAcceleration(rl_, wrt_);
+}
+
+Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialAcceleration(
+    const std::string& name_, dart::dynamics::Frame* rl_,
+    dart::dynamics::Frame* wrt_) {
+    return skel_ptr_->getBodyNode(name_)->getCOMSpatialAcceleration(rl_, wrt_);
+}
+
+Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialAcceleration(
+    const int& _bn_idx, dart::dynamics::Frame* rl_,
+    dart::dynamics::Frame* wrt_) {
+    return skel_ptr_->getBodyNode(_bn_idx)->getCOMSpatialAcceleration(rl_, wrt_);
+}
+//
+
 Eigen::VectorXd RobotSystem::getCentroidVelocity() {
     return J_cent_ * skel_ptr_->getVelocities();
 }
@@ -158,8 +189,7 @@ Eigen::MatrixXd RobotSystem::getBodyNodeJacobianDot(
     const std::string& name_, Eigen::Vector3d localOffset_,
     dart::dynamics::Frame* wrt_) {
     // return skel_ptr_->getJacobianSpatialDeriv(skel_ptr_->getBodyNode(name_),
-    // localOffset_,
-    // wrt_);
+    //                                          localOffset_, wrt_);
 
     return skel_ptr_->getJacobianClassicDeriv(skel_ptr_->getBodyNode(name_),
                                               localOffset_, wrt_);
@@ -216,9 +246,11 @@ Eigen::MatrixXd RobotSystem::getBodyNodeCoMJacobianDot(
 
 Eigen::MatrixXd RobotSystem::getBodyNodeCoMJacobianDot(
     const int& _bn_idx, dart::dynamics::Frame* wrt_) {
-    // return skel_ptr_->getJacobianSpatialDeriv(skel_ptr_->getBodyNode(name_),
-    // skel_ptr_->getBodyNode(name_)->getLocalCOM(),
-    // wrt_);
+
+    // return skel_ptr_->getJacobianSpatialDeriv(
+    //     skel_ptr_->getBodyNode(_bn_idx),
+    //     skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM(),
+    //     wrt_);
 
     return skel_ptr_->getJacobianClassicDeriv(
         skel_ptr_->getBodyNode(_bn_idx),
