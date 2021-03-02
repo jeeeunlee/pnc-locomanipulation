@@ -150,7 +150,11 @@ void MagnetoReachabilityContact::FinishContactSet() {
     Uf_row_dim+= Uf_i.rows();
     Uf_col_dim+= Uf_i.cols();
   }
+  my_utils::pretty_print(Uf, std::cout, "Uf");
+  my_utils::pretty_print(Fr_ieq, std::cout, "Fr_ieq");
   Fr_ieq -= Uf*F_magnetic; // todo : sign check
+  my_utils::pretty_print(Fr_ieq, std::cout, "Fr_ieq_mag");
+
   wbqpd_->setFrictionCone(Uf, Fr_ieq);
 }
 
@@ -193,16 +197,37 @@ void MagnetoReachabilityContact::update(const Eigen::VectorXd& q,
   wbqpd_param_->B = - Jc_bar_T_;
   wbqpd_param_->b0 = - AMat_*Jcdotqdot_ + Jc_bar_T_*cori_grav_;
 
-  my_utils::saveVector(wbqpd_param_->a0, "a0");
+  // 2020.2.10 Assume ddq a0 on gimabal to be zero
+  // for(int i(6); i<Magneto::n_vdof; ++i)
+  for(int i(0); i<Magneto::n_vdof; ++i)
+    wbqpd_param_->a0(Magneto::idx_vdof[i]) = 0.;  
+
+  // static int print_time=0;
+  // if( print_time++ < 1000 ){
+  //   if( print_time%100 == 0 ){
+  //     my_utils::pretty_print(MInv_, std::cout, "MInv_");
+  //     my_utils::pretty_print(Nc_T_, std::cout, "Nc_T_");
+  //     my_utils::pretty_print(cori_grav_, std::cout, "cori_grav_");
+  //     my_utils::pretty_print(Jc_, std::cout, "Jc_");
+  //     my_utils::pretty_print(AMat_, std::cout, "AMat_");
+  //     my_utils::pretty_print(Jcdotqdot_, std::cout, "Jcdotqdot_");
+      
+  //   }
+  //   std::cout<<"-----------------" << std::endl;
+  // }else{
+  //   exit(0);
+  // }
+
+  // my_utils::saveVector(wbqpd_param_->a0, "a0");
   
   wbqpd_param_->ddq_des = ddotq;
   wbqpd_param_->Wq = Eigen::VectorXd::Constant(dim_joint_, 10.);
-  wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 1.0);
+  wbqpd_param_->Wf = Eigen::VectorXd::Constant(dim_contact_, 1.);
 
   int fz_idx(0), contact_idx(0);
   for(auto &it : contact_list_) {
     fz_idx = contact_idx + ((BodyFramePointContactSpec*)(it))->getFzIndex();  
-    wbqpd_param_->Wf[fz_idx] = 0.001; // Fz no cost
+    wbqpd_param_->Wf[fz_idx] = 1.; // Fz no cost
     contact_idx += it->getDim();
   }
   wbqpd_->updateSetting(wbqpd_param_);
@@ -259,12 +284,14 @@ void MagnetoReachabilityContact::_buildContactJcDotQdot(
   // vercat Jcdotqdot
   Eigen::VectorXd Ji;
   int dim_Ji(0), dim_J(0);
+
   for(auto &contact : contact_list_) {
     contact->getJcDotQdot(Ji);
     dim_Ji = contact->getDim();
     Jcdotqdot.segment(dim_J, dim_Ji) = Ji;
     dim_J += dim_Ji;
   }
+
 }
 
 
@@ -432,8 +459,9 @@ void MagnetoReachabilityPlanner::addGraph(const std::vector<ReachabilityState> &
     Eigen::VectorXd ddq, ddq_des;
     if(!node_list.empty()) {
       MagnetoReachabilityNode* prev_node = node_list.back();
-      ddq_des = state.dq-prev_state.dq/0.001;
+      ddq_des = (state.dq-prev_state.dq)/0.001;
       b_feasible = prev_node->computeTorque(ddq_des, ddq, tau_a);
+      my_utils::saveVector(ddq_des, "ddq_des");
       my_utils::saveVector(ddq, "ddq_planner");
       my_utils::saveVector(tau_a, "torque");
       

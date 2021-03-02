@@ -189,11 +189,11 @@ bool BasicTask::_UpdateTaskJacobian() {
             Eigen::VectorXd xdot = robot_->getBodyNodeCoMSpatialVelocity(link_idx_).segment(3,3);
             Eigen::VectorXd JtQdot = Jt_ * robot_->getQdot();
 
-            Eigen::VectorXd check_xdot_dev = xdot - (JtQdot);
-            std::cout << "==================================" << std::endl;
-            my_utils::pretty_print(xdot, std::cout , "xdot");
-            my_utils::pretty_print(check_xdot_dev, std::cout , "check_xdot_dev");
-            std::cout << "---------------------------------" << std::endl;
+            // Eigen::VectorXd check_xdot_dev = xdot - (JtQdot);
+            // std::cout << "==================================" << std::endl;
+            // my_utils::pretty_print(xdot, std::cout , "xdot");
+            // my_utils::pretty_print(check_xdot_dev, std::cout , "check_xdot_dev");
+            // std::cout << "---------------------------------" << std::endl;
 
             break;
         }
@@ -233,14 +233,14 @@ bool BasicTask::_UpdateTaskJDotQdot() {
                              3, 0, dim_task_, robot_->getNumDofs()) *
                          robot_->getQdot();
 
-            // xddot = JdotQdot + J qddot
-            Eigen::VectorXd xddot = robot_->getBodyNodeCoMSpatialAcceleration(link_idx_).segment(3,3);
-            Eigen::VectorXd JtQddot = robot_->getBodyNodeCoMJacobian(link_idx_).block(
-                                            3, 0, dim_task_, robot_->getNumDofs()) *
-                                        robot_->getQddot();
-            Eigen::VectorXd check_xddot_dev = xddot - (JtDotQdot_ + JtQddot);
-            my_utils::pretty_print(xddot, std::cout , "xddot");
-            my_utils::pretty_print(check_xddot_dev, std::cout , "check_xddot_dev");
+            // xddot = JdotQdot + J qddot : JdotQdot=xddot-J qddot
+            // Eigen::VectorXd xddot = robot_->getBodyNodeCoMSpatialAcceleration(link_idx_).segment(3,3);
+            // Eigen::VectorXd JtQddot = robot_->getBodyNodeCoMJacobian(link_idx_).block(
+            //                                 3, 0, dim_task_, robot_->getNumDofs()) *
+            //                             robot_->getQddot();
+            // Eigen::VectorXd check_xddot_dev = xddot - (JtDotQdot_ + JtQddot);
+            // my_utils::pretty_print(xddot, std::cout , "xddot");
+            // my_utils::pretty_print(check_xddot_dev, std::cout , "check_xddot_dev");
 
             break;
         }
