@@ -36,7 +36,7 @@ MagnetoTrajectoryManager::MagnetoTrajectoryManager(MagnetoControlArchitecture* _
     };
 
     joint_task_ = 
-      new BasicTask(robot_manager_, BasicTaskType::FULLJOINT, Magneto::n_adof);
+      new BasicTask(robot_manager_, BasicTaskType::FULLJOINT, Magneto::n_dof);
 
     // Set Foot Motion Tasks
     alfoot_pos_task_ =
