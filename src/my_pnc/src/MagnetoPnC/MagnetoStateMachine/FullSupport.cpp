@@ -30,41 +30,10 @@ void FullSupport::firstVisit() {
   //      Planning
   // ---------------------------------------
   Eigen::VectorXd q_goal; 
-  // ctrl_arch_->goal_planner_->computeGoal(mc_curr_);  
-  // ctrl_arch_->goal_planner_->getGoalConfiguration(q_goal);
+  ctrl_arch_->goal_planner_->computeGoal(mc_curr_);  
+  ctrl_arch_->goal_planner_->getGoalConfiguration(q_goal);
 
-  // ctrl_arch_->reachability_planner_->setMovingFoot(mc_curr_.get_moving_foot());
-  // ctrl_arch_->reachability_planner_->compute(q_goal); 
-  // ctrl_arch_->reachability_planner_->addGraph
-
-  std::vector<ReachabilityState> state_list;
-  if(ctrl_arch_->trajectory_planner_->ParameterizeTrajectory(mc_curr_, 0.3, 0.2, 0.3, 0.2)){    
-    double t;
-    Eigen::VectorXd q, dotq, ddotq;
-    bool is_swing;
-    ReachabilityState rchstate;
-    for(int i=0; i<702; ++i){
-      t = (double)i * 0.001;
-      ctrl_arch_->trajectory_planner_->update(t, q, dotq, ddotq, is_swing);
-      // my_utils::pretty_print(q, std::cout, "q");
-      // my_utils::pretty_print(dotq, std::cout, "dotq");
-      my_utils::saveVector(q,"Planner_q");
-      my_utils::saveVector(dotq,"Planner_dotq");
-      my_utils::saveVector(ddotq,"Planner_ddotq");
-      rchstate.q = q;
-      rchstate.dq = dotq;
-      rchstate.ddq = ddotq;
-      rchstate.is_swing = is_swing;
-
-      state_list.push_back(rchstate);
-    }
-
-    ctrl_arch_->reachability_planner_->setMovingFoot(mc_curr_.get_moving_foot());
-    ctrl_arch_->reachability_planner_->addGraph(state_list);
-  }
-
-
-  // ---------------------------------------
+    // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
 
@@ -132,15 +101,15 @@ void FullSupport::firstVisit() {
 }
 
 void FullSupport::_taskUpdate() {
-  // ctrl_arch_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  ctrl_arch_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
   ctrl_arch_->com_trajectory_manager_->updateTask(sp_->curr_time,
                                       ctrl_arch_->taf_container_->com_task_);
 
-  // ctrl_arch_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  ctrl_arch_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
   ctrl_arch_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
                                       ctrl_arch_->taf_container_->base_ori_task_);
   
-  // ctrl_arch_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  ctrl_arch_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
   ctrl_arch_->joint_trajectory_manager_->updateTask(sp_->curr_time,
                                       ctrl_arch_->taf_container_->joint_task_);
 }
