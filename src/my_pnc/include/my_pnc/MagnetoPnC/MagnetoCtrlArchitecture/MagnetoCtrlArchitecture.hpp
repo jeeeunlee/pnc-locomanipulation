@@ -98,7 +98,7 @@ class MagnetoControlArchitecture : public ControlArchitecture {
   SingleWeightTrajectoryManager* weight_residualforce_manager_;
 
   MagnetoGoalPlanner* goal_planner_;
-  MagnetoReachabilityPlanner* reachability_planner_;
+  // MagnetoReachabilityPlanner* reachability_planner_;
   MagnetoTrajectoryManager* trajectory_planner_;
 
   private:

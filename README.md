@@ -12,7 +12,7 @@ Simulator environment and Controllers for Magento is available.
 ## Run the Code
 ```
 $ source devel/setup.bash
-$ rosrun my_simulator magneto_ros "config/Magneto/SIMULATIONWALK.yaml"
+$ rosrun my_simulator magneto_ros "config/Magneto/SIMULATION.yaml"
 ```
 
 ### Install Required Dependancies

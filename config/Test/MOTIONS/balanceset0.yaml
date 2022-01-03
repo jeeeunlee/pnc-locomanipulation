@@ -1,8 +1,0 @@
-num_motion: 1
-
-motion0:
-  pos: [0,0,-0.005]
-  ori: [1,0,0,0]
-  duration: 0.1
-  b_relative: false
-

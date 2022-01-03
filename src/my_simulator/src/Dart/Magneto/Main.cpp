@@ -288,7 +288,7 @@ int main(int argc, char** argv) {
     //std::ostringstream ground_file;
     try {
         YAML::Node simulation_cfg =
-            YAML::LoadFile(THIS_COM "config/Magneto/SIMULATIONWALK.yaml");
+            YAML::LoadFile(THIS_COM "config/Magneto/SIMULATION.yaml");
         my_utils::readParameter(simulation_cfg, "servo_rate", servo_rate);
         my_utils::readParameter(simulation_cfg, "is_record", isRecord);
         my_utils::readParameter(simulation_cfg, "show_joint_frame", b_show_joint_frame);
