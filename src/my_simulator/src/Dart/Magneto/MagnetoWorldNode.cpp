@@ -1,7 +1,7 @@
 #include <../my_utils/Configuration.h>
 #include <my_pnc/MagnetoPnC/MagnetoInterface.hpp>
 #include <my_simulator/Dart/Magneto/MagnetoWorldNode.hpp>
-#include <my_utils/IO/IOUtilities.hpp>
+
 #include <my_utils/Math/MathUtilities.hpp>
 
 
@@ -43,17 +43,6 @@ MagnetoWorldNode::MagnetoWorldNode(const dart::simulation::WorldPtr& _world)
 
     // ---- SET control parameters %% motion script
     run_mode_ = ((MagnetoInterface*)interface_)->getRunMode();
-    SetParams_();
-    ReadMotions_();
-
-
-    // ---- SET TORQUE LIMIT
-    trq_lb_ = Eigen::VectorXd::Constant(n_dof_, -torque_limit_);
-    trq_ub_ = Eigen::VectorXd::Constant(n_dof_, torque_limit_);
-    // trq_lb_ = robot_->getForceLowerLimits();
-    // trq_ub_ = robot_->getForceUpperLimits();
-    // std::cout<<"trq_lb_ = "<<trq_lb_.transpose() << std::endl;
-    // std::cout<<"trq_ub_ = "<<trq_ub_.transpose() << std::endl;  
 }
 
 MagnetoWorldNode::~MagnetoWorldNode() {
@@ -332,44 +321,45 @@ void MagnetoWorldNode::PlotFootStepResult_() {
     world_->addSimpleFrame(foot_frame);
 }
 
-void MagnetoWorldNode::SetParams_() {
+void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
     try {
-        YAML::Node simulation_cfg;
-        if(run_mode_==RUN_MODE::STATICWALK)
-            simulation_cfg = YAML::LoadFile(THIS_COM "config/Magneto/SIMULATION.yaml");
-        else
-        {
-            std::cout<<"unavailable run mode"<<std::endl;
-            exit(0);
-        }
-            
-
         my_utils::readParameter(simulation_cfg, "servo_rate", servo_rate_);
         my_utils::readParameter(simulation_cfg["control_configuration"], "kp", kp_);
         my_utils::readParameter(simulation_cfg["control_configuration"], "kd", kd_);
         my_utils::readParameter(simulation_cfg["control_configuration"], "torque_limit", torque_limit_);
         my_utils::readParameter(simulation_cfg, "plot_result", b_plot_result_);
-        my_utils::readParameter(simulation_cfg, "motion_script", motion_file_name_);  
-
+        
         // setting magnetic force
-        my_utils::readParameter(simulation_cfg, "magnetic_force", magnetic_force_);  
-        my_utils::readParameter(simulation_cfg, "residual_magnetism", residual_magnetism_);  
-    } catch (std::runtime_error& e) {
+        my_utils::readParameter(simulation_cfg["magnetism_params"], "magnetic_force", magnetic_force_);  
+        my_utils::readParameter(simulation_cfg["magnetism_params"], "residual_magnetism", residual_magnetism_); 
+
+        // read motion scripts
+        std::string motion_file_name;      
+        my_utils::readParameter(simulation_cfg, "motion_script", motion_file_name);
+        ReadMotions_(motion_file_name);
+    } 
+    catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
                   << __FILE__ << "]" << std::endl
                   << std::endl;
     }
+
+    // ---- SET TORQUE LIMIT
+    trq_lb_ = Eigen::VectorXd::Constant(n_dof_, -torque_limit_);
+    trq_ub_ = Eigen::VectorXd::Constant(n_dof_, torque_limit_);
+    // trq_lb_ = robot_->getForceLowerLimits();
+    // trq_ub_ = robot_->getForceUpperLimits();
+    // std::cout<<"trq_lb_ = "<<trq_lb_.transpose() << std::endl;
+    // std::cout<<"trq_ub_ = "<<trq_ub_.transpose() << std::endl;  
 }
 
-void MagnetoWorldNode::ReadMotions_() {
-
+void MagnetoWorldNode::ReadMotions_(const std::string& _motion_file_name) {
     std::ostringstream motion_file_name;    
-    motion_file_name << THIS_COM << motion_file_name_;
-
-    int num_motion;  
-
+    motion_file_name << THIS_COM << _motion_file_name;
+    
     try { 
         YAML::Node motion_cfg = YAML::LoadFile(motion_file_name.str());
+        int num_motion;
         my_utils::readParameter(motion_cfg, "num_motion", num_motion);
         for(int i(0); i<num_motion; ++i){
             int link_idx;

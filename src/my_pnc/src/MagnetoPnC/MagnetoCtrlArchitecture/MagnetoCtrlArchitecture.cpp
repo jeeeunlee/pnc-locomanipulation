@@ -37,7 +37,6 @@ MagnetoControlArchitecture::MagnetoControlArchitecture(RobotSystem* _robot)
   weight_residualforce_manager_ = new SingleWeightTrajectoryManager(robot_);
 
   goal_planner_ = new MagnetoGoalPlanner(robot_);
-  // reachability_planner_ = new MagnetoReachabilityPlanner(robot_, this);
   trajectory_planner_ = new MagnetoTrajectoryManager(this);
   // -- Trajctory Planner ?
   // dcm_trajectory_manager_ = new DCMTrajectoryManager(
@@ -274,8 +273,6 @@ void MagnetoControlArchitecture::_InitializeParameters() {
   state_machines_[MAGNETO_STATES::SWING_END_TRANS]
                   ->initialization(cfg_["transition_params"]);
 
-  // Planner initialization
-  // reachability_planner_->initialization(cfg_);
 }
 
 void MagnetoControlArchitecture::saveData() {

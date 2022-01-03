@@ -129,8 +129,4 @@ class MagnetoRosNode : public dart::gui::osg::WorldNode {
     bool b_plot_result_;
 
     std::string motion_file_name_;
-
-
-
-
 };

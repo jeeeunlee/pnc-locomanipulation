@@ -6,6 +6,8 @@
 #include <dart/gui/GLFuncs.hpp>
 #include <dart/gui/osg/osg.hpp>
 
+#include <my_utils/IO/IOUtilities.hpp>
+
 // MagnetoInterface
 class EnvInterface;
 class MagnetoSensorData;
@@ -17,9 +19,8 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     void UpdateContactDistance_();
     void UpdateContactSwitchData_();
     void UpdateContactWrenchData_();
-
-    void SetParams_();
-    void ReadMotions_();
+    
+    void ReadMotions_(const std::string& _motion_file_name);
     void PlotResult_();
     void PlotFootStepResult_();
     void CheckInterrupt_();
@@ -50,8 +51,8 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
 
     int run_mode_;
 
-    double magnetic_force_; // 147. #[N] 
-    double residual_magnetism_; //  3.0 #[%]
+    Eigen::VectorXd magnetic_force_; // 147. #[N] 
+    Eigen::VectorXd residual_magnetism_; //  3.0 #[%]
 
 
     float contact_threshold_;
@@ -62,8 +63,6 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
 
     bool b_plot_result_;
 
-    std::string motion_file_name_;
-
    public:
     MagnetoWorldNode(const dart::simulation::WorldPtr& world);
     virtual ~MagnetoWorldNode();
@@ -73,6 +72,8 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
 
     // user button
     void enableButtonFlag(uint16_t key);
+
+    void setParameters(const YAML::Node& simulation_cfg);
 
 
 };

@@ -286,8 +286,9 @@ int main(int argc, char** argv) {
     double q_temp;
     double coef_fric;
     //std::ostringstream ground_file;
+    YAML::Node simulation_cfg;
     try {
-        YAML::Node simulation_cfg =
+        simulation_cfg =
             YAML::LoadFile(THIS_COM "config/Magneto/SIMULATION.yaml");
         my_utils::readParameter(simulation_cfg, "servo_rate", servo_rate);
         my_utils::readParameter(simulation_cfg, "is_record", isRecord);
@@ -296,7 +297,7 @@ int main(int argc, char** argv) {
         my_utils::readParameter(simulation_cfg, "ground", ground_file);
 
         my_utils::readParameter(simulation_cfg, "initial_pose", q_floating_base_init); 
-        my_utils::readParameter(simulation_cfg, "friction", coef_fric);                
+        my_utils::readParameter(simulation_cfg["contact_params"], "friction", coef_fric);                
 
     } catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
@@ -373,6 +374,7 @@ int main(int argc, char** argv) {
     // =========================================================================
     osg::ref_ptr<MagnetoWorldNode> node;
     node = new MagnetoWorldNode(world);
+    ((MagnetoWorldNode*)node)->setParameters(simulation_cfg);
     node->setNumStepsPerCycle(30);
 
 
