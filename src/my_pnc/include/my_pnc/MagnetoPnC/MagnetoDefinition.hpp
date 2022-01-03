@@ -2,10 +2,11 @@
 namespace Magneto {
 constexpr int n_bodynode = 81;
 
+constexpr int n_leg = 4;
 constexpr int n_leg_pdof = 3;
 constexpr int n_leg_adof = 3;
-constexpr int n_vdof = 6 + 4*n_leg_pdof;
-constexpr int n_adof = 4*n_leg_adof;
+constexpr int n_vdof = 6 + n_leg*n_leg_pdof;
+constexpr int n_adof = n_leg*n_leg_adof;
 constexpr int n_dof = n_vdof + n_adof;
 constexpr int idx_vdof [n_vdof] = {0,1,2,3,4,5,9,10,11,15,16,17,21,22,23,27,28,29};
 constexpr int idx_adof [n_adof] = {6,7,8,12,13,14,18,19,20,24,25,26};

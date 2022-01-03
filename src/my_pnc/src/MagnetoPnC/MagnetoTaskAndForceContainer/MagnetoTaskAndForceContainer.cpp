@@ -60,22 +60,22 @@ void MagnetoTaskAndForceContainer::_InitializeTasks() {
 
 void MagnetoTaskAndForceContainer::_InitializeContacts() {
 
-  friction_coeff_ = 0.7; // updated later in setContactFriction 
+  friction_coeff_ = Eigen::VectorXd::Constant(Magneto::n_leg, 0.7); // updated later in setContactFriction 
   
   double foot_x = 0.02; // 0.05; 
   double foot_y = 0.02; 
 
   alfoot_contact_ = new BodyFrameSurfaceContactSpec(
-      robot_, MagnetoBodyNode::AL_foot_link, foot_x, foot_y, friction_coeff_); 
-  blfoot_contact_ = new BodyFrameSurfaceContactSpec(
-      robot_, MagnetoBodyNode::BL_foot_link, foot_x, foot_y, friction_coeff_);     
+      robot_, MagnetoBodyNode::AL_foot_link, foot_x, foot_y, friction_coeff_[MagnetoFoot::AL]); 
   arfoot_contact_ = new BodyFrameSurfaceContactSpec(
-      robot_, MagnetoBodyNode::AR_foot_link, foot_x, foot_y, friction_coeff_); 
+      robot_, MagnetoBodyNode::AR_foot_link, foot_x, foot_y, friction_coeff_[MagnetoFoot::AR]); 
+  blfoot_contact_ = new BodyFrameSurfaceContactSpec(
+      robot_, MagnetoBodyNode::BL_foot_link, foot_x, foot_y, friction_coeff_[MagnetoFoot::BL]);
   brfoot_contact_ = new BodyFrameSurfaceContactSpec(
-      robot_, MagnetoBodyNode::BR_foot_link, foot_x, foot_y, friction_coeff_);
+      robot_, MagnetoBodyNode::BR_foot_link, foot_x, foot_y, friction_coeff_[MagnetoFoot::BR]);
       
-  dim_contact_ = alfoot_contact_->getDim() + blfoot_contact_->getDim() +
-                arfoot_contact_->getDim() + brfoot_contact_->getDim();
+  dim_contact_ = alfoot_contact_->getDim() + arfoot_contact_->getDim() +
+                 blfoot_contact_->getDim() + brfoot_contact_->getDim();
 
   // max_z_ = 500.;
 
@@ -85,15 +85,16 @@ void MagnetoTaskAndForceContainer::_InitializeContacts() {
   // Add all contacts initially. Remove later as needed.
   contact_list_.clear();
   contact_list_.push_back(alfoot_contact_);
-  contact_list_.push_back(blfoot_contact_);
   contact_list_.push_back(arfoot_contact_);
+  contact_list_.push_back(blfoot_contact_);  
   contact_list_.push_back(brfoot_contact_); 
 
-  full_contact_list_.clear();
-  full_contact_list_.push_back(alfoot_contact_);
-  full_contact_list_.push_back(blfoot_contact_);
-  full_contact_list_.push_back(arfoot_contact_);
-  full_contact_list_.push_back(brfoot_contact_); 
+  // foot contact map
+  foot_contact_map_.clear();
+  foot_contact_map_[MagnetoFoot::AL] = alfoot_contact_;
+  foot_contact_map_[MagnetoFoot::AR] = arfoot_contact_;
+  foot_contact_map_[MagnetoFoot::BL] = blfoot_contact_;  
+  foot_contact_map_[MagnetoFoot::BR] = brfoot_contact_; 
   full_dim_contact_ = dim_contact_;
 }
 
@@ -134,15 +135,20 @@ void MagnetoTaskAndForceContainer::_DeleteContacts() {
   delete brfoot_contact_;
 }
 
-void MagnetoTaskAndForceContainer::setContactFriction(){
+void MagnetoTaskAndForceContainer::setContactFriction() {
   setContactFriction(friction_coeff_);
 } 
 
-void MagnetoTaskAndForceContainer::setContactFriction(double _mu){
+void MagnetoTaskAndForceContainer::setContactFriction(const Eigen::VectorXd& _mu_vec) {
   // initialize contact
-  for(auto &contact : full_contact_list_)
-    ((BodyFrameSurfaceContactSpec*)contact)->setFrictionCoeff(_mu);
-} 
+  for (int foot_idx=0; foot_idx<Magneto::n_leg; ++i)
+    setContactFriction(foot_idx, _mu_vec[foot_idx]);  
+}
+
+void MagnetoTaskAndForceContainer::setContactFriction(int foot_idx, double mu) {
+  // initialize contact
+  ((BodyFrameSurfaceContactSpec*)foot_contact_map_[foot_idx])->setFrictionCoeff(mu);
+}
 
 void MagnetoTaskAndForceContainer::paramInitialization(const YAML::Node& node) {
   
@@ -211,7 +217,7 @@ void MagnetoTaskAndForceContainer::set_residual_magnetic_force(int moving_cop, d
     double distance_ratio;
     double distance_constant = 0.005*4.;
     distance_ratio = distance_constant / (contact_distance + distance_constant);
-    distance_ratio = distance_ratio*distance_ratio;
+    distance_ratio = distance_ratio * distance_ratio;
     residual_force_ = distance_ratio * magnetic_force_ * (residual_ratio_/100.);
     F_residual_ = Eigen::VectorXd::Zero(J_residual_.rows());
     F_residual_[F_residual_.size()-1] = residual_force_;
@@ -222,22 +228,23 @@ void MagnetoTaskAndForceContainer::set_residual_magnetic_force(int moving_cop, d
 }
 
 void MagnetoTaskAndForceContainer::set_contact_magnetic_force(int moving_cop) {
-  // set F_magnetic_ based on b_magnetism_mabp_  
+  // set F_magnetic_ based on b_magnetism_map_  
   F_magnetic_ = Eigen::VectorXd::Zero(full_dim_contact_);
 
-  int contact_link_idx(0), dim_contact(0), fz_idx;
-  for(auto &it : full_contact_list_) {
-    contact_link_idx = ((BodyFrameSurfaceContactSpec*)(it))->getLinkIdx();
+  int contact_link_idx, fz_idx;
+  int dim_contact(0);
+  for(auto &[leg_idx, contact] : foot_contact_map_) {
+    contact_link_idx = ((BodyFrameSurfaceContactSpec*)(contact))->getLinkIdx();
     if( contact_link_idx != moving_cop) {  
-      fz_idx = dim_contact + ((BodyFrameSurfaceContactSpec*)(it))->getFzIndex();    
+      fz_idx = dim_contact + ((BodyFrameSurfaceContactSpec*)(contact))->getFzIndex();    
       if(b_magnetism_map_[contact_link_idx]){
-        F_magnetic_[fz_idx] = magnetic_force_;
+        F_magnetic_[fz_idx] = magnetic_force_[leg_idx];
       }
       else {
-        F_magnetic_[fz_idx] = residual_force_;
+        F_magnetic_[fz_idx] = residual_force_[leg_idx];
         // F_magnetic_[fz_idx] = -residual_force_;
       }
-      dim_contact += ((BodyFrameSurfaceContactSpec*)(it))->getDim();
+      dim_contact += ((BodyFrameSurfaceContactSpec*)(contact))->getDim();
     }
   }
   F_magnetic_ = F_magnetic_.head(dim_contact);  

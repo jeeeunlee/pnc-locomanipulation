@@ -329,7 +329,7 @@ void MagnetoRosNode::SetParams_() {
     try {
         YAML::Node simulation_cfg;
         if(run_mode_==RUN_MODE::STATICWALK)
-            simulation_cfg = YAML::LoadFile(THIS_COM "config/Magneto/SIMULATION.yaml");
+            simulation_cfg = YAML::LoadFile(THIS_COM "config/Magneto/SIMULATIONWALK.yaml");
         else
         {
             std::cout<<"unavailable run mode"<<std::endl;

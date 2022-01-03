@@ -41,9 +41,11 @@ void MotionCommand::clear_and_add_motion(int _moving_link_id,
 
 int MotionCommand::get_moving_foot() {
     // TODO LATER : if you want to give two feet swing together ?
-    for(auto &[idx, motion_data] : motion_sets_) {
-        if(idx > 0) {
-            return idx;
+    for(auto &it : motion_sets_
+    ) {
+        // it: <int, MOTION_DATA>
+        if(it->first > 0) {
+            return it->first;
         }
     }
     return -1;

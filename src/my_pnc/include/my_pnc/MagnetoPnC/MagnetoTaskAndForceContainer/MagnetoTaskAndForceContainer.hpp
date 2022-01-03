@@ -15,7 +15,7 @@ class MagnetoTaskAndForceContainer : public TaskAndForceContainer {
   void paramInitialization(const YAML::Node& node);
   
   void setContactFriction();
-  void setContactFriction(double _mu);
+  void setContactFriction(const Eigen::VectorXd& _mu_vec);
 
   // -------------------------------------------------------
   //    set functions
@@ -73,7 +73,7 @@ class MagnetoTaskAndForceContainer : public TaskAndForceContainer {
   ContactSpec* arfoot_contact_;
   ContactSpec* blfoot_contact_;
   ContactSpec* brfoot_contact_;
-  std::vector<ContactSpec*> full_contact_list_;
+  std::map<int, ContactSpec*> foot_contact_map_;
   int dim_contact_;
   int full_dim_contact_;
 
@@ -89,10 +89,10 @@ class MagnetoTaskAndForceContainer : public TaskAndForceContainer {
   Eigen::MatrixXd J_residual_;
   double w_res_;
 
-  double friction_coeff_;
-  double magnetic_force_; //[N]
-  double residual_ratio_; //[%]
-  double residual_force_;
+  Eigen::VectorXd friction_coeff_;
+  Eigen::VectorXd magnetic_force_; //[N]
+  Eigen::VectorXd residual_ratio_; //[%]
+  Eigen::VectorXd residual_force_;
 
   // -------------------------------------------------------
   // Parameters
