@@ -1,10 +1,10 @@
 #include <my_pnc/MagnetoPnC/MagnetoCtrlArchitecture/MagnetoCtrlArchitecture.hpp>
-#include <my_pnc/MagnetoPnC/MagnetoLogicInterrupt/WalkingInterruptLogic.hpp>
+#include <my_pnc/MagnetoPnC/MagnetoLogicInterrupt/ClimbingInterruptLogic.hpp>
 
-WalkingInterruptLogic::WalkingInterruptLogic(
+ClimbingInterruptLogic::ClimbingInterruptLogic(
         MagnetoControlArchitecture* _ctrl_arch)
         : InterruptLogic() {
-  my_utils::pretty_constructor(1, "Magneto Walking Interrupt Logic");
+  my_utils::pretty_constructor(1, "Magneto Climbing Interrupt Logic");
   ctrl_arch_ = _ctrl_arch;
   sp_ = MagnetoStateProvider::getStateProvider(ctrl_arch_->robot_);
   
@@ -12,25 +12,29 @@ WalkingInterruptLogic::WalkingInterruptLogic(
   motion_command_script_list_.clear();
 
   motion_data_default_.pose = POSE_DATA(-0.1,0,0, 1,0,0,0);
-  motion_data_default_.swing_height = 0.04;
+  motion_data_default_.swing_height = 0.05;
   motion_data_default_.motion_period = 0.9;
   
-  motion_command_alfoot_ = new MotionCommand(MagnetoBodyNode::AL_tibia_link, motion_data_default_);
-  motion_command_blfoot_ = new MotionCommand(MagnetoBodyNode::BL_tibia_link, motion_data_default_);
-  motion_command_arfoot_ = new MotionCommand(MagnetoBodyNode::AR_tibia_link, motion_data_default_);
-  motion_command_brfoot_ = new MotionCommand(MagnetoBodyNode::BR_tibia_link, motion_data_default_);
-  motion_command_instant_ = new MotionCommand();
+  motion_command_alfoot_ = new ClimbingMotionCommand(
+    MagnetoBodyNode::AL_tibia_link, motion_data_default_, 0.7, 100.);
+  motion_command_blfoot_ = new ClimbingMotionCommand(
+    MagnetoBodyNode::BL_tibia_link, motion_data_default_, 0.7, 100.);
+  motion_command_arfoot_ = new ClimbingMotionCommand(
+    MagnetoBodyNode::AR_tibia_link, motion_data_default_, 0.7, 100.);
+  motion_command_brfoot_ = new ClimbingMotionCommand(
+    MagnetoBodyNode::BR_tibia_link, motion_data_default_, 0.7, 100.);
+  motion_command_instant_ = new ClimbingMotionCommand();
 }
 
-WalkingInterruptLogic::~WalkingInterruptLogic() {}
+ClimbingInterruptLogic::~ClimbingInterruptLogic() {}
 
 // Process Interrupts here
-void WalkingInterruptLogic::processInterrupts() {   
+void ClimbingInterruptLogic::processInterrupts() {   
   if(b_button_pressed) {
-    // std::cout << "[Walking Interrupt Logic] button pressed : " << pressed_button << std::endl;
+    // std::cout << "[Climbing Interrupt Logic] button pressed : " << pressed_button << std::endl;
     switch(pressed_button){
       case 's':
-        std::cout << "[Walking Interrupt Logic] button S pressed" << std::endl;
+        std::cout << "[Climbing Interrupt Logic] button S pressed" << std::endl;
         std::cout << "---------                        ---------" << std::endl;
         std::cout << "---------     SCRIPT MOTION      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
@@ -47,7 +51,7 @@ void WalkingInterruptLogic::processInterrupts() {
         }
       break;
       case 'w':
-        std::cout << "[Walking Interrupt Logic] button w pressed" << std::endl;
+        std::cout << "[Climbing Interrupt Logic] button w pressed" << std::endl;
         std::cout << "---------                        ---------" << std::endl;
         std::cout << "---------     com up      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
@@ -59,7 +63,7 @@ void WalkingInterruptLogic::processInterrupts() {
         }
       break;
       case 'x':
-        std::cout << "[Walking Interrupt Logic] button x pressed" << std::endl;
+        std::cout << "[Climbing Interrupt Logic] button x pressed" << std::endl;
         std::cout << "---------                        ---------" << std::endl;
         std::cout << "---------     com down      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
@@ -77,22 +81,6 @@ void WalkingInterruptLogic::processInterrupts() {
   resetFlags();
 }
 
-void WalkingInterruptLogic::addPresetMotion(const YAML::Node& motion_cfg){
-  // add motion_command_script_list_
-    int link_idx;
-    MOTION_DATA md_temp;
+void ClimbingInterruptLogic::addPresetMotion(const YAML::Node& motion_cfg) {
 
-    Eigen::VectorXd pos_temp;
-    Eigen::VectorXd ori_temp;
-    bool is_bodyframe;
-    my_utils::readParameter(motion_cfg, "foot", link_idx);
-    my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
-    my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
-    my_utils::readParameter(motion_cfg, "pos",pos_temp);
-    my_utils::readParameter(motion_cfg, "ori", ori_temp);
-    my_utils::readParameter(motion_cfg, "b_relative", is_bodyframe);
-    md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_bodyframe);
-    MotionCommand motion_command = MotionCommand(link_idx, md_temp);
-
-    motion_command_script_list_.push_back(motion_command);
 }

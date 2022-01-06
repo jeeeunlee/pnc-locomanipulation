@@ -4,7 +4,8 @@
 MagnetoControlArchitecture::MagnetoControlArchitecture(RobotSystem* _robot)
     : ControlArchitecture(_robot) {
   my_utils::pretty_constructor(1, "Magneto Control Architecture");
-  cfg_ = YAML::LoadFile(THIS_COM "config/Magneto/ARCHITECTURE/WALKING_PARAMS.yaml");
+  // cfg_ = YAML::LoadFile(THIS_COM "config/Magneto/ARCHITECTURE/WALKING_PARAMS.yaml");
+  cfg_ = YAML::LoadFile(THIS_COM "config/Magneto/ARCHITECTURE/CLIMBING_PARAMS.yaml");
 
   sp_ = MagnetoStateProvider::getStateProvider(robot_);
 

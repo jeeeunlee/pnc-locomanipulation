@@ -13,6 +13,7 @@ class WalkingInterruptLogic : public InterruptLogic {
   ~WalkingInterruptLogic();
 
   void processInterrupts();
+  void addPresetMotion(const YAML::Node& motion_cfg);
 
   MagnetoControlArchitecture* ctrl_arch_;
   MagnetoStateProvider* sp_;

@@ -96,3 +96,29 @@ bool MotionCommand::is_com_target_exist() {
     }
     return false;
 }
+
+//
+
+ClimbingMotionCommand::ClimbingMotionCommand() {
+    motion_sets_.clear();
+}
+
+ClimbingMotionCommand::ClimbingMotionCommand::MotionCommand(int _moving_link_id,
+                    const MOTION_DATA& _motion_data) {
+    motion_sets_.clear();
+    motion_sets_.insert(std::make_pair(_moving_link_id, _motion_data));
+    // defaults contact spects fop new contact
+    mu_ = 0.7; 
+    f_mag_ = 100;
+}
+
+
+ClimbingMotionCommand::ClimbingMotionCommand(int _moving_link_id,
+                    const MOTION_DATA& _motion_data,
+                    double _mu,
+                    double _f_mag){
+    motion_sets_.clear();
+    motion_sets_.insert(std::make_pair(_moving_link_id, _motion_data)); 
+    mu_ = _mu;
+    f_mag_ = _f_mag;
+}

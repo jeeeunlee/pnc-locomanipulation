@@ -7,14 +7,12 @@
 
 class MagnetoStateProvider;
 class MagnetoStateEstimator;
-// class StaticWalkingPatternParam;
-// class BalancingPatternParam;
 
 namespace RUN_MODE {
 constexpr int BALANCE = 0;
 constexpr int STATICWALK = 1;
-
-};  // namespace BLPhase
+constexpr int MPCCLIMBING = 2;
+};  // namespace RUN_MODE
 
 class MagnetoSensorData {
    public:
@@ -115,12 +113,6 @@ class MagnetoInterface : public EnvInterface {
     virtual void getCommand(void* _sensor_data, void* _command_data);
     int getRunMode() {return run_mode_;}
 
-    void StaticWalk(const int& _moving_foot,
-                    const Eigen::Vector3d& _pos, 
-                    const Eigen::Quaternion<double>& _ori, 
-                    const double& _motion_period,
-                    const double& _swing_height,
-                    bool _is_bodyframe );
     void AddScriptWalkMotion(int _link_idx, 
                             const MOTION_DATA& _motion_data);
     

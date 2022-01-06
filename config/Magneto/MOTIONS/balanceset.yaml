@@ -1,4 +1,5 @@
 num_motion: 9
+type_motion: 2 # 0:climbing, 1:walking, 2:balancing
 
 motion0:
   pos: [0,0,-0.01]

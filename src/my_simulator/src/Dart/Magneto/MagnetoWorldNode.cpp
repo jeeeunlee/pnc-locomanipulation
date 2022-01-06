@@ -322,6 +322,7 @@ void MagnetoWorldNode::PlotFootStepResult_() {
 }
 
 void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
+    // will be called @ Main.cpp, after created
     try {
         my_utils::readParameter(simulation_cfg, "servo_rate", servo_rate_);
         my_utils::readParameter(simulation_cfg["control_configuration"], "kp", kp_);
@@ -360,32 +361,26 @@ void MagnetoWorldNode::ReadMotions_(const std::string& _motion_file_name) {
     try { 
         YAML::Node motion_cfg = YAML::LoadFile(motion_file_name.str());
         int num_motion;
+        int type_motion;
         my_utils::readParameter(motion_cfg, "num_motion", num_motion);
+        my_utils::readParameter(motion_cfg, "type_motion", type_motion);
         for(int i(0); i<num_motion; ++i){
-            int link_idx;
-            MOTION_DATA md_temp;
-
-            Eigen::VectorXd pos_temp;
-            Eigen::VectorXd ori_temp;
-            bool is_bodyframe;
-
             std::ostringstream stringStream;
             stringStream << "motion" << i;
-            std::string conf = stringStream.str();    
-
-            my_utils::readParameter(motion_cfg[conf], "foot", link_idx);
-            my_utils::readParameter(motion_cfg[conf], "duration", md_temp.motion_period);
-            my_utils::readParameter(motion_cfg[conf], "swing_height", md_temp.swing_height);
-            my_utils::readParameter(motion_cfg[conf], "pos",pos_temp);
-            my_utils::readParameter(motion_cfg[conf], "ori", ori_temp);
-            my_utils::readParameter(motion_cfg[conf], "b_relative", is_bodyframe);
-            md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_bodyframe);
-            // interface_->(WalkingInterruptLogic*)interrupt_
-            //             ->motion_command_script_list_
-            //             .push_back(MotionCommand(link_idx,md_temp));
-            ((MagnetoInterface*)interface_)->AddScriptWalkMotion(link_idx,md_temp);
+            std::string conf = stringStream.str();
+            switch(type_motion){
+                case 0: //clmibing
+                    ((MagnetoInterface*)interface_)->
+                    AddScriptClimbMotion(motion_cfg[conf]);
+                    break;
+                case 1: //walking
+                case 2: //balancing
+                    ((MagnetoInterface*)interface_)->
+                    AddScriptWalkMotion(motion_cfg[conf]);
+                    break;
+            }
+            
         }
-
     } catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
                   << __FILE__ << "]" << std::endl
