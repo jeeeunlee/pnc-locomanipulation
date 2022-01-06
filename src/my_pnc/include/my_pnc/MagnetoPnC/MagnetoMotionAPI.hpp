@@ -5,10 +5,7 @@
 #include <deque>
 #include <map>
 
-class MotionCommand;
-
 typedef int TARGET_LINK_IDX;
-// typedef std::deque<MotionCommand*> MotionCommandDeque;
 
 struct POSE_DATA {
     Eigen::Vector3d pos;
@@ -23,14 +20,14 @@ struct POSE_DATA {
 
     POSE_DATA(const Eigen::Vector3d& _pos, 
               const Eigen::Quaternion<double>& _ori,
-              bool _is_bodyframe=true)
-              : pos(_pos),ori(_ori),is_bodyframe(_is_bodyframe){
+              bool _is_baseframe=true)
+              : pos(_pos),ori(_ori),is_bodyframe(_is_baseframe){
     }
 
     POSE_DATA(const Eigen::VectorXd& _pos, 
               const Eigen::VectorXd& _ori,
-              bool _is_bodyframe=true) 
-              : is_bodyframe(_is_bodyframe) {
+              bool _is_baseframe=true) 
+              : is_bodyframe(_is_baseframe) {
         is_bodyframe = true;
         pos << _pos[0], _pos[1], _pos[2];
         ori = Eigen::Quaternion<double>
@@ -64,10 +61,10 @@ struct MOTION_DATA {
     }
     MOTION_DATA(const Eigen::Vector3d& _pos,  
                 const Eigen::Quaternion<double>& _ori,
-                bool _is_bodyframe,
+                bool _is_baseframe,
                 double _motion_period,
                 double _swing_height=0.0) {
-        pose = POSE_DATA(_pos,_ori,_is_bodyframe);
+        pose = POSE_DATA(_pos,_ori,_is_baseframe);
         motion_period = _motion_period;
         swing_height = _swing_height;
     }
@@ -103,8 +100,23 @@ public:
     int get_num_of_foot_target();
     bool is_com_target_exist();
 
-private:  
+protected:  
     // link_idx, assume IDX of COM is -1
     // just in case a robot should swing more than two legs at the same time.
     std::map<TARGET_LINK_IDX, MOTION_DATA> motion_sets_;
+};
+
+class ClimbingMotionCommand : public MotionCommand{
+public:
+    ClimbingMotionCommand();
+    ClimbingMotionCommand(int _moving_link_id,
+                    const MOTION_DATA& _motion_data);
+    ClimbingMotionCommand(int _moving_link_id,
+                    const MOTION_DATA& _motion_data,
+                    double _mu,
+                    double _f_mag);
+    ~ClimbingMotionCommand();
+protected:
+    double mu_;
+    double f_mag_;
 };

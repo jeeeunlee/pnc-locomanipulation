@@ -1,5 +1,7 @@
 num_motion: 4
-# foot : AL-8/14, AR-17/23, BL-26/32 , BR-35/41
+type_motion: 1 # 0:climbing, 1:walking, 2:balancing
+
+# foot : AL-8/14, AR-17/23, BL-26/32 , BR-35/41: link_3/link
 
 motion1:
   foot: 32 # 26 #BL

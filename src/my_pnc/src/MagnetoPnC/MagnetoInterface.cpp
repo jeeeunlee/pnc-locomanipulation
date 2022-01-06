@@ -11,6 +11,7 @@
 #include <string>
 
 MagnetoInterface::MagnetoInterface() : EnvInterface() {
+    // MagnetoInterface 
     std::string border = "=";
     for (int i = 0; i < 79; ++i) {
         border += "=";
@@ -18,20 +19,34 @@ MagnetoInterface::MagnetoInterface() : EnvInterface() {
     my_utils::color_print(myColor::BoldCyan, border);
     my_utils::pretty_constructor(0, "Magneto Interface");
 
+    // set run_mode from interface.yaml
+    _ParameterSetting(); 
+
+    // declare
     robot_ = new RobotSystem(
         6+3*4, THIS_COM "robot_description/Robot/Magneto/MagnetoSim_Dart.urdf");
-
-    // robot_->setRobotMass();
-    // robot_->printRobotInfo();
-
     robot_->setActuatedJoint(Magneto::idx_adof);
+    // robot_->setRobotMass();
+    // robot_->printRobotInfo();    
 
     state_estimator_ = new MagnetoStateEstimator(robot_);
     sp_ = MagnetoStateProvider::getStateProvider(robot_);
 
     control_architecture_ = new MagnetoControlArchitecture(robot_);
-    interrupt_ = new WalkingInterruptLogic(
-          static_cast<MagnetoControlArchitecture*>(control_architecture_));    
+
+    switch(run_mode_) {
+        case RUN_MODE::BALANCE:
+        case RUN_MODE::STATICWALK:
+            interrupt_ = new WalkingInterruptLogic(
+            static_cast<MagnetoControlArchitecture*>(control_architecture_));
+        break;
+        case RUN_MODE::MPCCLIMBING:
+            interrupt_ = new ClimbingInterruptLogic(
+            static_cast<MagnetoControlArchitecture*>(control_architecture_));  
+        break;
+        default:
+        break;
+    }    
 
     sp_->stance_foot = MagnetoBodyNode::base_link; // todo base_link
 
@@ -45,7 +60,7 @@ MagnetoInterface::MagnetoInterface() : EnvInterface() {
     check_com_planner_updated = 0;
     check_foot_planner_updated = 0;
 
-    _ParameterSetting(); //text_ = new Test();
+    
 
     my_utils::color_print(myColor::BoldCyan, border);
 }
@@ -104,6 +119,8 @@ void MagnetoInterface::_ParameterSetting() {
             run_mode_ = RUN_MODE::STATICWALK;
         } else if (test_name == "balance_test") {
             run_mode_ = RUN_MODE::BALANCE;
+        } else if (test_name == "mpc_climbing_test") {
+            run_mode_ = RUN_MODE::MPCCLIMBING;
         } else {
             printf(
             "[Magneto Interface] There is no matching test with the "
@@ -202,30 +219,30 @@ void MagnetoInterface::GetNextFootStep(Eigen::VectorXd& foot_pos) {
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-void MagnetoInterface::StaticWalk(const int& _moving_foot,
-                            const Eigen::Vector3d& _pos, 
-                            const Eigen::Quaternion<double>& _ori,
-                            const double& _motion_period,
-                            const double& _swing_height,
-                            bool _is_bodyframe ) {
+// void MagnetoInterface::AddScriptWalkMotion(int _link_idx, 
+//                                         const MOTION_DATA& _motion_data) {
 
-    // motion_param->set_walking_pattern(_moving_foot, _pos, _ori, _motion_period, _is_bodyframe);
-    // ((StaticWalkingTest*)test_)->addNextStep(motion_param); 
-    MOTION_DATA motion_data = MOTION_DATA(_pos, _ori, _is_bodyframe, 
-                                        _motion_period, _swing_height);
-    ((WalkingInterruptLogic*)interrupt_)->motion_command_instant_
-                                    ->clear_and_add_motion(_moving_foot, motion_data);
+//     // motion_param->set_walking_pattern(_moving_foot, _pos, _ori, _motion_period, _is_bodyframe);
+//     MotionCommand motion_command = MotionCommand(_link_idx,_motion_data);
+//     ((WalkingInterruptLogic*)interrupt_)
+//         ->motion_command_script_list_.push_back(motion_command);
+// }
+void MagnetoInterface::AddScriptMotion(const YAML::Node& motion_cfg){
+
 }
 
-void MagnetoInterface::AddScriptWalkMotion(int _link_idx, 
-                                        const MOTION_DATA& _motion_data) {
+void MagnetoInterface::AddScriptWalkMotion(const YAML::Node& motion_cfg){
+
+}
+
+void MagnetoInterface::AddScriptClimbMotion(const YAML::Node& motion_cfg) {
 
     // motion_param->set_walking_pattern(_moving_foot, _pos, _ori, _motion_period, _is_bodyframe);
-    // ((StaticWalkingTest*)test_)->addNextStep(motion_param); 
     MotionCommand motion_command = MotionCommand(_link_idx,_motion_data);
-    ((WalkingInterruptLogic*)interrupt_)
+    ((ClimbingInterruptLogic*)interrupt_)
         ->motion_command_script_list_.push_back(motion_command);
 }
+
 
 
 
