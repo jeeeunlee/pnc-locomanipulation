@@ -6,7 +6,7 @@
 #include <dart/gui/GLFuncs.hpp>
 #include <dart/gui/osg/osg.hpp>
 #include <../my_utils/Configuration.h>
-#include <my_pnc/MagnetoPnC/MagnetoInterface.hpp>
+#include <my_robot_core/magneto_core/MagnetoInterface.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 #include <my_utils/Math/MathUtilities.hpp>
 #include <ros/ros.h>

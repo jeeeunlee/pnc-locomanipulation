@@ -29,6 +29,11 @@
 *.out
 *.app
 
+# zip
+*.xz
+*.zip
+*.tar
+
 # Editor Setting files
 *.json
 .vscode

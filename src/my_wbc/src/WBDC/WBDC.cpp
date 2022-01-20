@@ -45,7 +45,7 @@ void WBDC::makeTorque(const std::vector<Task*> & task_list,
         Eigen::VectorXd & cmd,
         void* extra_input){
     _PrintDebug(1);
-    if(!b_updatesetting_) { printf("[Wanning] WBDC setting is not done\n"); }
+    if(!b_updatesetting_) { printf("[Warning] WBDC setting is not done\n"); }
 
     if(extra_input) data_ = static_cast<WBDC_ExtraData*>(extra_input);
 

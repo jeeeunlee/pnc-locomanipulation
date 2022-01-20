@@ -1,5 +1,5 @@
 #include <../my_utils/Configuration.h>
-#include <my_pnc/MagnetoPnC/MagnetoInterface.hpp>
+#include <my_robot_core/magneto_core/MagnetoInterface.hpp>
 #include <my_simulator/Dart/Magneto/MagnetoWorldNode.hpp>
 
 #include <my_utils/Math/MathUtilities.hpp>
