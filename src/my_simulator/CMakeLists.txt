@@ -22,7 +22,7 @@ find_package(DART 6.9 REQUIRED COMPONENTS utils-urdf gui-osg CONFIG)
 
 catkin_package(
   LIBRARIES run_magneto magneto_ros
-  CATKIN_DEPENDS my_utils my_pnc
+  CATKIN_DEPENDS my_utils my_robot_core
 )
 
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
@@ -49,14 +49,14 @@ file(GLOB_RECURSE ros_dart_headers "src/RosSim/*.hpp")
 add_executable(run_magneto ${dart_magneto_sources}
                           ${dart_magneto_headers})
 target_link_libraries(run_magneto ${DART_LIBRARIES}
-                                  my_pnc
+                                  my_robot_core
                                   my_utils)
 
 add_executable(magneto_ros ${ros_dart_sources}
                         ${ros_dart_headers})
 target_link_libraries(magneto_ros ${DART_LIBRARIES}
                               ${catkin_LIBRARIES}
-                              my_pnc
+                              my_robot_core
                               my_utils)
 
 # add_executable(run_test ${bullet_sources}

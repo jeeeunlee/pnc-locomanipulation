@@ -42,7 +42,7 @@ void WBRMRC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
                            const std::vector<ContactSpec*>& contact_list,
                            Eigen::VectorXd& cmd, void* extra_input) {
     if (!b_updatesetting_) {
-        printf("[Wanning] WBRMRC setting is not done\n");
+        printf("[Warning] WBRMRC setting is not done\n");
     }
     if (extra_input) data_ = static_cast<WBRMRC_ExtraData*>(extra_input);
 
