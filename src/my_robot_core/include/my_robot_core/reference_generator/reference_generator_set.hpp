@@ -1,10 +1,6 @@
-#include <my_robot_core/reference_generator/CoMTrajectoryManager.hpp>
-#include <my_robot_core/reference_generator/FootPosTrajectoryManager.hpp>
-#include <my_robot_core/reference_generator/JointTrajectoryManager.hpp>
-#include <my_robot_core/reference_generator/BaseOriTrajectoryManager.hpp>
+#include <my_robot_core/reference_generator/com_trajectory_manager.hpp>
+#include <my_robot_core/reference_generator/foot_trajectory_manager.hpp>
+#include <my_robot_core/reference_generator/joint_trajectory_manager.hpp>
+#include <my_robot_core/reference_generator/base_ori_trajectory_manager.hpp>
 
-#include <my_robot_core/reference_generator/MaxNormalForceTrajectoryManager.hpp>
-#include <my_robot_core/reference_generator/QPWeightTrajectoryManager.hpp>
-#include <my_robot_core/reference_generator/SingleWeightTrajectoryManager.hpp>
-
-
+#include <my_robot_core/reference_generator/smooth_transition_manager.hpp>

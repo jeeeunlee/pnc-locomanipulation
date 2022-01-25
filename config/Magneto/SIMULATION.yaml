@@ -24,10 +24,10 @@ control_configuration:
 
 # -- initial physics settings
 contact_params:
-  # [AL, AR, BL, BR] >> MagnetoFoot @ MagnetoDefinition.hpp
+  # [AL, AR, BL, BR] >> MagnetoFoot @ magneto_definition.hpp
   friction: [0.7, 0.7, 0.7, 0.7] 
   
 magnetism_params:
-  # [AL, AR, BL, BR] >> MagnetoFoot @ MagnetoDefinition.hpp
+  # [AL, AR, BL, BR] >> MagnetoFoot @ magneto_definition.hpp
   magnetic_force: [147., 147., 147., 147.] #[N] 
   residual_magnetism: [0.0, 0.0, 0.0, 0.0] #5.0 # 3.0 #[%]

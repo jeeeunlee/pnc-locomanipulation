@@ -1,35 +1,27 @@
-#include <my_robot_core/reference_generator/SingleWeightTrajectoryManager.hpp>
+#include <my_robot_core/reference_generator/smooth_transition_manager.hpp>
 
-SingleWeightTrajectoryManager::SingleWeightTrajectoryManager(RobotSystem* _robot)
-    : TransitionManagerBase(_robot) {
-  my_utils::pretty_constructor(2, "TrajectoryManager: weight");
+template<typename T>
+SmoothTransitionManager<T>::SmoothTransitionManager()
+  :TransitionManagerBase() {
+  my_utils::pretty_constructor(2, "SmoothTransitionManager");
 }
 
-
-void SingleWeightTrajectoryManager::setSingleWeightTrajectory(const double& _start_time, 
-                                                          const double& _duration,
-                                                          const double& _init,
-                                                          const double& _target) {
-  setSingleWeightInitTarget(_init, _target);
-  setSingleWeightTime(_start_time, _duration);
-}
-
-void SingleWeightTrajectoryManager::setSingleWeightInitTarget(const double& _init,
-                                                          const double& _target) {
+template<typename T>
+void SmoothTransitionManager<T>::setTransition(const double& _start_time, 
+                                                const double& _duration,
+                                                const T& _init,
+                                                const T& _target) {
   weight_init_ = _init;
   weight_target_ = _target;
+  trans_start_time_ = _start_time;
+  trans_duration_ = _duration;
+  trans_end_time_ = trans_start_time_ + trans_duration_;
 }
 
-void SingleWeightTrajectoryManager::setSingleWeightTime(const double& _start_time, 
-                                                        const double& _duration) {
-  traj_start_time_ = _start_time;
-  traj_duration_ = _duration;
-  traj_end_time_ = traj_start_time_ + traj_duration_;
-}
-
-void SingleWeightTrajectoryManager::updateSingleWeight(const double& current_time,
-                                                        double &_weight) {
-  double ts = (current_time - traj_start_time_) / traj_duration_; // 0~1
+template<typename T>
+void SmoothTransitionManager<T>::updateSingleWeight(const double& current_time,
+                                                        T &_weight) {
+  double ts = (current_time - trans_start_time_) / trans_duration_; // 0~1
   ts = 0. > ts ? 0. : ts;
   ts = 1. < ts ? 1. : ts;
   double alpha = 0.5 * (1 - cos(M_PI * ts)); // 0~1

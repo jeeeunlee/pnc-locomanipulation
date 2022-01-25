@@ -78,27 +78,17 @@ public:
     ~MotionCommand(){};
 
     // function
-    void add_foot_motion(int _moving_foot_link_id,
-                        const POSE_DATA& _pose_del,
-                        double _motion_period);
     void add_com_motion(const POSE_DATA& _pose_del,
                         double _motion_period);
     void add_motion(int _moving_link_id,
                     const MOTION_DATA& _pose_del);
-
-    void clear_motion();
     void clear_and_add_motion(int _moving_link_id,
-                    const MOTION_DATA& _motion_data);
-    
+                    const MOTION_DATA& _motion_data);    
 
     int get_moving_foot();
     bool get_foot_motion_command(MOTION_DATA &_motion_data, TARGET_LINK_IDX &_idx) ;
     bool get_foot_motion_command(MOTION_DATA &_motion_data);
     bool get_com_motion_command(MOTION_DATA &_motion_data);
-
-    int get_num_of_target(){  return motion_sets_.size();  };
-    int get_num_of_foot_target();
-    bool is_com_target_exist();
 
 protected:  
     // link_idx, assume IDX of COM is -1
@@ -106,17 +96,18 @@ protected:
     std::map<TARGET_LINK_IDX, MOTION_DATA> motion_sets_;
 };
 
-class ClimbingMotionCommand : public MotionCommand{
-public:
-    ClimbingMotionCommand();
-    ClimbingMotionCommand(int _moving_link_id,
-                    const MOTION_DATA& _motion_data);
-    ClimbingMotionCommand(int _moving_link_id,
-                    const MOTION_DATA& _motion_data,
-                    double _mu,
-                    double _f_mag);
-    ~ClimbingMotionCommand();
-protected:
-    double mu_;
-    double f_mag_;
+////////////////////////////////////////
+
+
+class SimEnvCommand {
+  public:
+    SimEnvCommand(): foot_idx(-1), mu(0.7), f_adhesive(100.){ };
+    SimEnvCommand(TARGET_LINK_IDX _idx, double _mu, double _f)
+    : foot_idx(_idx), mu(_mu), f_adhesive(_f){ };
+    ~SimEnvCommand(){};
+
+  protected:
+    TARGET_LINK_IDX foot_idx;
+    double mu;
+    double f_adhesive;
 };

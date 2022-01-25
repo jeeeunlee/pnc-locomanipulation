@@ -4,8 +4,8 @@
 #include <my_wbc/Contact/BasicContactSpec.hpp>
 #include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/BasicTask.hpp>
-#include <my_robot_core/magneto_core/MagnetoMotionAPI.hpp>
-#include <my_robot_core/magneto_core/MagnetoDefinition.hpp>
+#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_definition.hpp>
 
 // interpolators
 #include <my_utils/Math/hermite_curve_vec.hpp>

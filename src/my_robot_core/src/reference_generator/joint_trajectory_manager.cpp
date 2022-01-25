@@ -1,4 +1,4 @@
-#include <my_robot_core/reference_generator/JointTrajectoryManager.hpp>
+#include <my_robot_core/reference_generator/joint_trajectory_manager.hpp>
 
 JointTrajectoryManager::JointTrajectoryManager(RobotSystem* _robot)
     : TrajectoryManagerBase(_robot) {

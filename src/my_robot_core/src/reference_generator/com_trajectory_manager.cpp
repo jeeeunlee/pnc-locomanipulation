@@ -1,4 +1,4 @@
-#include <my_robot_core/reference_generator/pos_trajectory_manager.hpp>
+#include <my_robot_core/reference_generator/com_trajectory_manager.hpp>
 
 CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {

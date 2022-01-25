@@ -5,6 +5,11 @@
 #include <my_wbc/WBC.hpp>
 #include <my_wbc/Contact/ContactSpec.hpp>
 
+// residual magnetic force acting on swing foot 
+// is considered in the dynamics equation
+
+// force variable to be minimized: Fx=Fc-Fm (friction cone force)
+
 class WBRMRC_ExtraData{
     public:
         // Output
