@@ -1,5 +1,5 @@
-#include <my_robot_core/magneto_core/MagnetoDefinition.hpp>
-#include <my_robot_core/reference_generator/FootPosTrajectoryManager.hpp>
+#include <my_robot_core/magneto_core/magneto_definition.hpp>
+#include <my_robot_core/reference_generator/foot_trajectory_manager.hpp>
 
 
 FootPosTrajectoryManager::FootPosTrajectoryManager(RobotSystem* _robot)

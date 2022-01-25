@@ -1,8 +1,8 @@
 #pragma once
 
-#include "my_robot_core/EnvInterface.hpp"
-#include "my_robot_core/magneto_core/MagnetoDefinition.hpp"
-#include "my_robot_core/magneto_core/MagnetoMotionAPI.hpp"
+#include "my_robot_core/env_interface.hpp"
+#include "my_robot_core/magneto_core/magneto_definition.hpp"
+#include "my_robot_core/magneto_core/magneto_motion_api.hpp"
 #include "my_robot_core/magneto_core/magneto_logic_interrupt/WalkingInterruptLogic.hpp"
 
 class MagnetoStateProvider;
@@ -68,11 +68,6 @@ class MagnetoCommand {
     Eigen::VectorXd q;
     Eigen::VectorXd qdot;
     Eigen::VectorXd jtrq;
-
-    // bool alfoot_magnetism_on;
-    // bool blfoot_magnetism_on;
-    // bool arfoot_magnetism_on;
-    // bool brfoot_magnetism_on;
     std::map<int, bool> b_magnetism_map;
 
     // double alfoot_magnetism_on; // 0~1
@@ -101,7 +96,6 @@ class MagnetoInterface : public EnvInterface {
     Eigen::VectorXd cmd_jvel_;
     Eigen::VectorXd cmd_jtrq_;
 
-    double prev_planning_moment_;
     int check_com_planner_updated;
     int check_foot_planner_updated;
     int run_mode_;
@@ -116,9 +110,6 @@ class MagnetoInterface : public EnvInterface {
     void AddScriptWalkMotion(int _link_idx, 
                             const MOTION_DATA& _motion_data);
     
-    void GetCoMTrajectory(std::vector<Eigen::VectorXd>& com_des_list);
-    void GetContactSequence(std::vector<Eigen::Isometry3d>& foot_target_list);
-    bool IsTrajectoryUpdated();
 
     void GetFeasibleCoM(std::vector <std::pair<double, Eigen::Vector3d>>& 
                         feasible_com_list);

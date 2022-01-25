@@ -1,4 +1,4 @@
-#include <my_robot_core/reference_generator/ori_trajectory_manager.hpp>
+#include <my_robot_core/reference_generator/base_ori_trajectory_manager.hpp>
 
 BaseOriTrajectoryManager::BaseOriTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {

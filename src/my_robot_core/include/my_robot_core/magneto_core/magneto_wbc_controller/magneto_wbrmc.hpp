@@ -1,19 +1,19 @@
 #pragma once
 
-// #include <my_robot_core/magneto_core/MagnetoDefinition.hpp>
-// #include <my_robot_core/magneto_core/MagnetoInterface.hpp>
-// #include <my_robot_core/magneto_core/MagnetoStateProvider.hpp>
-// #include <my_robot_core/magneto_core/MagnetoTaskAndForceContainer/MagnetoTaskAndForceContainer.hpp>
+// #include <my_robot_core/magneto_core/magneto_definition.hpp>
+// #include <my_robot_core/magneto_core/magneto_interface.hpp>
+// #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
+// #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 // #include <my_wbc/JointIntegrator.hpp>
 // #include <my_wbc/WBLC/KinWBC.hpp>
 #include <my_wbc/WBMC/WBRMRC.hpp>
-#include <my_robot_core/magneto_core/magneto_controller/MagnetoMainController.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbmc.hpp>
 
-class MagnetoResidualController: public MagnetoMainController {
+class MagnetoWBRMC: public MagnetoWBMC {
  public:
-  MagnetoResidualController(MagnetoTaskAndForceContainer* _taf_container,
+  MagnetoWBRMC(MagnetoWbcSpecContainer* _ws_container,
                             RobotSystem* _robot);
-  virtual ~MagnetoResidualController();
+  virtual ~MagnetoWBRMC();
 
   virtual void getCommand(void* _cmd);
   virtual void ctrlInitialization(const YAML::Node& node);

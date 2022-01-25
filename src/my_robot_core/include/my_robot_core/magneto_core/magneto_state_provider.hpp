@@ -6,8 +6,6 @@
 #include <my_utils/IO/IOUtilities.hpp>
 //#include <RobotSystem/include/CentroidModel.hpp>
 
-
-
 class RobotSystem;
 class MotionCommand;
 
@@ -30,14 +28,9 @@ class MagnetoStateProvider {
     Clock clock;
 
     double curr_time;
-    double prev_state_machine_time;
-    double planning_moment;
-
-    bool b_do_planning;
-
-    int stance_foot;
-    Eigen::Isometry3d stance_foot_iso;
-    Eigen::Isometry3d moving_foot_target_iso;
+    
+    // Motion api command
+    MotionCommand motion_command; 
 
     Eigen::VectorXd q_des;
     Eigen::VectorXd q;
@@ -50,19 +43,11 @@ class MagnetoStateProvider {
     int b_alfoot_contact;
     int b_blfoot_contact;
 
-    int num_step_copy;
-    int phase_copy;
- 
-    // save planned result for the plot
-    std::vector<Eigen::Isometry3d> foot_target_list;
-    std::vector<Eigen::VectorXd> com_des_list;  
-
-    /* -------------- Magneto by JE ---------------*/
+    /* -------------- com planner ---------------*/
 
     // save feasibile com for the plot
     std::vector<std::pair<double, Eigen::Vector3d>> feasible_com_list;
-    Eigen::Vector3d com_pos_ini_step;
-    Eigen::Vector3d com_pos_des_step;
+
     Eigen::Vector3d com_pos_init;
     Eigen::Vector3d com_pos_target;
     int check_com_planner_updated;
@@ -70,19 +55,13 @@ class MagnetoStateProvider {
     Eigen::VectorXd foot_pos_init;
     Eigen::VectorXd foot_pos_target;
     int check_foot_planner_updated;
-    // magentic force
-    Eigen::VectorXd arf_magenetic_wrench;
-    Eigen::VectorXd alf_magenetic_wrench;
-    Eigen::VectorXd brf_magenetic_wrench;
-    Eigen::VectorXd blf_magenetic_wrench;
 
-    /*-------------- Magneto by JE ---------------*/
 
-    // data manager
+    /*-------------- data manager ---------------*/
+
     Eigen::VectorXd com_pos;
     Eigen::VectorXd com_vel;
     Eigen::VectorXd mom;
-    Eigen::VectorXd est_com_vel;
 
     Eigen::VectorXd com_pos_des;
     Eigen::VectorXd com_vel_des;
@@ -106,29 +85,8 @@ class MagnetoStateProvider {
     Eigen::VectorXd blf_pos_des;
     Eigen::VectorXd blf_vel_des;
 
-    Eigen::Quaternion<double> arf_ori_quat;
-    Eigen::VectorXd arf_ang_vel;
-    Eigen::Quaternion<double> brf_ori_quat;
-    Eigen::VectorXd brf_ang_vel;
-    Eigen::Quaternion<double> alf_ori_quat;
-    Eigen::VectorXd alf_ang_vel;
-    Eigen::Quaternion<double> blf_ori_quat;
-    Eigen::VectorXd blf_ang_vel;
-
-    Eigen::Quaternion<double> arf_ori_quat_des;
-    Eigen::VectorXd arf_ang_vel_des;
-    Eigen::Quaternion<double> brf_ori_quat_des;
-    Eigen::VectorXd brf_ang_vel_des;
-    Eigen::Quaternion<double> alf_ori_quat_des;
-    Eigen::VectorXd alf_ang_vel_des;
-    Eigen::Quaternion<double> blf_ori_quat_des;
-    Eigen::VectorXd blf_ang_vel_des;
-
     Eigen::Quaternion<double> base_ori;
     Eigen::VectorXd base_ang_vel;
-
-    Eigen::Quaternion<double> base_ori_des;
-    Eigen::VectorXd base_ang_vel_des;
 
     Eigen::VectorXd al_rf_des;
     Eigen::VectorXd bl_rf_des;
@@ -139,8 +97,6 @@ class MagnetoStateProvider {
     Eigen::VectorXd bl_rf;
     Eigen::VectorXd ar_rf;
     Eigen::VectorXd br_rf;
-
-    Eigen::VectorXd des_jacc_cmd;
 
    private:
     MagnetoStateProvider(RobotSystem* _robot);
