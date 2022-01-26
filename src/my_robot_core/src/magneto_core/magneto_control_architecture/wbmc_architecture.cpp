@@ -132,23 +132,30 @@ void MagnetoWbmcControlArchitecture::get_next_state_pair(StateIdentifier &_next_
      std::cout<<"states_sequence_ is empty!!" << std::endl;
   }    
   else {
-    StatePair next_state_pair = states_sequence_.front();
-    _next_state = next_state_pair.first;
-    _next_motion_command = next_state_pair.second;
+    STMCommand next_stm_cmd = states_sequence_.front();
+    _next_state = next_stm_cmd.state_id;
+    _next_motion_command = next_stm_cmd.motion_command;
+
+    auto next_sim_cmd_pair = sp_->sim_env_sequence.front();
+    while(next_sim_cmd_pair.first != next_stm_cmd.motion_id)
+      sp_->sim_env_sequence.pop_front();
+     
     states_sequence_.pop_front();       
   }
   states_sequence_mtx_.unlock();
+  
   // std::cout<<"get_next_state = " << _next_state << std::endl;
 }
 
-void MagnetoWbmcControlArchitecture::add_next_state(int _state, const MotionCommand &_motion_command) {
-  STMCommand next_state_pair = std::make_pair(_state, _motion_command);
-  add_next_state(next_state_pair);  
+void MagnetoWbmcControlArchitecture::add_next_state(int _st_id, int _mt_id,
+                                      const MotionCommand &_motion_command) {
+  STMCommand stm_cmd = STMCommand(_st_id, _mt_id, _motion_command);
+  add_next_state(stm_cmd);  
 } 
 
-void MagnetoWbmcControlArchitecture::add_next_state(STMCommand _state_pair) {
+void MagnetoWbmcControlArchitecture::add_next_state(STMCommand _stm_cmd) {
   states_sequence_mtx_.lock();
-  states_sequence_.push_back(_state_pair);
+  states_sequence_.push_back(_stm_cmd);
   states_sequence_mtx_.unlock();
 }
 

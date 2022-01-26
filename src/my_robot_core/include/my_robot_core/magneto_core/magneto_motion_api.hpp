@@ -10,10 +10,10 @@ typedef int TARGET_LINK_IDX;
 struct POSE_DATA {
     Eigen::Vector3d pos;
     Eigen::Quaternion<double> ori;
-    bool is_bodyframe;
+    bool is_baseframe;
 
     POSE_DATA() {
-        is_bodyframe = true;
+        is_baseframe = true;
         pos = Eigen::VectorXd::Zero(3);
         ori = Eigen::Quaternion<double>::Identity();
     }
@@ -21,14 +21,14 @@ struct POSE_DATA {
     POSE_DATA(const Eigen::Vector3d& _pos, 
               const Eigen::Quaternion<double>& _ori,
               bool _is_baseframe=true)
-              : pos(_pos),ori(_ori),is_bodyframe(_is_baseframe){
+              : pos(_pos),ori(_ori),is_baseframe(_is_baseframe){
     }
 
     POSE_DATA(const Eigen::VectorXd& _pos, 
               const Eigen::VectorXd& _ori,
               bool _is_baseframe=true) 
-              : is_bodyframe(_is_baseframe) {
-        is_bodyframe = true;
+              : is_baseframe(_is_baseframe) {
+        is_baseframe = true;
         pos << _pos[0], _pos[1], _pos[2];
         ori = Eigen::Quaternion<double>
                 (_ori[0], _ori[1], _ori[2], _ori[3]);
@@ -36,7 +36,7 @@ struct POSE_DATA {
 
     POSE_DATA(double x, double y, double z, 
               double w, double qx, double qy, double qz) {
-        is_bodyframe = true;
+        is_baseframe = true;
         pos << x,y,z;
         ori = Eigen::Quaternion<double>(w,qx,qy,qz);
     }

@@ -6,7 +6,7 @@
 class MagnetoWbmcControlArchitecture;
 class MagnetoStateProvider;
 class MotionCommand;
-class SimEnvComand;
+class SimEnvCommand;
 
 class ClimbingInterruptLogic : public InterruptLogic {
  public:
@@ -14,11 +14,11 @@ class ClimbingInterruptLogic : public InterruptLogic {
   ~ClimbingInterruptLogic();
 
   void processInterrupts();
-  void addPresetMotion(const YAML::Node& motion_cfg);
+  void setInterruptRoutine(const YAML::Node& motion_cfg);
 
   MagnetoWbmcControlArchitecture* ctrl_arch_;
   MagnetoStateProvider* sp_;
 
-  std::deque<std::pair<SimEnvComand, MotionCommand>> simenv_motion_script_list_; 
-  int motion_identifier;
+  std::deque<std::pair<SimEnvCommand, MotionCommand>> simenv_motion_script_list_; 
+  int mc_id; // motion command identifier
 };

@@ -77,7 +77,7 @@ void WalkingInterruptLogic::processInterrupts() {
   resetFlags();
 }
 
-void WalkingInterruptLogic::addPresetMotion(const YAML::Node& motion_cfg){
+void WalkingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
   // add motion_command_script_list_
     int link_idx;
     MOTION_DATA md_temp;

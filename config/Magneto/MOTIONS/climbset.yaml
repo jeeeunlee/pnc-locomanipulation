@@ -11,7 +11,9 @@ motion0:
   swing_height: 0.05
   duration: 0.4  
   frame: 0
-  new_contact_spec: [0.7, 100] # for only simulation [mu, adhesion]
+  # for only simulation
+  mu: 0.7 # friction
+  fm: 100 # adhesive force
 
 motion1:
   foot: 0
@@ -20,7 +22,9 @@ motion1:
   swing_height: 0.05
   duration: 0.4  
   frame: 0
-  new_contact_spec: [0.7, 100] # for only simulation [mu, adhesion]
+  # for only simulation
+  mu: 0.7 # friction
+  fm: 100 # adhesive force
 
 motion2:
   foot: 3
@@ -29,7 +33,9 @@ motion2:
   swing_height: 0.05
   duration: 0.4  
   frame: 0
-  new_contact_spec: [0.7, 100] # for only simulation [mu, adhesion]
+  # for only simulation
+  mu: 0.7 # friction
+  fm: 100 # adhesive force
 
 motion3:
   foot: 1
@@ -38,4 +44,6 @@ motion3:
   swing_height: 0.05
   duration: 0.4  
   frame: 0
-  new_contact_spec: [0.7, 100] # for only simulation [mu, adhesion]
+  # for only simulation
+  mu: 0.7 # friction
+  fm: 100 # adhesive force

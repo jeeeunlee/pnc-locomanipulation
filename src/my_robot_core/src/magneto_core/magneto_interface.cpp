@@ -193,30 +193,11 @@ void MagnetoInterface::GetNextFootStep(Eigen::VectorXd& foot_pos) {
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-
-// void MagnetoInterface::AddScriptWalkMotion(int _link_idx, 
-//                                         const MOTION_DATA& _motion_data) {
-
-//     // motion_param->set_walking_pattern(_moving_foot, _pos, _ori, _motion_period, _is_bodyframe);
-//     MotionCommand motion_command = MotionCommand(_link_idx,_motion_data);
-//     ((WalkingInterruptLogic*)interrupt_)
-//         ->motion_command_script_list_.push_back(motion_command);
-// }
 void MagnetoInterface::AddScriptMotion(const YAML::Node& motion_cfg){
-
+    interrupt_->setInterruptRoutine(motion_cfg);
 }
 
-void MagnetoInterface::AddScriptWalkMotion(const YAML::Node& motion_cfg){
 
-}
-
-void MagnetoInterface::AddScriptClimbMotion(const YAML::Node& motion_cfg) {
-
-    // motion_param->set_walking_pattern(_moving_foot, _pos, _ori, _motion_period, _is_bodyframe);
-    MotionCommand motion_command = MotionCommand(_link_idx,_motion_data);
-    ((ClimbingInterruptLogic*)interrupt_)
-        ->motion_command_script_list_.push_back(motion_command);
-}
 
 
 
