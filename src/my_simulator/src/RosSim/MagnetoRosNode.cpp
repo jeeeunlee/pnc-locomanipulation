@@ -113,7 +113,7 @@ void MagnetoRosNode::customPreStep() {
     // --------------------------------------------------------------
     //          COMPUTE COMMAND - desired joint acc/trq etc
     // --------------------------------------------------------------
-    CheckInterrupt_();
+
     // ROS_INFO("getCommand start");
     ((MagnetoInterface*)interface_)->getCommand(sensor_data_, command_);
     // ROS_INFO("getCommand end");
@@ -188,10 +188,6 @@ void MagnetoRosNode::customPreStep() {
 
 
     count_++;
-}
-
-void MagnetoRosNode::CheckInterrupt_() {
-    // this moved to enableButton
 }
 
 void MagnetoRosNode::EnforceTorqueLimit()  {

@@ -7,7 +7,7 @@
 //#include <RobotSystem/include/CentroidModel.hpp>
 
 class RobotSystem;
-class MotionCommand;
+class SimEnvCommand;
 
 class MagnetoStateProvider {
    public:
@@ -29,9 +29,8 @@ class MagnetoStateProvider {
 
     double curr_time;
     
-    // Motion api command
-    MotionCommand motion_command; 
-
+    std::deque<std::pair<int, SimEnvCommand>> sim_env_sequence;
+    
     Eigen::VectorXd q_des;
     Eigen::VectorXd q;
     Eigen::VectorXd qdot;

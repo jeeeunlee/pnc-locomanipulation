@@ -87,8 +87,7 @@ class MagnetoRosNode : public dart::gui::osg::WorldNode {
     void ReadMotions_();
     void PlotResult_();
     void PlotFootStepResult_();
-    void CheckInterrupt_();
-    
+
     void CheckRobotSkeleton(const dart::dynamics::SkeletonPtr& skel);
     
     void EnforceTorqueLimit(); 

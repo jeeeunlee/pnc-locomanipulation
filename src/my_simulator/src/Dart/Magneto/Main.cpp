@@ -297,7 +297,7 @@ int main(int argc, char** argv) {
         my_utils::readParameter(simulation_cfg, "ground", ground_file);
 
         my_utils::readParameter(simulation_cfg, "initial_pose", q_floating_base_init); 
-        my_utils::readParameter(simulation_cfg["contact_params"], "friction", coef_fric);                
+                        
 
     } catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
@@ -321,22 +321,6 @@ int main(int argc, char** argv) {
 
     world->addSkeleton(ground);
     world->addSkeleton(robot);
-
-    // =========================================================================
-    // Friction & Restitution Coefficient
-    // =========================================================================
-    double friction(coef_fric); // maximum tangential force not mu
-    double restit(0.0);
-    ground->getBodyNode("ground_link")->setFrictionCoeff(friction);
-    robot->getBodyNode("BL_foot_link")->setFrictionCoeff(friction);
-    robot->getBodyNode("AL_foot_link")->setFrictionCoeff(friction);
-    robot->getBodyNode("AR_foot_link")->setFrictionCoeff(friction);
-    robot->getBodyNode("BR_foot_link")->setFrictionCoeff(friction);
-
-    robot->getBodyNode("BL_foot_link_3")->setFrictionCoeff(friction);
-    robot->getBodyNode("AL_foot_link_3")->setFrictionCoeff(friction);
-    robot->getBodyNode("AR_foot_link_3")->setFrictionCoeff(friction);
-    robot->getBodyNode("BR_foot_link_3")->setFrictionCoeff(friction);
 
     Eigen::Vector3d gravity(0.0, 0.0, -9.81);
     world->setGravity(gravity);

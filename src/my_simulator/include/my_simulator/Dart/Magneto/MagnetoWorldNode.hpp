@@ -23,7 +23,7 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     void ReadMotions_(const std::string& _motion_file_name);
     void PlotResult_();
     void PlotFootStepResult_();
-    void CheckInterrupt_();
+
     
     void CheckRobotSkeleton(const dart::dynamics::SkeletonPtr& skel);
     
@@ -51,8 +51,14 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
 
     int run_mode_;
 
-    Eigen::VectorXd magnetic_force_; // 147. #[N] 
-    Eigen::VectorXd residual_magnetism_; //  3.0 #[%]
+    double coef_fric_;
+    double magnetic_force_; // 147. #[N] 
+    double residual_magnetism_; //  3.0 #[%]
+
+    std::map<int, double> coef_fric_map_;
+    std::map<int, double> magnetic_force_map_;
+    std::map<int, double> residual_magnetism_map_;
+    
 
 
     float contact_threshold_;
@@ -72,8 +78,8 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
 
     // user button
     void enableButtonFlag(uint16_t key);
-
     void setParameters(const YAML::Node& simulation_cfg);
 
-
+    //
+    void setFrictionCoeff();
 };
