@@ -1,9 +1,10 @@
 #pragma once
 
-#include </my_robot_core/magneto_core/magneto_planner/magneto_planner_set.hpp>
-#include </my_robot_core/reference_generator/reference_generator_set.hpp>
+#include <my_robot_core/magneto_core/magneto_planner/magneto_planner_set.hpp>
+#include <my_robot_core/reference_generator/reference_generator_set.hpp>
 
 class RobotSystem;
+class MotionCommand;
 
 // Object which publicly contains all the tasks, contacts and reaction forces
 class MagnetoReferenceGeneratorContainer {
@@ -12,6 +13,9 @@ class MagnetoReferenceGeneratorContainer {
   ~MagnetoReferenceGeneratorContainer();
 
   RobotSystem* robot_;
+
+  // Motion Command
+  MotionCommand motion_command_;
 
   // Trajectory Managers
   FootPosTrajectoryManager* foot_trajectory_manager_;
@@ -28,6 +32,6 @@ class MagnetoReferenceGeneratorContainer {
 
   // Planner
   MagnetoGoalPlanner* goal_planner_;
-  MagnetoTrajectoryManager* trajectory_planner_;
+  // MagnetoTrajectoryManager* trajectory_planner_;
 
 };

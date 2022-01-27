@@ -9,6 +9,27 @@
 class RobotSystem;
 class SimEnvCommand;
 
+class STMCommand {
+  public:
+    STMCommand() {
+      state_id = MAGNETO_STATES::BALANCE;
+      motion_command = MotionCommand();
+      motion_id = -1;
+    };
+    ~STMCommand();
+    STMCommand(int _st_id, int _mt_id,
+              const MotionCommand& _motion_command) {
+      state_id = _st_id;
+      motion_id = _mt_id;
+      motion_command = _motion_command;
+    };
+
+    int state_id;    
+    MotionCommand motion_command;
+    SimEnvCommand sim_env;
+    int motion_id;    
+};
+
 class MagnetoStateProvider {
    public:
     static MagnetoStateProvider* getStateProvider(RobotSystem* _robot);
@@ -30,6 +51,8 @@ class MagnetoStateProvider {
     double curr_time;
     
     std::deque<std::pair<int, SimEnvCommand>> sim_env_sequence;
+    std::deque<STMCommand> states_sequence_;
+    std::mutex states_sequence_mtx_;
     
     Eigen::VectorXd q_des;
     Eigen::VectorXd q;

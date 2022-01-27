@@ -1,6 +1,6 @@
 #pragma once
 
-#include <my_robot_core/reference_generator/TrajectoryManagerBase.hpp>
+#include <my_robot_core/reference_generator/trajectory_manager_base.hpp>
 #include <my_wbc/Task/BasicTask.hpp>
 
 // Object to manage common trajectory primitives

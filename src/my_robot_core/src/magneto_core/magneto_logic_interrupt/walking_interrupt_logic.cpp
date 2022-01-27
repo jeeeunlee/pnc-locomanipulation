@@ -1,5 +1,5 @@
-#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture.hpp>
-#include <my_robot_core/magneto_core/magneto_logic_interrupt/WalkingInterruptLogic.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
+#include <my_robot_core/magneto_core/magneto_logic_interrupt/walking_interrupt_logic.hpp>
 
 WalkingInterruptLogic::WalkingInterruptLogic(
         MagnetoWbmcControlArchitecture* _ctrl_arch)
@@ -20,6 +20,8 @@ WalkingInterruptLogic::WalkingInterruptLogic(
   motion_command_arfoot_ = new MotionCommand(MagnetoBodyNode::AR_tibia_link, motion_data_default_);
   motion_command_brfoot_ = new MotionCommand(MagnetoBodyNode::BR_tibia_link, motion_data_default_);
   motion_command_instant_ = new MotionCommand();
+
+  mc_id = -1; // motion command identifier
 }
 
 WalkingInterruptLogic::~WalkingInterruptLogic() {}
@@ -37,13 +39,14 @@ void WalkingInterruptLogic::processInterrupts() {
           // initialize trajectory_manager
           // ctrl_arch_->floating_base_lifting_up_manager_->
           // set stateMachine sequences
-          for(auto &it : motion_command_script_list_) {          
-            ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, it );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_START_TRANS, it );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING, it );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_END_TRANS, it );            
+          for(auto &it : motion_command_script_list_) {    
+            mc_id ++;      
+            ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id, it );
+            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_START_TRANS, mc_id, it );
+            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING, mc_id, it );
+            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_END_TRANS, mc_id, it );            
           }
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, MotionCommand() );
+          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, MotionCommand() );
         }
       break;
       case 'w':
@@ -55,7 +58,7 @@ void WalkingInterruptLogic::processInterrupts() {
           POSE_DATA pose_up(0,0,0.01, 1,0,0,0);
           double duration_up = 0.5;
           mc_com_up.add_com_motion(pose_up, duration_up);
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_com_up);
+          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, mc_com_up);
         }
       break;
       case 'x':
@@ -67,7 +70,7 @@ void WalkingInterruptLogic::processInterrupts() {
           POSE_DATA pose_up(0,0,-0.01, 1,0,0,0);
           double duration_up = 0.5;
           mc_com_up.add_com_motion(pose_up, duration_up);
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_com_up);
+          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, mc_com_up);
         }
       break;
       default:
@@ -84,14 +87,14 @@ void WalkingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
 
     Eigen::VectorXd pos_temp;
     Eigen::VectorXd ori_temp;
-    bool is_bodyframe;
+    bool is_baseframe;
     my_utils::readParameter(motion_cfg, "foot", link_idx);
     my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
     my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
     my_utils::readParameter(motion_cfg, "pos",pos_temp);
     my_utils::readParameter(motion_cfg, "ori", ori_temp);
-    my_utils::readParameter(motion_cfg, "b_relative", is_bodyframe);
-    md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_bodyframe);
+    my_utils::readParameter(motion_cfg, "b_relative", is_baseframe);
+    md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_baseframe);
     MotionCommand motion_command = MotionCommand(link_idx, md_temp);
 
     motion_command_script_list_.push_back(motion_command);

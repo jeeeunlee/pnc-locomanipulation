@@ -1,4 +1,4 @@
-#include <my_robot_core/magneto_core/magneto_tasks/TaskSet.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/tasks/com_task.hpp>
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <../my_utils/Configuration.h>
 #include <my_utils/IO/IOUtilities.hpp>

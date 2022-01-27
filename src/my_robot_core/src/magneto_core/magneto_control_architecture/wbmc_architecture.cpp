@@ -26,13 +26,13 @@ MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _rob
 
   // Initialize states: add all states to the state machine map
   state_machines_[MAGNETO_STATES::BALANCE] =
-      new FullSupport(MAGNETO_STATES::BALANCE, ws_container_, rg_container_, robot_);
+      new FullSupport(MAGNETO_STATES::BALANCE, robot_, ws_container_, rg_container_);
   state_machines_[MAGNETO_STATES::SWING_START_TRANS] =
-      new Transition(MAGNETO_STATES::SWING_START_TRANS, ws_container_, rg_container_, robot_, 0);
+      new Transition(MAGNETO_STATES::SWING_START_TRANS, robot_, ws_container_, rg_container_, 0);
   state_machines_[MAGNETO_STATES::SWING] =
-      new Swing(MAGNETO_STATES::SWING, ws_container_, rg_container_, robot_);
+      new Swing(MAGNETO_STATES::SWING, robot_, ws_container_, rg_container_);
   state_machines_[MAGNETO_STATES::SWING_END_TRANS] =
-      new Transition(MAGNETO_STATES::SWING_END_TRANS, ws_container_, rg_container_, robot_, 1);
+      new Transition(MAGNETO_STATES::SWING_END_TRANS, robot_, ws_container_, rg_container_, 1);
   // Set Starting State
   state_ = MAGNETO_STATES::BALANCE;
   prev_state_ = state_;
@@ -46,19 +46,6 @@ MagnetoWbmcControlArchitecture::~MagnetoWbmcControlArchitecture() {
   delete rg_container_;
   delete wbc_controller;
 
-  // Delete the trajectory managers
-  delete foot_trajectory_manager_;
-  delete com_trajectory_manager_;
-  delete joint_trajectory_manager_;
-  delete base_ori_trajectory_manager_;
-
-  // -- TaskWeightTrajectoryManager : class for managing hierarchy with weight
-  // -- MaxNormalForceTrajectoryManager : class for managing max normal force
-  delete max_normal_force_manager_;
-  delete QPweight_qddot_manager_;
-  delete QPweight_xddot_manager_;
-  delete QPweight_reactforce_manager_;
-
   // Delete the state machines
   // delete state_machines_[MAGNETO_STATES::INITIALIZE];
   // delete state_machines_[MAGNETO_STATES::STAND];
@@ -66,9 +53,7 @@ MagnetoWbmcControlArchitecture::~MagnetoWbmcControlArchitecture() {
   delete state_machines_[MAGNETO_STATES::SWING_START_TRANS];
   delete state_machines_[MAGNETO_STATES::SWING];
   delete state_machines_[MAGNETO_STATES::SWING_END_TRANS];
-  
-  delete goal_planner_;
-  delete trajectory_planner_;
+
 }
 
 void MagnetoWbmcControlArchitecture::ControlArchitectureInitialization() {}
@@ -107,7 +92,7 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
     state_machines_[state_]->lastVisit();
     prev_state_ = state_;
     // state_ = state_machines_[state_]->getNextState();
-    get_next_state_pair(state_, rg_container_->motion_command_);
+    get_next_state(state_);
     b_state_first_visit_ = true;
   }
 };
@@ -121,20 +106,19 @@ int MagnetoWbmcControlArchitecture::get_num_states() {
   return states_sequence_.size();
 }
 
-void MagnetoWbmcControlArchitecture::get_next_state_pair(StateIdentifier &_next_state, 
-                                              MotionCommand &_next_motion_command) {
+void MagnetoWbmcControlArchitecture::get_next_state(StateIdentifier &_next_state) {
   // DRACO & VALKIYRIE VERSION
   // return state_machines_[state_]->getNextState(); 
   states_sequence_mtx_.lock();
   if(states_sequence_.empty()) {
      _next_state = MAGNETO_STATES::BALANCE;
-     _next_motion_command = MotionCommand();
+     rg_container_->motion_command_ = MotionCommand();
      std::cout<<"states_sequence_ is empty!!" << std::endl;
   }    
   else {
     STMCommand next_stm_cmd = states_sequence_.front();
     _next_state = next_stm_cmd.state_id;
-    _next_motion_command = next_stm_cmd.motion_command;
+    rg_container_->motion_command_ = next_stm_cmd.motion_command;
 
     auto next_sim_cmd_pair = sp_->sim_env_sequence.front();
     while(next_sim_cmd_pair.first != next_stm_cmd.motion_id)

@@ -3,7 +3,7 @@
 #include "my_robot_core/env_interface.hpp"
 #include "my_robot_core/magneto_core/magneto_definition.hpp"
 #include "my_robot_core/magneto_core/magneto_motion_api.hpp"
-#include "my_robot_core/magneto_core/magneto_logic_interrupt/WalkingInterruptLogic.hpp"
+
 
 class MagnetoStateProvider;
 class MagnetoStateEstimator;
@@ -105,11 +105,7 @@ class MagnetoInterface : public EnvInterface {
     virtual ~MagnetoInterface();
 
     virtual void getCommand(void* _sensor_data, void* _command_data);
-    int getRunMode() {return run_mode_;}
-
-    void AddScriptWalkMotion(int _link_idx, 
-                            const MOTION_DATA& _motion_data);
-    
+    int getRunMode() {return run_mode_;}    
 
     void GetFeasibleCoM(std::vector <std::pair<double, Eigen::Vector3d>>& 
                         feasible_com_list);
@@ -120,4 +116,6 @@ class MagnetoInterface : public EnvInterface {
     
     bool IsPlannerUpdated();
     bool IsFootPlannerUpdated();
+
+    void AddScriptMotion(const YAML::Node& motion_cfg);
 };

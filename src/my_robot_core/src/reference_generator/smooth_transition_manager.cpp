@@ -19,7 +19,7 @@ void SmoothTransitionManager<T>::setTransition(const double& _start_time,
 }
 
 template<typename T>
-void SmoothTransitionManager<T>::updateSingleWeight(const double& current_time,
+void SmoothTransitionManager<T>::updateTransition(const double& current_time,
                                                         T &_weight) {
   double ts = (current_time - trans_start_time_) / trans_duration_; // 0~1
   ts = 0. > ts ? 0. : ts;

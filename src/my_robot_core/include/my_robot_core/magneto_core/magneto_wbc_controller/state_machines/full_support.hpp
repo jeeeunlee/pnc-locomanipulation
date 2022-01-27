@@ -2,7 +2,7 @@
 
 #include <my_utils/Math/BSplineBasic.h>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
-#include <my_robot_core/StateMachine.hpp>
+#include <my_robot_core/state_machine.hpp>
 
 class MagnetoWbcSpecContainer;
 class MagnetoReferenceGeneratorContainer;

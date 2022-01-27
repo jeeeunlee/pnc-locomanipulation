@@ -366,7 +366,7 @@ void MagnetoRosNode::ReadMotions_() {
 
             Eigen::VectorXd pos_temp;
             Eigen::VectorXd ori_temp;
-            bool is_bodyframe;
+            bool is_baseframe;
 
             std::ostringstream stringStream;
             stringStream << "motion" << i;
@@ -377,8 +377,8 @@ void MagnetoRosNode::ReadMotions_() {
             my_utils::readParameter(motion_cfg[conf], "swing_height", md_temp.swing_height);
             my_utils::readParameter(motion_cfg[conf], "pos",pos_temp);
             my_utils::readParameter(motion_cfg[conf], "ori", ori_temp);
-            my_utils::readParameter(motion_cfg[conf], "b_relative", is_bodyframe);
-            md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_bodyframe);
+            my_utils::readParameter(motion_cfg[conf], "b_relative", is_baseframe);
+            md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_baseframe);
             // interface_->(WalkingInterruptLogic*)interrupt_
             //             ->motion_command_script_list_
             //             .push_back(MotionCommand(link_idx,md_temp));
