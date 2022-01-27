@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 // #include <memory>
-#include <my_robot_core/InterruptLogic.hpp>
+#include <my_robot_core/interrupt_logic.hpp>
 
 class RobotSystem;
 class ControlArchitecture;

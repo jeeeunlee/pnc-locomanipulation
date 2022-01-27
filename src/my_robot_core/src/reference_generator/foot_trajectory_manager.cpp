@@ -61,7 +61,7 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
     traj_duration_ = 1.0;
     pos_dev_b = Eigen::VectorXd::Zero(3);
     swing_height_ = 0.5;
-    motion_cmd_data.pose.is_bodyframe=true;
+    motion_cmd_data.pose.is_baseframe=true;
   }
   traj_duration_ = traj_duration_ > 0 ? traj_duration_ : 0.01;
   traj_start_time_ = _start_time;
@@ -74,7 +74,7 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
   foot_pos_ini_ = robot_->getBodyNodeIsometry(link_idx_).translation();
   foot_rot_ini_ = robot_->getBodyNodeIsometry(link_idx_).linear();
 
-  if(motion_cmd_data.pose.is_bodyframe) {
+  if(motion_cmd_data.pose.is_baseframe) {
     // TODOJE : ? getBodyNodeIsometry(MagnetoBodyNode::base_link)
     Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear(); 
     // Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();

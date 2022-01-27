@@ -20,6 +20,8 @@ class MagnetoWbcSpecContainer {
   MagnetoWbcSpecContainer(RobotSystem* _robot);
   ~MagnetoWbcSpecContainer();
   void paramInitialization(const YAML::Node& node);
+  void setContactFriction();
+  void setContactFriction(const Eigen::VectorXd& _mu_vec);
   
   RobotSystem* robot_;
   std::vector<Task*> task_list_;
@@ -31,8 +33,6 @@ class MagnetoWbcSpecContainer {
   void _InitializeMagnetisms();
   void _DeleteTasks();
   void _DeleteContacts();
-  void setContactFriction();
-  void setContactFriction(const Eigen::VectorXd& _mu_vec);
 
  public:
   // -------------------------------------------------------

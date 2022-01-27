@@ -118,7 +118,7 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
   _motion_command.get_foot_motion_command(motion_data);
   motion_data.pose.pos = robot_planner_->getCoMPosition()
                           - robot_->getCoMPosition();
-  motion_data.pose.is_bodyframe = false;
+  motion_data.pose.is_baseframe = false;
   motion_data.swing_height = 0.0;
   _motion_command.add_motion(-1, motion_data);
 }

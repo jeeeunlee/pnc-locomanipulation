@@ -1,8 +1,11 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
 #include <my_robot_system/RobotSystem.hpp>
+#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
 
 MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(RobotSystem* _robot){
   robot_ = _robot;
+  
+  motion_command_ = MotionCommand();
   
   // Initialize Trajectory managers
   foot_trajectory_manager_ = new FootPosTrajectoryManager(robot_);                    
@@ -17,7 +20,6 @@ MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(RobotSyst
   weight_residualforce_manager_ = new SmoothTransitionManager<double>();
 
   goal_planner_ = new MagnetoGoalPlanner(robot_);
-  trajectory_planner_ = new MagnetoTrajectoryManager(this);
 }
 
 MagnetoReferenceGeneratorContainer::~MagnetoReferenceGeneratorContainer(){
@@ -33,5 +35,4 @@ MagnetoReferenceGeneratorContainer::~MagnetoReferenceGeneratorContainer(){
     delete weight_residualforce_manager_;
 
     delete goal_planner_;
-    delete trajectory_planner_;
 }

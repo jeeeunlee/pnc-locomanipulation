@@ -37,25 +37,25 @@ void Transition::firstVisit() {
   moving_foot_idx_ = mc_curr_.get_moving_foot();
 
   // --set com traj
-  ctrl_arch_->com_trajectory_manager_
+  rg_container->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, 
                               ctrl_duration_);
 
   // -- set base ori traj
-  ctrl_arch_->base_ori_trajectory_manager_
+  rg_container->base_ori_trajectory_manager_
             ->setBaseOriTrajectory(ctrl_start_time_,
                                   ctrl_duration_);
 
   // -- set joint traj
-  ctrl_arch_->joint_trajectory_manager_
+  rg_container->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
                                 ctrl_duration_);
 
   // -- set task_list in taf with hierachy
-  ctrl_arch_->ws_container_->clear_task_list();
-  ctrl_arch_->ws_container_->add_task_list(ctrl_arch_->ws_container_->com_task_);
-  ctrl_arch_->ws_container_->add_task_list(ctrl_arch_->ws_container_->base_ori_task_);
-  ctrl_arch_->ws_container_->add_task_list(ctrl_arch_->ws_container_->joint_task_);
+  ws_container_->clear_task_list();
+  ws_container_->add_task_list(ws_container_->com_task_);
+  ws_container_->add_task_list(ws_container_->base_ori_task_);
+  ws_container_->add_task_list(ws_container_->joint_task_);
 
 
   // ---------------------------------------
@@ -64,115 +64,115 @@ void Transition::firstVisit() {
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
   if(b_contact_start_){
-    ctrl_arch_->ws_container_->set_magnetism(-1);
-    ctrl_arch_->ws_container_->set_residual_magnetic_force(-1);
-    ctrl_arch_->ws_container_->set_contact_magnetic_force(-1);
+    ws_container_->set_magnetism(-1);
+    ws_container_->set_residual_magnetic_force(-1);
+    ws_container_->set_contact_magnetic_force(-1);
     
   }  else {
-    ctrl_arch_->ws_container_->set_magnetism(moving_foot_idx_); // off-magnetism on moving foot
-    ctrl_arch_->ws_container_->set_residual_magnetic_force(moving_foot_idx_);
-    ctrl_arch_->ws_container_->set_contact_magnetic_force(-1); // build full contact dim F_magnetic_    
+    ws_container_->set_magnetism(moving_foot_idx_); // off-magnetism on moving foot
+    ws_container_->set_residual_magnetic_force(moving_foot_idx_);
+    ws_container_->set_contact_magnetic_force(-1); // build full contact dim F_magnetic_    
   }
 
 
   // ---------------------------------------
   //      CONTACT LIST
   // --------------------------------------- 
-  ctrl_arch_->ws_container_->set_contact_list(-1);  // contain full contact
+  ws_container_->set_contact_list(-1);  // contain full contact
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
   // --------------------------------------- 
-  // ctrl_arch_->ws_container_->W_qddot_ : will be always same 
+  // ws_container_->W_qddot_ : will be always same 
   Eigen::VectorXd W_xddot_swing_, W_rf_swing_; 
   Eigen::VectorXd W_xddot_full_contact, W_rf_full_contact; 
-  ctrl_arch_->ws_container_->compute_weight_param(moving_foot_idx_, 
-                                ctrl_arch_->ws_container_->W_xddot_contact_,
-                                ctrl_arch_->ws_container_->W_xddot_nocontact_,
+  ws_container_->compute_weight_param(moving_foot_idx_, 
+                                ws_container_->W_xddot_contact_,
+                                ws_container_->W_xddot_nocontact_,
                                 W_xddot_swing_);
-  ctrl_arch_->ws_container_->compute_weight_param(-1, 
-                                ctrl_arch_->ws_container_->W_xddot_contact_,
-                                ctrl_arch_->ws_container_->W_xddot_nocontact_,
+  ws_container_->compute_weight_param(-1, 
+                                ws_container_->W_xddot_contact_,
+                                ws_container_->W_xddot_nocontact_,
                                 W_xddot_full_contact);                                  
-  ctrl_arch_->ws_container_->compute_weight_param(moving_foot_idx_, 
-                                ctrl_arch_->ws_container_->W_rf_contact_,
-                                ctrl_arch_->ws_container_->W_rf_nocontact_,
+  ws_container_->compute_weight_param(moving_foot_idx_, 
+                                ws_container_->W_rf_contact_,
+                                ws_container_->W_rf_nocontact_,
                                 W_rf_swing_);                                
-  ctrl_arch_->ws_container_->compute_weight_param(-1, 
-                                ctrl_arch_->ws_container_->W_rf_contact_,
-                                ctrl_arch_->ws_container_->W_rf_nocontact_,
+  ws_container_->compute_weight_param(-1, 
+                                ws_container_->W_rf_contact_,
+                                ws_container_->W_rf_nocontact_,
                                 W_rf_full_contact); 
 
 
-  // ctrl_arch_->QPweight_qddot_manager_->setQPWeightTrajectory(ctrl_start_time_,ctrl_duration_, )
+  // rg_container->QPweight_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
   if(b_contact_start_) {
     // moving foot : nocontact -> contact
-    ctrl_arch_->max_normal_force_manager_
-              ->setMaxNormalForceTrajectory(ctrl_start_time_, ctrl_duration_,
-                                  ctrl_arch_->ws_container_->max_rf_z_nocontact_,
-                                  ctrl_arch_->ws_container_->max_rf_z_contact_);
-    ctrl_arch_->QPweight_xddot_manager_
-              ->setQPWeightTrajectory(ctrl_start_time_, ctrl_duration_, 
+    rg_container->max_normal_force_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_,
+                                  ws_container_->max_rf_z_nocontact_,
+                                  ws_container_->max_rf_z_contact_);
+    rg_container->QPweight_xddot_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_xddot_swing_, W_xddot_full_contact);
-    ctrl_arch_->QPweight_reactforce_manager_
-              ->setQPWeightTrajectory(ctrl_start_time_, ctrl_duration_, 
+    rg_container->QPweight_reactforce_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_rf_swing_, W_rf_full_contact);
-    ctrl_arch_->weight_residualforce_manager_
-              ->setSingleWeightTrajectory(ctrl_start_time_, ctrl_duration_, 
+    rg_container->weight_residualforce_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       1.0, 0.0);
   } else {
     // moving foot : contact -> nocontact
-    ctrl_arch_->max_normal_force_manager_
-              ->setMaxNormalForceTrajectory(ctrl_start_time_, ctrl_duration_,
-                                  ctrl_arch_->ws_container_->max_rf_z_contact_, 
-                                  ctrl_arch_->ws_container_->max_rf_z_nocontact_);
-    ctrl_arch_->QPweight_xddot_manager_
-              ->setQPWeightTrajectory(ctrl_start_time_, ctrl_duration_, 
+    rg_container->max_normal_force_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_,
+                                  ws_container_->max_rf_z_contact_, 
+                                  ws_container_->max_rf_z_nocontact_);
+    rg_container->QPweight_xddot_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_xddot_full_contact, W_xddot_swing_);
-    ctrl_arch_->QPweight_reactforce_manager_
-              ->setQPWeightTrajectory(ctrl_start_time_, ctrl_duration_, 
+    rg_container->QPweight_reactforce_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_rf_full_contact, W_rf_swing_);
-    ctrl_arch_->weight_residualforce_manager_
-              ->setSingleWeightTrajectory(ctrl_start_time_, ctrl_duration_, 
+    rg_container->weight_residualforce_manager_
+              ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       0.0, 1.0);
   }
 }
 
 void Transition::_taskUpdate() {
-  // ctrl_arch_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
-  ctrl_arch_->com_trajectory_manager_->updateTask(sp_->curr_time,
-                                  ctrl_arch_->ws_container_->com_task_);
-  // ctrl_arch_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
-  ctrl_arch_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
-                                  ctrl_arch_->ws_container_->base_ori_task_);
-  // ctrl_arch_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
-  ctrl_arch_->joint_trajectory_manager_->updateTask(sp_->curr_time,
-                                  ctrl_arch_->ws_container_->joint_task_);
+  // rg_container->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  rg_container->com_trajectory_manager_->updateTask(sp_->curr_time,
+                                  ws_container_->com_task_);
+  // rg_container->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  rg_container->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
+                                  ws_container_->base_ori_task_);
+  // rg_container->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  rg_container->joint_trajectory_manager_->updateTask(sp_->curr_time,
+                                  ws_container_->joint_task_);
 }
 
 void Transition::_weightUpdate() {
   // change in weight
-  // ctrl_arch_->QPweight_qddot_manager_
-  //           ->updateQPWeight(sp_->curr_time, 
-  //                           ctrl_arch_->ws_container_->W_qddot_);
-  ctrl_arch_->QPweight_xddot_manager_
-            ->updateQPWeight(sp_->curr_time, 
-                            ctrl_arch_->ws_container_->W_xddot_);
-  ctrl_arch_->QPweight_reactforce_manager_
-            ->updateQPWeight(sp_->curr_time, 
-                            ctrl_arch_->ws_container_->W_rf_);
-  // ctrl_arch_->weight_residualforce_manager_
-  //           ->updateSingleWeight(sp_->curr_time,
-  //                               ctrl_arch_->ws_container_->w_res_);
-  ctrl_arch_->ws_container_->w_res_ = 0.0;
+  // rg_container->QPweight_qddot_manager_
+  //           ->updateTransition(sp_->curr_time, 
+  //                           ws_container_->W_qddot_);
+  rg_container->QPweight_xddot_manager_
+            ->updateTransition(sp_->curr_time, 
+                            ws_container_->W_xddot_);
+  rg_container->QPweight_reactforce_manager_
+            ->updateTransition(sp_->curr_time, 
+                            ws_container_->W_rf_);
+  // rg_container->weight_residualforce_manager_
+  //           ->updateTransition(sp_->curr_time,
+  //                               ws_container_->w_res_);
+  ws_container_->w_res_ = 0.0;
 
   // change in normal force in contactSpec
-  ctrl_arch_->max_normal_force_manager_
-            ->updateMaxNormalForce(sp_->curr_time, 
-                                  ctrl_arch_->ws_container_->max_rf_z_trans_);
-  ctrl_arch_->ws_container_->set_maxfz_contact(moving_foot_idx_, 
-                              ctrl_arch_->ws_container_->max_rf_z_contact_,
-                              ctrl_arch_->ws_container_->max_rf_z_trans_);
+  rg_container->max_normal_force_manager_
+            ->updateTransition(sp_->curr_time, 
+                                  ws_container_->max_rf_z_trans_);
+  ws_container_->set_maxfz_contact(moving_foot_idx_, 
+                              ws_container_->max_rf_z_contact_,
+                              ws_container_->max_rf_z_trans_);
 }
 
 

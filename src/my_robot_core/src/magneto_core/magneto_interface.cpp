@@ -1,11 +1,14 @@
 #include <math.h>
 #include <stdio.h>
 #include <my_robot_system/RobotSystem.hpp>
-#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
 #include <my_robot_core/magneto_core/magneto_interface.hpp>
 #include <my_robot_core/magneto_core/magneto_state_estimator.hpp>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 #include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_logic_interrupt/walking_interrupt_logic.hpp>
+#include <my_robot_core/magneto_core/magneto_logic_interrupt/climbing_interrupt_logic.hpp>
+
 #include <my_utils/IO/IOUtilities.hpp>
 #include <my_utils/Math/MathUtilities.hpp>
 #include <string>

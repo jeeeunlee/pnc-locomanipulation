@@ -190,9 +190,13 @@ void MagnetoWorldNode::setFrictionCoeff(){
     robot->getBodyNode("BR_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BR_foot_link]);
 }
 
-void MagnetoWorldNode::updateContactEnvSetup(){
-sp_->sim_env_sequence
+void MagnetoWorldNode::updateContactEnvSetup() {
+    auto sim_env_pair = sp_->sim_env_sequence.front();   
+    SimEnvCommand sim_env = sim_env_pair.second;
 
+    int foot_idx =  sim_env.foot_idx
+    coef_fric_map_[foot_idx] = sim_env.mu;
+    magnetic_force_map_[foot_idx] = sim_env.f_adhesive;
 } 
 
 void MagnetoWorldNode::ApplyMagneticForce()  {
@@ -209,12 +213,12 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
     for(auto it : command_->b_magnetism_map) {
         // b_magnetism_map : [linkidx, mag_onoff]
         if( it.second ) {
-            force[2] = - magnetic_force_;
+            force[2] = - magnetic_force_map_[it.first];
         } else {
             // distance 0->1 , infinite->0
             distance_ratio = distance_constant / (contact_distance_[it.first] + distance_constant);
             distance_ratio = distance_ratio*distance_ratio;
-            force[2] = - distance_ratio*(residual_magnetism_/100.)*magnetic_force_;
+            force[2] = - distance_ratio*(residual_magnetism_/100.)*magnetic_force_map_[it.first];
             // std::cout<<"res: dist = "<<contact_distance_[it.first]<<", distance_ratio=" << distance_ratio << std::endl;
         }       
         robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);

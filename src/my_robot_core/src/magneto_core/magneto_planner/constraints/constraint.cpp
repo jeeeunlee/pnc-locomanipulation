@@ -15,7 +15,7 @@ void Constraint::setDesired(const POSE_DATA& pos_del) {
     pos_ini_ = robot_->getBodyNodeIsometry(link_idx_).translation();
     ori_ini_ = Eigen::Quaternion<double>(robot_->getBodyNodeIsometry(link_idx_).linear());
 
-    if(pos_del.is_bodyframe) {
+    if(pos_del.is_baseframe) {
         Eigen::MatrixXd R_wb = 
             robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear(); 
         pos_des_ = pos_ini_ + R_wb*(pos_del.pos);     

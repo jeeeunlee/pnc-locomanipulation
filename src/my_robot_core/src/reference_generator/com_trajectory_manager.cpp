@@ -46,7 +46,7 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
   traj_end_time_ = traj_start_time_ + traj_duration_;
   // initialize pos_ini_ with current position
   com_pos_ini_ = robot_ ->getCoMPosition(); 
-  if(motion_cmd_data.pose.is_bodyframe) {
+  if(motion_cmd_data.pose.is_baseframe) {
     Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();    
     com_pos_des_ = com_pos_ini_ + R_wb*pos_dev_b;     
   }

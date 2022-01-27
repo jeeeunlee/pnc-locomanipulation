@@ -31,8 +31,8 @@ void FullSupport::firstVisit() {
   //      Planning
   // ---------------------------------------
   Eigen::VectorXd q_goal; 
-  ctrl_arch_->goal_planner_->computeGoal(mc_curr_);  
-  ctrl_arch_->goal_planner_->getGoalConfiguration(q_goal);
+  rg_container->goal_planner_->computeGoal(mc_curr_);  
+  rg_container->goal_planner_->getGoalConfiguration(q_goal);
 
     // ---------------------------------------
   //      TASK - SET TRAJECTORY
@@ -42,24 +42,24 @@ void FullSupport::firstVisit() {
   // _set_moving_foot_frame();
 
   // --set com traj
-  ctrl_arch_->com_trajectory_manager_
+  rg_container->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, &mc_curr_);
-  ctrl_duration_ = ctrl_arch_->com_trajectory_manager_->getTrajDuration();
-  ctrl_end_time_ = ctrl_arch_->com_trajectory_manager_->getTrajEndTime();
+  ctrl_duration_ = rg_container->com_trajectory_manager_->getTrajDuration();
+  ctrl_end_time_ = rg_container->com_trajectory_manager_->getTrajEndTime();
   // -- set base ori traj
-  ctrl_arch_->base_ori_trajectory_manager_
+  rg_container->base_ori_trajectory_manager_
             ->setBaseOriTrajectory(ctrl_start_time_, ctrl_duration_);
 
   // -- set joint traj
-  ctrl_arch_->joint_trajectory_manager_
+  rg_container->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
                                 ctrl_duration_);
  
   // -- set task_list in taf with hierachy
-  ctrl_arch_->ws_container_->clear_task_list();
-  ctrl_arch_->ws_container_->add_task_list(ctrl_arch_->ws_container_->com_task_);
-  ctrl_arch_->ws_container_->add_task_list(ctrl_arch_->ws_container_->base_ori_task_);
-  ctrl_arch_->ws_container_->add_task_list(ctrl_arch_->ws_container_->joint_task_);
+  ws_container_->clear_task_list();
+  ws_container_->add_task_list(ws_container_->com_task_);
+  ws_container_->add_task_list(ws_container_->base_ori_task_);
+  ws_container_->add_task_list(ws_container_->joint_task_);
 
 
   // ---------------------------------------
@@ -67,52 +67,45 @@ void FullSupport::firstVisit() {
   // ---------------------------------------
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
-  ctrl_arch_->ws_container_->set_magnetism(-1);  
-  ctrl_arch_->ws_container_->set_residual_magnetic_force(-1);
-  ctrl_arch_->ws_container_->set_contact_magnetic_force(-1);
-  ctrl_arch_->ws_container_->w_res_ = 0.0;
+  ws_container_->set_magnetism(-1);  
+  ws_container_->set_residual_magnetic_force(-1);
+  ws_container_->set_contact_magnetic_force(-1);
+  ws_container_->w_res_ = 0.0;
 
 
   // ---------------------------------------
   //      CONTACT LIST
   // --------------------------------------- 
-  ctrl_arch_->ws_container_->set_contact_list(-1);
+  ws_container_->set_contact_list(-1);
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
   // ---------------------------------------  
-  // ctrl_arch_->max_normal_force_manager_->
-  // ctrl_arch_->QPweight_qddot_manager_->setQPWeightTrajectory(ctrl_start_time_,ctrl_duration_, )
-  // ctrl_arch_->QPweight_xddot_manager_
-  //           ->setQPWeightTrajectory(ctrl_start_time_,ctrl_duration_, )
-  // ctrl_arch_->QPweight_reactforce_manager_
-  //           ->setQPWeightTrajectory(ctrl_start_time_,ctrl_duration_, )
-
-  ctrl_arch_->ws_container_->set_maxfz_contact(-1);
-  // ctrl_arch_->ws_container_->W_qddot_ : will be always same  
-  ctrl_arch_->ws_container_->compute_weight_param(-1, 
-                      ctrl_arch_->ws_container_->W_xddot_contact_,
-                      ctrl_arch_->ws_container_->W_xddot_nocontact_,
-                      ctrl_arch_->ws_container_->W_xddot_);
-  ctrl_arch_->ws_container_->compute_weight_param(-1, 
-                      ctrl_arch_->ws_container_->W_rf_contact_,
-                      ctrl_arch_->ws_container_->W_rf_nocontact_,
-                      ctrl_arch_->ws_container_->W_rf_);
+  ws_container_->set_maxfz_contact(-1);
+  // ws_container_->W_qddot_ : will be always same  
+  ws_container_->compute_weight_param(-1, 
+                      ws_container_->W_xddot_contact_,
+                      ws_container_->W_xddot_nocontact_,
+                      ws_container_->W_xddot_);
+  ws_container_->compute_weight_param(-1, 
+                      ws_container_->W_rf_contact_,
+                      ws_container_->W_rf_nocontact_,
+                      ws_container_->W_rf_);
 
 }
 
 void FullSupport::_taskUpdate() {
-  ctrl_arch_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
-  ctrl_arch_->com_trajectory_manager_->updateTask(sp_->curr_time,
-                                      ctrl_arch_->ws_container_->com_task_);
+  rg_container->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  rg_container->com_trajectory_manager_->updateTask(sp_->curr_time,
+                                      ws_container_->com_task_);
 
-  ctrl_arch_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
-  ctrl_arch_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
-                                      ctrl_arch_->ws_container_->base_ori_task_);
+  rg_container->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  rg_container->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
+                                      ws_container_->base_ori_task_);
   
-  ctrl_arch_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
-  ctrl_arch_->joint_trajectory_manager_->updateTask(sp_->curr_time,
-                                      ctrl_arch_->ws_container_->joint_task_);
+  rg_container->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  rg_container->joint_trajectory_manager_->updateTask(sp_->curr_time,
+                                      ws_container_->joint_task_);
 }
 
 void FullSupport::_weightUpdate() {

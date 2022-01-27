@@ -131,56 +131,6 @@ void _setTransparency(dart::dynamics::SkeletonPtr robot) {
     }
 }
 
-void _printRobotModel(dart::dynamics::SkeletonPtr robot) {
-    // for (int i = 0; i < robot->getNumBodyNodes(); ++i) {
-    // dart::dynamics::BodyNodePtr bn = robot->getBodyNode(i);
-    // std::cout << i << "th" << std::endl;
-    // std::cout << bn->getName() << std::endl;
-    // std::cout << bn->getMass() << std::endl;
-    //}
-
-    // for (int i = 0; i < robot->getNumJoints(); ++i) {
-    // dart::dynamics::Joint* joint = robot->getJoint(i);
-    // std::cout << i << "th" << std::endl;
-    // std::cout << joint->getNumDofs() << std::endl;
-    //}
-
-    for (int i = 0; i < robot->getNumDofs(); ++i) {
-        dart::dynamics::DegreeOfFreedom* dof = robot->getDof(i);
-        std::cout << i << "th" << std::endl;
-        std::cout << "dof name : " << dof->getName() << std::endl;
-        // std::cout << "child body node name and mass : "
-        //<< dof->getChildBodyNode()->getName() << " , "
-        //<< dof->getChildBodyNode()->getMass() << std::endl;
-    }
-
-    // std::cout << "num dof" << std::endl;
-    // std::cout << robot->getNumDofs() << std::endl;
-    // std::cout << robot->getNumJoints() << std::endl;
-    // std::cout << "mass mat row" << std::endl;
-    // std::cout << robot->getMassMatrix().rows() << std::endl;
-    // std::cout << robot->getMassMatrix().cols() << std::endl;
-    // std::cout << "q" << std::endl;
-    // std::cout << robot->getPositions() << std::endl;
-    // std::cout << "robot total mass" << std::endl;
-    // std::cout << robot->getMass() << std::endl;
-    // std::cout << "robot position" << std::endl;
-    // std::cout << robot->getPositions() << std::endl;
-
-    // std::cout << "right" << std::endl;
-    // std::cout << robot->getBodyNode("rightCOP_Frame")
-    //->getWorldTransform()
-    //.translation()
-    //<< std::endl;
-    // std::cout << "left" << std::endl;
-    // std::cout << robot->getBodyNode("leftCOP_Frame")
-    //->getWorldTransform()
-    //.translation()
-    //<< std::endl;
-
-    exit(0);
-}
-
 void _setInitialConfiguration(dart::dynamics::SkeletonPtr robot, const Eigen::VectorXd& q_v = Eigen::VectorXd::Zero(6)) {
 
     int _base_joint = robot->getDof("_base_joint")->getIndexInSkeleton();
@@ -347,11 +297,6 @@ int main(int argc, char** argv) {
     // Set Transparency
     // =========================================================================
     // _setTransparencye(robot);
-
-    // =========================================================================
-    // Print Model Info
-    // =========================================================================
-    // _printRobotModel(robot);
 
     // =========================================================================
     // Wrap a worldnode

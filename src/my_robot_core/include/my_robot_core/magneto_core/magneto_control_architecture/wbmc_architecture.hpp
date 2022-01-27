@@ -10,29 +10,7 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbrmc.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
-#include <my_robot_core/magneto_core/magneto_planner/magneto_plannerSet.hpp>
-
-class STMCommand {
-  public:
-    STMCommand() {
-      state_id = MAGNETO_STATES::BALANCE;
-      motion_command = MotionCommand();
-      motion_id = -1;
-    };
-    ~STMCommand();
-    STMCommand(StateIdentifier _st_id, int _mt_id,
-              const MotionCommand& _motion_command) {
-      state_id = _st_id;
-      motion_id = _mt_id;
-      motion_command = _motion_command;
-    };
-
-    StateIdentifier state_id;    
-    MotionCommand motion_command;
-    int motion_id;    
-}
-
-class MagnetoStateProvider;
+#include <my_robot_core/magneto_core/magneto_planner/magneto_planner_set.hpp>
 
 namespace CONTROLLER_TYPES {
 constexpr int WBMC = 0;
@@ -47,6 +25,8 @@ constexpr int SWING = 3;
 constexpr int SWING_END_TRANS = 4;
 };  // namespace MAGNETO_STATES
 
+class MagnetoStateProvider;
+
 class MagnetoWbmcControlArchitecture : public ControlArchitecture {
  public:
   MagnetoWbmcControlArchitecture(RobotSystem* _robot);
@@ -60,8 +40,7 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
 
   // states_sequence_ : deque of pair<StateIdentifier, motion_command*>
   int get_num_states();  
-  void get_next_state_pair(StateIdentifier &_state, 
-                          MotionCommand &_motion_command);
+  void get_next_state(StateIdentifier &_state);
   void add_next_state(StateIdentifier _st_id, int _mt_id,
                       const MotionCommand &_motion_command);
   void add_next_state(STMCommand _stm_cmd);
@@ -74,9 +53,6 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
 
  protected:
   MagnetoStateProvider* sp_;
-
-  std::deque<STMCommand> states_sequence_;
-  std::mutex states_sequence_mtx_;
   
   YAML::Node cfg_;
 

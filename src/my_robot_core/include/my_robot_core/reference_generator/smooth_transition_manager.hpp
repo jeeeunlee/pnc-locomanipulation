@@ -18,7 +18,7 @@ class SmoothTransitionManager : public TransitionManagerBase {
                     const T& _init,
                     const T& _target);
 
-  void update(const double& current_time,
+  void updateTransition(const double& current_time,
                 T &_val);
   
 };

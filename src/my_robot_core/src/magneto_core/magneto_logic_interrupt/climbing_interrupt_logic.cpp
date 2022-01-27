@@ -1,5 +1,5 @@
-#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture.hpp>
-#include <my_robot_core/magneto_core/magneto_logic_interrupt/ClimbingInterruptLogic.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
+#include <my_robot_core/magneto_core/magneto_logic_interrupt/climbing_interrupt_logic.hpp>
 
 ClimbingInterruptLogic::ClimbingInterruptLogic(
         MagnetoWbmcControlArchitecture* _ctrl_arch)
@@ -38,7 +38,7 @@ void ClimbingInterruptLogic::processInterrupts() {
             ctrl_arch_->add_next_state(MAGNETO_STATES::SWING, mc_id, it.second );
             ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_END_TRANS, mc_id, it.second );            
           }
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, MotionCommand() );
+          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, MotionCommand() );
         }
       break;
       default:
