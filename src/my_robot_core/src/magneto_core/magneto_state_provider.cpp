@@ -1,6 +1,6 @@
 #include <my_robot_system/RobotSystem.hpp>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
-#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 
 
@@ -14,10 +14,8 @@ MagnetoStateProvider::MagnetoStateProvider(RobotSystem* _robot) {
     my_utils::pretty_constructor(1, "Magneto State Provider");
 
     robot_ = _robot;
-    curr_time = 0.;
-
-    
-    sim_env_sequence.clear();
+    curr_time = 0.;    
+    states_sequence_ = new UserCommandSequence();
 
     q = Eigen::VectorXd::Zero(Magneto::n_dof);
     qdot = Eigen::VectorXd::Zero(Magneto::n_dof);

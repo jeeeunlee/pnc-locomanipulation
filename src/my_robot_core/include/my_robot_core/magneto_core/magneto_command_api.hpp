@@ -129,13 +129,18 @@ class MotionCommand : public UserCommand {
     MOTION_DATA com_motion_data;
 };
 
+
 class SimMotionCommand : public MotionCommand {
   public:
     SimMotionCommand(): MotionCommand(), mu(0.7), f_adhesive(100.) {}
     SimMotionCommand(const MotionCommand& motion_cmd,
     double _mu, double _fm ): MotionCommand(motion_cmd), mu(_mu), f_adhesive(_fm){}
     ~SimMotionCommand() {};
-    void CopyCommand(UserCommand* _cmd);
+    void CopyCommand(UserCommand* _cmd) {
+      MotionCommand::CopyCommand(_cmd);
+      mu = ((SimMotionCommand*)_cmd)->mu;
+      f_adhesive = ((SimMotionCommand*)_cmd)->f_adhesive;
+    }
 
   protected:
     double mu;

@@ -4,7 +4,7 @@
 #include <my_utils/IO/IOUtilities.hpp>
 #include <my_robot_system/RobotSystem.hpp>
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
-#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
 
 class Constraint {
    public:

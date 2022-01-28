@@ -5,7 +5,7 @@
 
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_robot_core/magneto_core/magneto_interface.hpp>
-#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
 
 #include <my_robot_core/magneto_core/magneto_planner/magneto_goal_planner.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
