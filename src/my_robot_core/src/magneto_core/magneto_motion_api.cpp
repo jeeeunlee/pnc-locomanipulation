@@ -23,12 +23,6 @@ void MotionCommand::add_motion(int _moving_link_id,
     motion_sets_.insert(std::make_pair(_moving_link_id, _motion_data));
 }
 
-void MotionCommand::clear_and_add_motion(int _moving_link_id,
-                    const MOTION_DATA& _motion_data) {
-    motion_sets_.clear();
-    motion_sets_.insert(std::make_pair(_moving_link_id, _motion_data));
-}
-
 int MotionCommand::get_moving_foot() {
     // TODO LATER : if you want to give two feet swing together ?
     for(auto &it : motion_sets_) {
@@ -69,4 +63,16 @@ bool MotionCommand::get_com_motion_command(MOTION_DATA &_motion_data) {
         }
     }
     return false;
+}
+
+
+SimMotionCommand::SimMotionCommand() {
+
+}
+
+SimMotionCommand::SimMotionCommand(int _moving_link_id,
+                        const MOTION_DATA& _motion_data,
+                        double mu,
+                        double f_adhesive) {
+    
 }

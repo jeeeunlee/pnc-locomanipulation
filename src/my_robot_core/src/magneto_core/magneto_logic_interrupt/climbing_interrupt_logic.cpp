@@ -70,10 +70,10 @@ void ClimbingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg) {
   my_utils::readParameter(motion_cfg, "foot", foot_idx);
   my_utils::readParameter(motion_cfg, "pos",pos_temp);
   my_utils::readParameter(motion_cfg, "ori", ori_temp);
-  my_utils::readParameter(motion_cfg, "frame", frame);
+  my_utils::readParameter(motion_cfg, "frame", frame); 
   my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
   my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
-  md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0);
+  md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0); // frame : base-0, foot-1
   MotionCommand mc_temp = MotionCommand(foot_idx, md_temp);
 
   // simulation enviroment spec

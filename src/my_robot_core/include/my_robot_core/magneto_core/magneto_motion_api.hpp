@@ -82,8 +82,6 @@ public:
                         double _motion_period);
     void add_motion(int _moving_link_id,
                     const MOTION_DATA& _pose_del);
-    void clear_and_add_motion(int _moving_link_id,
-                    const MOTION_DATA& _motion_data);    
 
     int get_moving_foot();
     bool get_foot_motion_command(MOTION_DATA &_motion_data, TARGET_LINK_IDX &_idx) ;
@@ -99,15 +97,37 @@ protected:
 ////////////////////////////////////////
 
 
-class SimEnvCommand {
+// class SimEnvCommand {
+//   public:
+//     SimEnvCommand(): foot_idx(-1), mu(0.7), f_adhesive(100.){ };
+//     SimEnvCommand(TARGET_LINK_IDX _idx, double _mu, double _f)
+//     : foot_idx(_idx), mu(_mu), f_adhesive(_f){ };
+//     ~SimEnvCommand(){};
+
+//   protected:
+//     TARGET_LINK_IDX foot_idx;
+//     double mu;
+//     double f_adhesive;
+// };
+
+class SimMotionCommand : public MotionCommand{
   public:
-    SimEnvCommand(): foot_idx(-1), mu(0.7), f_adhesive(100.){ };
-    SimEnvCommand(TARGET_LINK_IDX _idx, double _mu, double _f)
-    : foot_idx(_idx), mu(_mu), f_adhesive(_f){ };
-    ~SimEnvCommand(){};
+    SimMotionCommand();
+    SimMotionCommand(int _moving_link_id,
+                const MOTION_DATA& _motion_data,
+                double mu = 0.7,
+                double f_adhesive= 100.);
+    ~SimMotionCommand() {};
+
+    void getSimEnv(double& _mu, double _fm){
+        _mu = mu;
+        _fm = f_adhesive;
+    };
 
   protected:
-    TARGET_LINK_IDX foot_idx;
+    // std::map<TARGET_LINK_IDX, double> mu_sets_;
+    // std::map<TARGET_LINK_IDX, double> f_sets_;
+
     double mu;
-    double f_adhesive;
+    double f_adhesive;  
 };
