@@ -92,7 +92,8 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
     state_machines_[state_]->lastVisit();
     prev_state_ = state_;
     // state_ = state_machines_[state_]->getNextState();
-    get_next_state(state_);
+    // get_next_state(state_);
+    sp_->states_sequence_->getNextState();
     b_state_first_visit_ = true;
   }
 };

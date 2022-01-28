@@ -6,7 +6,7 @@
 // default component
 class UserCommand {
   public:
-    virtual UserCommand() {};
+    UserCommand() {};
     virtual ~UserCommand() {}; 
     virtual void CopyCommand(UserCommand* _cmd)=0;
 };
@@ -28,15 +28,15 @@ class UserCommandSequence {
         delete (sequence_.front());
         sequence_.pop_front();
         return true;
-    };
-}
+    }
+};
 
     
 // for state machine
 class StateCommand{
   public:
     StateCommand() { 
-      state_id = id;
+      state_id = -1;
       user_cmd = new UserCommand();
     }
     StateCommand(int id, UserCommand* _cmd){
@@ -55,14 +55,15 @@ class StateCommand{
   public:
     int state_id;
     UserCommand* user_cmd;
-}
+};
     
 class StateSequence {
   private:
     StateCommand* current_state_;
     std::deque< StateCommand* > sequence_;
   public:
-    StateSequence() { sequence_.clear(); }
+    StateSequence() { sequence_.clear(); 
+    current_state_ = new StateCommand();}
     ~StateSequence() { for(auto &cmd: sequence_) delete cmd; delete sequence_;}
     void addState(int state_id, UserCommand* _cmd) {
       sequence_.push_back( new StateCommand(state_id, _cmd) );
@@ -70,8 +71,10 @@ class StateSequence {
     bool getNextState(int& state_id, UserCommand* _cmd) {
         if(sequence_.empty())
             return false;
-        StateCommand* state_cmd = sequence_.front();
-        state_cmd->getStateCommand(state_id, _cmd);
+        StateCommand* state_cmd = sequence_.front();        
+        current_state_->CopyStateCommand(state_cmd);
+        current_state_->getStateCommand(state_id, _cmd);
+
         delete (state_cmd);
         sequence_.pop_front();
         return true;
@@ -79,4 +82,4 @@ class StateSequence {
     bool getCurrentState(){
 
     }
-}
+};
