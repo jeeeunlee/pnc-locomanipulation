@@ -2,7 +2,7 @@
 
 #include "my_robot_core/env_interface.hpp"
 #include "my_robot_core/magneto_core/magneto_definition.hpp"
-#include "my_robot_core/magneto_core/magneto_motion_api.hpp"
+#include "my_robot_core/magneto_core/magneto_command_api.hpp"
 
 
 class MagnetoStateProvider;

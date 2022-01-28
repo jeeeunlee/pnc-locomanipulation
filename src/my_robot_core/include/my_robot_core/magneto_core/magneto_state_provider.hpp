@@ -7,9 +7,7 @@
 //#include <RobotSystem/include/CentroidModel.hpp>
 
 class RobotSystem;
-class SimEnvCommand;
-class MotionCommand;
-
+class StateSequence;
 
 class MagnetoStateProvider {
    public:
@@ -31,9 +29,8 @@ class MagnetoStateProvider {
 
     double curr_time;
     
-    std::deque<STMCommand> states_sequence_;
-    std::mutex states_sequence_mtx_;
-    
+    StateSequence* states_sequence_;
+        
     Eigen::VectorXd q_des;
     Eigen::VectorXd q;
     Eigen::VectorXd qdot;

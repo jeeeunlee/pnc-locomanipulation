@@ -1,6 +1,6 @@
 #pragma once
 
-#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_robot_core/reference_generator/trajectory_manager_base.hpp>
 #include <my_wbc/Contact/BasicContactSpec.hpp>

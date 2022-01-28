@@ -5,8 +5,6 @@
 // Forward Declare Control Architecture
 class MagnetoWbmcControlArchitecture;
 class MagnetoStateProvider;
-class MotionCommand;
-class SimEnvCommand;
 
 class ClimbingInterruptLogic : public InterruptLogic {
  public:
@@ -19,6 +17,5 @@ class ClimbingInterruptLogic : public InterruptLogic {
   MagnetoWbmcControlArchitecture* ctrl_arch_;
   MagnetoStateProvider* sp_;
 
-  std::deque<std::pair<SimEnvCommand, MotionCommand>> simenv_motion_script_list_; 
-  int mc_id; // motion command identifier
+  std::deque<UserCommand*> script_user_cmd_deque_;
 };

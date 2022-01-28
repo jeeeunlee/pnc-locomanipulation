@@ -1,6 +1,6 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
 #include <my_robot_system/RobotSystem.hpp>
-#include <my_robot_core/magneto_core/magneto_motion_api.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
 
 MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(RobotSystem* _robot){
   robot_ = _robot;
