@@ -6,6 +6,7 @@
 // default component
 class UserCommand {
   public:
+    virtual UserCommand() {};
     virtual ~UserCommand() {}; 
     virtual void CopyCommand(UserCommand* _cmd)=0;
 };
@@ -34,14 +35,22 @@ class UserCommandSequence {
 // for state machine
 class StateCommand{
   public:
+    StateCommand() { 
+      state_id = id;
+      user_cmd = new UserCommand();
+    }
     StateCommand(int id, UserCommand* _cmd){
       state_id = id;
       user_cmd = _cmd;
     }
     ~StateCommand() {delete user_cmd;}
-    getStateCommand(int& _state_id, UserCommand* _cmd){
+    void getStateCommand(int& _state_id, UserCommand* _cmd){
       _state_id = state_id;
       _cmd->CopyCommand(user_cmd);
+    }
+    void CopyStateCommand(StateCommand* _st_cmd){
+      state_id = _st_cmd->state_id;
+      user_cmd->CopyCommand(_st_cmd->user_cmd);
     }
   public:
     int state_id;
@@ -50,6 +59,7 @@ class StateCommand{
     
 class StateSequence {
   private:
+    StateCommand* current_state_;
     std::deque< StateCommand* > sequence_;
   public:
     StateSequence() { sequence_.clear(); }
@@ -66,4 +76,7 @@ class StateSequence {
         sequence_.pop_front();
         return true;
     };
+    bool getCurrentState(){
+
+    }
 }

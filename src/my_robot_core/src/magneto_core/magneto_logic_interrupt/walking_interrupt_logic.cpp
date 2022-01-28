@@ -10,18 +10,6 @@ WalkingInterruptLogic::WalkingInterruptLogic(
   
   // Initialize motion commands
   motion_command_script_list_.clear();
-
-  motion_data_default_.pose = POSE_DATA(-0.1,0,0, 1,0,0,0);
-  motion_data_default_.swing_height = 0.04;
-  motion_data_default_.motion_period = 0.9;
-  
-  motion_command_alfoot_ = new MotionCommand(MagnetoBodyNode::AL_tibia_link, motion_data_default_);
-  motion_command_blfoot_ = new MotionCommand(MagnetoBodyNode::BL_tibia_link, motion_data_default_);
-  motion_command_arfoot_ = new MotionCommand(MagnetoBodyNode::AR_tibia_link, motion_data_default_);
-  motion_command_brfoot_ = new MotionCommand(MagnetoBodyNode::BR_tibia_link, motion_data_default_);
-  motion_command_instant_ = new MotionCommand();
-
-  mc_id = -1; // motion command identifier
 }
 
 WalkingInterruptLogic::~WalkingInterruptLogic() {}
@@ -36,17 +24,15 @@ void WalkingInterruptLogic::processInterrupts() {
         std::cout << "---------                        ---------" << std::endl;
         std::cout << "---------     SCRIPT MOTION      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
-          // initialize trajectory_manager
-          // ctrl_arch_->floating_base_lifting_up_manager_->
           // set stateMachine sequences
-          for(auto &it : motion_command_script_list_) {    
-            mc_id ++;      
-            ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id, it );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_START_TRANS, mc_id, it );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING, mc_id, it );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_END_TRANS, mc_id, it );            
+          for(auto &it : script_user_cmd_deque_) {
+            // set env for simulation
+            sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it) ;
+            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
+            sp_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
+            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
           }
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, MotionCommand() );
+          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, new MotionCommand() );
         }
       break;
       case 'w':
@@ -54,11 +40,10 @@ void WalkingInterruptLogic::processInterrupts() {
         std::cout << "---------                        ---------" << std::endl;
         std::cout << "---------     com up      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
-          MotionCommand mc_com_up;
           POSE_DATA pose_up(0,0,0.01, 1,0,0,0);
-          double duration_up = 0.5;
-          mc_com_up.add_com_motion(pose_up, duration_up);
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, mc_com_up);
+          MOTION_DATA motion_com_up(pose_up, 0.5);
+          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
+                                  new MotionCommand(motion_com_up) );
         }
       break;
       case 'x':
@@ -66,11 +51,10 @@ void WalkingInterruptLogic::processInterrupts() {
         std::cout << "---------                        ---------" << std::endl;
         std::cout << "---------     com down      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
-          MotionCommand mc_com_up;
-          POSE_DATA pose_up(0,0,-0.01, 1,0,0,0);
-          double duration_up = 0.5;
-          mc_com_up.add_com_motion(pose_up, duration_up);
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id++, mc_com_up);
+          POSE_DATA pose_dn(0,0,-0.01, 1,0,0,0);
+          MOTION_DATA motion_com_dn(pose_dn, 0.5);
+          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
+                                  new MotionCommand(motion_com_dn) );
         }
       break;
       default:
@@ -95,7 +79,7 @@ void WalkingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
     my_utils::readParameter(motion_cfg, "ori", ori_temp);
     my_utils::readParameter(motion_cfg, "b_relative", is_baseframe);
     md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_baseframe);
-    MotionCommand motion_command = MotionCommand(link_idx, md_temp);
+    MotionCommand* motion_command = new MotionCommand(link_idx, md_temp);
 
-    motion_command_script_list_.push_back(motion_command);
+    script_user_cmd_deque_.push_back(motion_command);
 }
