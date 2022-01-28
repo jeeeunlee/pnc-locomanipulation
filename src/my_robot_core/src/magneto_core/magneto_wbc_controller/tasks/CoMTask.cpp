@@ -15,9 +15,9 @@ CoMTask::CoMTask(RobotSystem* robot):Task(robot, 3)
 CoMTask::~CoMTask(){}
 
 bool CoMTask::_UpdateCommand(const Eigen::VectorXd & _pos_des,
-                                      const Eigen::VectorXd & _vel_des,
-                                      const Eigen::VectorXd & _acc_des) {
-    // POSE_DATA : x,y,z (position)
+                            const Eigen::VectorXd & _vel_des,
+                            const Eigen::VectorXd & _acc_des) {
+    // x,y,z (position)
     // update     
     // For Dyn WBC: op_cmd;
     // For Kin WBC: pos_err; vel_des; acc_des;
