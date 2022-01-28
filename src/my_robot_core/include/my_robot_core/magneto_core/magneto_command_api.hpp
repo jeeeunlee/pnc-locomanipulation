@@ -141,6 +141,10 @@ class SimMotionCommand : public MotionCommand {
       mu = ((SimMotionCommand*)_cmd)->mu;
       f_adhesive = ((SimMotionCommand*)_cmd)->f_adhesive;
     }
+    void getSimEnv(double& _mu, double& _fm){
+      _mu = mu;
+      _fm = f_adhesive;
+    }
 
   protected:
     double mu;
