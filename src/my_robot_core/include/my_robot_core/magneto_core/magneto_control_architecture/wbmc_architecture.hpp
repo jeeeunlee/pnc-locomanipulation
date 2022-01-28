@@ -39,11 +39,11 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
 
 
   // states_sequence_ : deque of pair<StateIdentifier, motion_command*>
-  int get_num_states();  
-  void get_next_state(StateIdentifier &_state);
-  void add_next_state(StateIdentifier _st_id, int _mt_id,
-                      const MotionCommand &_motion_command);
-  void add_next_state(STMCommand _stm_cmd);
+  // int get_num_states();  
+  // void get_next_state(StateIdentifier &_state);
+  // void add_next_state(StateIdentifier _st_id, int _mt_id,
+  //                     const MotionCommand &_motion_command);
+  // void add_next_state(STMCommand _stm_cmd);
   
 
   // initialize parameters

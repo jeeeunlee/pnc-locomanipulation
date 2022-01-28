@@ -102,46 +102,46 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
 //////////////////////////////////////////////////////////////////
 
 
-int MagnetoWbmcControlArchitecture::get_num_states() {
-  return states_sequence_.size();
-}
+// int MagnetoWbmcControlArchitecture::get_num_states() {
+//   return states_sequence_.size();
+// }
 
-void MagnetoWbmcControlArchitecture::get_next_state(StateIdentifier &_next_state) {
-  // DRACO & VALKIYRIE VERSION
-  // return state_machines_[state_]->getNextState(); 
-  states_sequence_mtx_.lock();
-  if(states_sequence_.empty()) {
-     _next_state = MAGNETO_STATES::BALANCE;
-     rg_container_->motion_command_ = MotionCommand();
-     std::cout<<"states_sequence_ is empty!!" << std::endl;
-  }    
-  else {
-    STMCommand next_stm_cmd = states_sequence_.front();
-    _next_state = next_stm_cmd.state_id;
-    rg_container_->motion_command_ = next_stm_cmd.motion_command;
+// void MagnetoWbmcControlArchitecture::get_next_state(StateIdentifier &_next_state) {
+//   // DRACO & VALKIYRIE VERSION
+//   // return state_machines_[state_]->getNextState(); 
+//   states_sequence_mtx_.lock();
+//   if(states_sequence_.empty()) {
+//      _next_state = MAGNETO_STATES::BALANCE;
+//      rg_container_->motion_command_ = MotionCommand();
+//      std::cout<<"states_sequence_ is empty!!" << std::endl;
+//   }    
+//   else {
+//     STMCommand next_stm_cmd = states_sequence_.front();
+//     _next_state = next_stm_cmd.state_id;
+//     rg_container_->motion_command_ = next_stm_cmd.motion_command;
 
-    auto next_sim_cmd_pair = sp_->sim_env_sequence.front();
-    while(next_sim_cmd_pair.first != next_stm_cmd.motion_id)
-      sp_->sim_env_sequence.pop_front();
+//     auto next_sim_cmd_pair = sp_->sim_env_sequence.front();
+//     while(next_sim_cmd_pair.first != next_stm_cmd.motion_id)
+//       sp_->sim_env_sequence.pop_front();
      
-    states_sequence_.pop_front();       
-  }
-  states_sequence_mtx_.unlock();
+//     states_sequence_.pop_front();       
+//   }
+//   states_sequence_mtx_.unlock();
   
-  // std::cout<<"get_next_state = " << _next_state << std::endl;
-}
+//   // std::cout<<"get_next_state = " << _next_state << std::endl;
+// }
 
-void MagnetoWbmcControlArchitecture::add_next_state(int _st_id, int _mt_id,
-                                      const MotionCommand &_motion_command) {
-  STMCommand stm_cmd = STMCommand(_st_id, _mt_id, _motion_command);
-  add_next_state(stm_cmd);  
-} 
+// void MagnetoWbmcControlArchitecture::add_next_state(int _st_id, int _mt_id,
+//                                       const MotionCommand &_motion_command) {
+//   STMCommand stm_cmd = STMCommand(_st_id, _mt_id, _motion_command);
+//   add_next_state(stm_cmd);  
+// } 
 
-void MagnetoWbmcControlArchitecture::add_next_state(STMCommand _stm_cmd) {
-  states_sequence_mtx_.lock();
-  states_sequence_.push_back(_stm_cmd);
-  states_sequence_mtx_.unlock();
-}
+// void MagnetoWbmcControlArchitecture::add_next_state(STMCommand _stm_cmd) {
+//   states_sequence_mtx_.lock();
+//   states_sequence_.push_back(_stm_cmd);
+//   states_sequence_mtx_.unlock();
+// }
 
 ///////////////////////////////////////////////////////////////////////
 void MagnetoWbmcControlArchitecture::smoothing_torque(void* _cmd) {

@@ -26,19 +26,13 @@ void ClimbingInterruptLogic::processInterrupts() {
           // set stateMachine sequences
 
           for(auto &it : script_user_cmd_deque_) {
-
             // set env for simulation
-            sp_->sim_env_sequence.push_back(std::make_pair(mc_id, it.first));
-
-            // set motion command with state machine identifier
-            ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, mc_id, it.second );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_START_TRANS, mc_id, it.second );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING, mc_id, it.second );
-            ctrl_arch_->add_next_state(MAGNETO_STATES::SWING_END_TRANS, mc_id, it.second ); 
-
-            sp_->states_sequence_->addCommand();         
+            sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it) ;
+            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
+            sp_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
+            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
           }
-          ctrl_arch_->add_next_state(MAGNETO_STATES::BALANCE, MotionCommand() );
+          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, new SimMotionCommand() );
         }
       break;
       default:
