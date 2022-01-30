@@ -15,7 +15,10 @@ MagnetoStateProvider::MagnetoStateProvider(RobotSystem* _robot) {
 
     robot_ = _robot;
     curr_time = 0.;    
-    states_sequence_ = new UserCommandSequence();
+    
+    curr_state = -1;
+    curr_motion_command = MotionCommand();
+    curr_simulation_command = SimulationCommand();
 
     q = Eigen::VectorXd::Zero(Magneto::n_dof);
     qdot = Eigen::VectorXd::Zero(Magneto::n_dof);

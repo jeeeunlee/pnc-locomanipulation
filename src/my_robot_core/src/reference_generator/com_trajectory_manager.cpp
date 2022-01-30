@@ -27,11 +27,11 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
   
   MOTION_DATA motion_cmd_data = MOTION_DATA();
   Eigen::VectorXd pos_dev_b;
-  if(_motion_cmd->get_com_motion_command(motion_cmd_data)){
+  if(_motion_cmd->get_com_motion(motion_cmd_data)){
       // if com motion command is given
       traj_duration_ = motion_cmd_data.motion_period;
       pos_dev_b = motion_cmd_data.pose.pos;
-  } else if(_motion_cmd->get_foot_motion_command(motion_cmd_data)) {
+  } else if(_motion_cmd->get_foot_motion(motion_cmd_data)) {
     // heuristic computation
     traj_duration_ = motion_cmd_data.motion_period;
     pos_dev_b = 0.25 * motion_cmd_data.pose.pos;

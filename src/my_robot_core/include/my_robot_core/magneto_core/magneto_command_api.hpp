@@ -91,13 +91,6 @@ class MotionCommand : public UserCommand {
       foot_motion_data = _mc.foot_motion_data;
     }
     ~MotionCommand() {};
-    void CopyCommand(UserCommand* _cmd) {
-      com_motion_given = ((MotionCommand*)_cmd)->com_motion_given;
-      foot_motion_given = ((MotionCommand*)_cmd)->foot_motion_given;
-      swing_foot_idx =  ((MotionCommand*)_cmd)->swing_foot_idx;
-      com_motion_data = ((MotionCommand*)_cmd)->com_motion_data;  
-      foot_motion_data = ((MotionCommand*)_cmd)->foot_motion_data;
-    };
 
   public:
     void set_com_motion(const MOTION_DATA& _com_motion_data){
@@ -129,18 +122,11 @@ class MotionCommand : public UserCommand {
     MOTION_DATA com_motion_data;
 };
 
-
-class SimMotionCommand : public MotionCommand {
+class SimulationCommand : public UserCommand {
   public:
-    SimMotionCommand(): MotionCommand(), mu(0.7), f_adhesive(100.) {}
-    SimMotionCommand(const MotionCommand& motion_cmd,
-    double _mu, double _fm ): MotionCommand(motion_cmd), mu(_mu), f_adhesive(_fm){}
-    ~SimMotionCommand() {};
-    void CopyCommand(UserCommand* _cmd) {
-      MotionCommand::CopyCommand(_cmd);
-      mu = ((SimMotionCommand*)_cmd)->mu;
-      f_adhesive = ((SimMotionCommand*)_cmd)->f_adhesive;
-    }
+    SimulationCommand(): mu(0.7), f_adhesive(100.) {}
+    SimulationCommand(double _mu, double _fm): mu(_mu), f_adhesive(_fm) {}
+    ~SimulationCommand() {};
     void getSimEnv(double& _mu, double& _fm){
       _mu = mu;
       _fm = f_adhesive;
@@ -149,5 +135,14 @@ class SimMotionCommand : public MotionCommand {
   protected:
     double mu;
     double f_adhesive;
+}
+
+class SimMotionCommand : public MotionCommand, public SimulationCommand {
+  public:
+    SimMotionCommand(): MotionCommand(), SimulationCommand() {}
+    SimMotionCommand(const MotionCommand& motion_cmd,
+                    double _mu, double _fm )
+                    : MotionCommand(motion_cmd), SimulationCommand(_mu, _fm) {}
+    ~SimMotionCommand() {};
 };
 

@@ -37,6 +37,7 @@ MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _rob
   state_ = MAGNETO_STATES::BALANCE;
   prev_state_ = state_;
   b_state_first_visit_ = true;
+  sp_->curr_state = state_;
 
   _InitializeParameters();
 }
@@ -66,13 +67,11 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
   }
 
   // static bool b_integrator_init = true;
-  // if ((prev_state_ == MAGNETO_STATES::STAND || state_ == MAGNETO_STATES::BALANCE)
-  // &&
-  // b_integrator_init) {
-  // std::cout << "[Joint Integrator] Start" << std::endl;
-  // wbc_controller->initializeJointIntegrator();
-  // b_integrator_init = false;
-  //}
+  // if ( (prev_state_ == MAGNETO_STATES::STAND || state_ == MAGNETO_STATES::BALANCE) 
+  //       && b_integrator_init) {
+  //   wbc_controller->initializeJointIntegrator();
+  //   b_integrator_init = false;
+  // }
 
   // Update State Machine
   state_machines_[state_]->oneStep();
@@ -91,9 +90,12 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
   if (state_machines_[state_]->endOfState()) {
     state_machines_[state_]->lastVisit();
     prev_state_ = state_;
-    // state_ = state_machines_[state_]->getNextState();
-    // get_next_state(state_);
-    sp_->states_sequence_->getNextState();
+    states_sequence_->getNextState(state_, user_cmd_);
+    
+    sp_->curr_state = state_;
+    sp_->curr_motion_command = (MotionCommand)user_cmd_;
+    sp_->curr_simulation_command = (SimulationCommand)user_cmd_;
+
     b_state_first_visit_ = true;
   }
 };

@@ -25,7 +25,7 @@ void FullSupport::firstVisit() {
 
   ctrl_start_time_ = sp_->curr_time;
   // -- set current motion param
-  MotionCommand mc_curr_ = rg_container_->motion_command_;
+  MotionCommand mc_curr_ = sp_->curr_motion_command;
 
   // ---------------------------------------
   //      Planning

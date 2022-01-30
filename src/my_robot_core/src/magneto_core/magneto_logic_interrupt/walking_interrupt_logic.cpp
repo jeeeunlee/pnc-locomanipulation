@@ -27,12 +27,12 @@ void WalkingInterruptLogic::processInterrupts() {
           // set stateMachine sequences
           for(auto &it : script_user_cmd_deque_) {
             // set env for simulation
-            sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it) ;
-            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
-            sp_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
-            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
           }
-          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, new MotionCommand() );
+          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, MotionCommand() );
         }
       break;
       case 'w':
@@ -42,8 +42,8 @@ void WalkingInterruptLogic::processInterrupts() {
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           POSE_DATA pose_up(0,0,0.01, 1,0,0,0);
           MOTION_DATA motion_com_up(pose_up, 0.5);
-          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
-                                  new MotionCommand(motion_com_up) );
+          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
+                                                MotionCommand(motion_com_up) );
         }
       break;
       case 'x':
@@ -53,8 +53,8 @@ void WalkingInterruptLogic::processInterrupts() {
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           POSE_DATA pose_dn(0,0,-0.01, 1,0,0,0);
           MOTION_DATA motion_com_dn(pose_dn, 0.5);
-          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
-                                  new MotionCommand(motion_com_dn) );
+          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
+                                                MotionCommand(motion_com_dn) );
         }
       break;
       default:
@@ -79,7 +79,7 @@ void WalkingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
     my_utils::readParameter(motion_cfg, "ori", ori_temp);
     my_utils::readParameter(motion_cfg, "b_relative", is_baseframe);
     md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_baseframe);
-    MotionCommand* motion_command = new MotionCommand(link_idx, md_temp);
+    MotionCommand mc_temp = MotionCommand(link_idx, md_temp);
 
-    script_user_cmd_deque_.push_back(motion_command);
+    script_user_cmd_deque_.push_back(mc_temp);
 }

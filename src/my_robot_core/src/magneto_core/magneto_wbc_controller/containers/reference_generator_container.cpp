@@ -4,9 +4,7 @@
 
 MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(RobotSystem* _robot){
   robot_ = _robot;
-  
-  motion_command_ = MotionCommand();
-  
+    
   // Initialize Trajectory managers
   foot_trajectory_manager_ = new FootPosTrajectoryManager(robot_);                    
   com_trajectory_manager_ = new CoMTrajectoryManager(robot_);
