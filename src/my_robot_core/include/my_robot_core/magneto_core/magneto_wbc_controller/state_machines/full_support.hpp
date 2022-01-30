@@ -20,7 +20,6 @@ class FullSupport : public StateMachine {
   void lastVisit();
   bool endOfState();
   void initialization(const YAML::Node& node);
-  StateIdentifier getNextState();
 
  protected:
   MagnetoStateProvider* sp_;

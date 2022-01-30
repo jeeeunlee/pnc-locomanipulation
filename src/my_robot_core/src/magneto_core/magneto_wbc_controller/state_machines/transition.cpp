@@ -1,5 +1,5 @@
-#include </my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
-#include </my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/transition.hpp>
 
 Transition::Transition(const StateIdentifier state_identifier_in,
@@ -37,17 +37,17 @@ void Transition::firstVisit() {
   moving_foot_idx_ = mc_curr_.get_moving_foot();
 
   // --set com traj
-  rg_container->com_trajectory_manager_
+  rg_container_->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, 
                               ctrl_duration_);
 
   // -- set base ori traj
-  rg_container->base_ori_trajectory_manager_
+  rg_container_->base_ori_trajectory_manager_
             ->setBaseOriTrajectory(ctrl_start_time_,
                                   ctrl_duration_);
 
   // -- set joint traj
-  rg_container->joint_trajectory_manager_
+  rg_container_->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
                                 ctrl_duration_);
 
@@ -104,70 +104,70 @@ void Transition::firstVisit() {
                                 W_rf_full_contact); 
 
 
-  // rg_container->QPweight_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
+  // rg_container_->QPweight_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
   if(b_contact_start_) {
     // moving foot : nocontact -> contact
-    rg_container->max_normal_force_manager_
+    rg_container_->max_normal_force_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_,
                                   ws_container_->max_rf_z_nocontact_,
                                   ws_container_->max_rf_z_contact_);
-    rg_container->QPweight_xddot_manager_
+    rg_container_->QPweight_xddot_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_xddot_swing_, W_xddot_full_contact);
-    rg_container->QPweight_reactforce_manager_
+    rg_container_->QPweight_reactforce_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_rf_swing_, W_rf_full_contact);
-    rg_container->weight_residualforce_manager_
+    rg_container_->weight_residualforce_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       1.0, 0.0);
   } else {
     // moving foot : contact -> nocontact
-    rg_container->max_normal_force_manager_
+    rg_container_->max_normal_force_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_,
                                   ws_container_->max_rf_z_contact_, 
                                   ws_container_->max_rf_z_nocontact_);
-    rg_container->QPweight_xddot_manager_
+    rg_container_->QPweight_xddot_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_xddot_full_contact, W_xddot_swing_);
-    rg_container->QPweight_reactforce_manager_
+    rg_container_->QPweight_reactforce_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_rf_full_contact, W_rf_swing_);
-    rg_container->weight_residualforce_manager_
+    rg_container_->weight_residualforce_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       0.0, 1.0);
   }
 }
 
 void Transition::_taskUpdate() {
-  // rg_container->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
-  rg_container->com_trajectory_manager_->updateTask(sp_->curr_time,
+  // rg_container_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  rg_container_->com_trajectory_manager_->updateTask(sp_->curr_time,
                                   ws_container_->com_task_);
-  // rg_container->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
-  rg_container->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
+  // rg_container_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  rg_container_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
                                   ws_container_->base_ori_task_);
-  // rg_container->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
-  rg_container->joint_trajectory_manager_->updateTask(sp_->curr_time,
+  // rg_container_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  rg_container_->joint_trajectory_manager_->updateTask(sp_->curr_time,
                                   ws_container_->joint_task_);
 }
 
 void Transition::_weightUpdate() {
   // change in weight
-  // rg_container->QPweight_qddot_manager_
+  // rg_container_->QPweight_qddot_manager_
   //           ->updateTransition(sp_->curr_time, 
   //                           ws_container_->W_qddot_);
-  rg_container->QPweight_xddot_manager_
+  rg_container_->QPweight_xddot_manager_
             ->updateTransition(sp_->curr_time, 
                             ws_container_->W_xddot_);
-  rg_container->QPweight_reactforce_manager_
+  rg_container_->QPweight_reactforce_manager_
             ->updateTransition(sp_->curr_time, 
                             ws_container_->W_rf_);
-  // rg_container->weight_residualforce_manager_
+  // rg_container_->weight_residualforce_manager_
   //           ->updateTransition(sp_->curr_time,
   //                               ws_container_->w_res_);
   ws_container_->w_res_ = 0.0;
 
   // change in normal force in contactSpec
-  rg_container->max_normal_force_manager_
+  rg_container_->max_normal_force_manager_
             ->updateTransition(sp_->curr_time, 
                                   ws_container_->max_rf_z_trans_);
   ws_container_->set_maxfz_contact(moving_foot_idx_, 
@@ -191,10 +191,6 @@ bool Transition::endOfState() {
     return true;
   }
   return false;
-}
-
-StateIdentifier Transition::getNextState() {
-  return MAGNETO_STATES::SWING_START_TRANS;
 }
 
 void Transition::initialization(const YAML::Node& node) {

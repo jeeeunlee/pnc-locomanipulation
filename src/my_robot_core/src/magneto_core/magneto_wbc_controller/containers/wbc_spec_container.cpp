@@ -1,6 +1,6 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 
-MagnetoWbcContainer::MagnetoWbcSpecContainer(RobotSystem* _robot) {
+MagnetoWbcSpecContainer::MagnetoWbcSpecContainer(RobotSystem* _robot) {
   robot_ = _robot;
   _InitializeTasks();
   _InitializeContacts();
@@ -100,8 +100,8 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
 
 
 void MagnetoWbcSpecContainer::_InitializeMagnetisms(){
-  magnetic_force_ = 0.;
-  residual_ratio_ = 0.;
+  magnetic_force_ = Eigen::VectorXd::Zero(4);
+  residual_ratio_ = Eigen::VectorXd::Zero(4);
   b_magnetism_map_[MagnetoBodyNode::AL_foot_link] = false;
   b_magnetism_map_[MagnetoBodyNode::BL_foot_link] = false;
   b_magnetism_map_[MagnetoBodyNode::AR_foot_link] = false;
@@ -141,7 +141,7 @@ void MagnetoWbcSpecContainer::setContactFriction() {
 
 void MagnetoWbcSpecContainer::setContactFriction(const Eigen::VectorXd& _mu_vec) {
   // initialize contact
-  for (int foot_idx=0; foot_idx<Magneto::n_leg; ++i)
+  for (int foot_idx=0; foot_idx<Magneto::n_leg; ++foot_idx)
     setContactFriction(foot_idx, _mu_vec[foot_idx]);  
 }
 
@@ -208,19 +208,53 @@ void MagnetoWbcSpecContainer::set_magnetism(int moving_cop) {
                         moving_cop != MagnetoBodyNode::BR_foot_link);
 }
 
+int MagnetoWbcSpecContainer::footLink2FootIdx(int moving_cop){
+  switch(moving_cop){
+    case MagnetoBodyNode::AL_foot_link :
+    case MagnetoBodyNode::AL_tibia_link :
+        return MagnetoFoot::AL;
+    case MagnetoBodyNode::BL_foot_link :
+    case MagnetoBodyNode::BL_tibia_link :
+        return MagnetoFoot::BL;
+    case MagnetoBodyNode::AR_foot_link :
+    case MagnetoBodyNode::AR_tibia_link :
+        return MagnetoFoot::AR;
+    case MagnetoBodyNode::BR_foot_link :
+    case MagnetoBodyNode::BR_tibia_link :
+        return MagnetoFoot::BR;
+    default:
+        return -1;
+  }
+} 
+
+int MagnetoWbcSpecContainer::footIdx2FootLink(int foot_idx){
+  switch(foot_idx){
+      case  MagnetoFoot::AL :
+        return MagnetoFootLink::AL;
+      case  MagnetoFoot::BL :
+        return MagnetoFootLink::BL;
+      case  MagnetoFoot::AR :
+        return MagnetoFootLink::AR;
+      case  MagnetoFoot::BR :
+        return MagnetoFootLink::BR;
+      default:
+          return -1;
+  }
+} 
+
 void MagnetoWbcSpecContainer::set_residual_magnetic_force(int moving_cop, double contact_distance) {
 
   if( moving_cop >= 0 && moving_cop < robot_->getNumBodyNodes() ){
+    // set foot idx
+    int idx = footLink2FootIdx(moving_cop);
     // set J_residual_
     J_residual_ = robot_->getBodyNodeCoMBodyJacobian(moving_cop); // 6 x ndof
     // set F_residual_
-    double distance_ratio;
-    double distance_constant = 0.005*4.;
-    distance_ratio = distance_constant / (contact_distance + distance_constant);
-    distance_ratio = distance_ratio * distance_ratio;
-    residual_force_ = distance_ratio * magnetic_force_ * (residual_ratio_/100.);
+    double distance_ratio = 0.02 / (contact_distance + 0.02);
+    residual_force_[idx] = distance_ratio * distance_ratio
+                       * magnetic_force_[idx] * (residual_ratio_[idx]/100.);
     F_residual_ = Eigen::VectorXd::Zero(J_residual_.rows());
-    F_residual_[F_residual_.size()-1] = residual_force_;
+    F_residual_[F_residual_.size()-1] = residual_force_[idx];
   } else{
     J_residual_ = Eigen::MatrixXd::Zero(6, robot_->getNumDofs()); // 6 x ndof
     F_residual_ = Eigen::VectorXd::Zero(J_residual_.rows());
@@ -255,10 +289,10 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   // build contact_list_
   dim_contact_=0;
   contact_list_.clear();
-  for(auto &it : full_contact_list_) {
-    if(((BodyFrameSurfaceContactSpec*)(it))->getLinkIdx()!=moving_cop) {
-      contact_list_.push_back((BodyFrameSurfaceContactSpec*)(it));
-      dim_contact_ += (it)->getDim();
+  for(auto &[leg_idx, contact] : foot_contact_map_) {
+    if( footIdx2FootLink(leg_idx) != moving_cop ) {
+      contact_list_.push_back((BodyFrameSurfaceContactSpec*)(contact));
+      dim_contact_ += (contact)->getDim();
     }
   }
 }

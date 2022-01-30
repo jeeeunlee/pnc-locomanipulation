@@ -47,7 +47,7 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
   // void add_next_state(StateIdentifier _st_id, int _mt_id,
   //                     const MotionCommand &_motion_command);
   // void add_next_state(STMCommand _stm_cmd);
-  StateSequence<SimMotionCommand> states_sequence_;
+  StateSequence<SimMotionCommand>* states_sequence_;
   SimMotionCommand user_cmd_;
   
   // initialize parameters

@@ -95,32 +95,22 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
     // compute optimal delq
     _UpdateDelQ();
     // update q
-    // if(iter%20 == 1)
-    // {
-    //   std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-    //   my_utils::pretty_print(q_, std::cout, "q");
-    //   my_utils::pretty_print(delq_, std::cout, "delq");
-    //   my_utils::pretty_print(ceq_, std::cout, "ceq_");
-    // }
-
     q_ += delq_;
     err = delq_.norm();
   }
 
   q_goal_ = q_;
 
-  // std::cout<<"iter(" << iter << "), err=" << err << std::endl;
-  // my_utils::pretty_print(q_, std::cout, "q");
-  // my_utils::pretty_print(ceq_, std::cout, "ceq_");
-
   // add com goal
-  MOTION_DATA motion_data;
-  _motion_command.get_foot_motion(motion_data);
-  motion_data.pose.pos = robot_planner_->getCoMPosition()
+  MOTION_DATA com_motion_data;
+  com_motion_data.swing_height = 0.0;
+  com_motion_data.motion_period = 
+            _motion_command.get_foot_motion_period();
+  com_motion_data.pose.pos = robot_planner_->getCoMPosition()
                           - robot_->getCoMPosition();
-  motion_data.pose.is_baseframe = false;
-  motion_data.swing_height = 0.0;
-  _motion_command.add_motion(-1, motion_data);
+  com_motion_data.pose.is_baseframe = false;
+  
+  _motion_command.set_com_motion(com_motion_data);
 }
 
 void MagnetoGoalPlanner::_UpdateDelQ() {

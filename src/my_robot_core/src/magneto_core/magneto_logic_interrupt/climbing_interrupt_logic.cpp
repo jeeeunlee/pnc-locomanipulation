@@ -1,5 +1,6 @@
 #include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
-#include <my_robot_core/magneto_core/magneto_logic_interrupt/ClimbingInterruptLogic.hpp>
+#include <my_robot_core/magneto_core/magneto_logic_interrupt/climbing_interrupt_logic.hpp>
+
 
 ClimbingInterruptLogic::ClimbingInterruptLogic(
         MagnetoWbmcControlArchitecture* _ctrl_arch)

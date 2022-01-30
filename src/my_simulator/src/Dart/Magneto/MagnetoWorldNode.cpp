@@ -191,10 +191,9 @@ void MagnetoWorldNode::setFrictionCoeff(){
 }
 
 void MagnetoWorldNode::updateContactEnvSetup() {
-    auto sim_env_pair = sp_->sim_env_sequence.front();   
-    SimEnvCommand sim_env = sim_env_pair.second;
+    SimulationCommand sim_env = sp_->curr_simulation_command; 
 
-    int foot_idx =  sim_env.foot_idx
+    int foot_idx =  sp_-> curr_motion_command.get_moving_foot();
     coef_fric_map_[foot_idx] = sim_env.mu;
     magnetic_force_map_[foot_idx] = sim_env.f_adhesive;
 } 

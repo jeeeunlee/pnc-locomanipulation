@@ -109,9 +109,16 @@ class MotionCommand : public UserCommand {
       _idx = swing_foot_idx;
       return foot_motion_given;
     }
+    bool get_foot_motion(MOTION_DATA &_motion_data){
+      _motion_data = foot_motion_data;
+      return foot_motion_given;
+    }
     bool get_com_motion(MOTION_DATA &_motion_data){
       _motion_data = com_motion_data;
       return com_motion_given;
+    }
+    double get_foot_motion_period(){
+      return foot_motion_data.motion_period;
     }
 
   protected:
@@ -135,11 +142,13 @@ class SimulationCommand : public UserCommand {
   protected:
     double mu;
     double f_adhesive;
-}
+};
 
 class SimMotionCommand : public MotionCommand, public SimulationCommand {
   public:
     SimMotionCommand(): MotionCommand(), SimulationCommand() {}
+    SimMotionCommand(const MotionCommand& motion_cmd)
+                    : MotionCommand(motion_cmd), SimulationCommand() {}
     SimMotionCommand(const MotionCommand& motion_cmd,
                     double _mu, double _fm )
                     : MotionCommand(motion_cmd), SimulationCommand(_mu, _fm) {}

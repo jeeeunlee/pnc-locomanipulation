@@ -1,12 +1,12 @@
 #include <my_robot_core/reference_generator/smooth_transition_manager.hpp>
 
-template<typename T>
+template<class T>
 SmoothTransitionManager<T>::SmoothTransitionManager()
   :TransitionManagerBase() {
   my_utils::pretty_constructor(2, "SmoothTransitionManager");
 }
 
-template<typename T>
+template<class T>
 void SmoothTransitionManager<T>::setTransition(const double& _start_time, 
                                                 const double& _duration,
                                                 const T& _init,
@@ -18,7 +18,7 @@ void SmoothTransitionManager<T>::setTransition(const double& _start_time,
   trans_end_time_ = trans_start_time_ + trans_duration_;
 }
 
-template<typename T>
+template<class T>
 void SmoothTransitionManager<T>::updateTransition(const double& current_time,
                                                         T &_weight) {
   double ts = (current_time - trans_start_time_) / trans_duration_; // 0~1

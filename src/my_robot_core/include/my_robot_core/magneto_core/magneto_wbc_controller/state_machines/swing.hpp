@@ -20,7 +20,6 @@ class Swing : public StateMachine {
   void lastVisit();
   bool endOfState();
   void initialization(const YAML::Node& node);
-  StateIdentifier getNextState();
 
   void switchStateButtonTrigger() { state_switch_button_trigger_ = true; }
 
