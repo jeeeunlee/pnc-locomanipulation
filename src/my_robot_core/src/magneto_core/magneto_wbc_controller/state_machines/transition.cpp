@@ -32,7 +32,7 @@ void Transition::firstVisit() {
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
   // -- set current motion param
-  MotionCommand mc_curr_ = ctrl_arch_->get_motion_command();
+  MotionCommand mc_curr_ = sp_->curr_motion_command;
 
   moving_foot_idx_ = mc_curr_.get_moving_foot();
 

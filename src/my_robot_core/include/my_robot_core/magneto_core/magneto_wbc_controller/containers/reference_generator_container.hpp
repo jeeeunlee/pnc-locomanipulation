@@ -14,9 +14,6 @@ class MagnetoReferenceGeneratorContainer {
 
   RobotSystem* robot_;
 
-  // Motion Command
-  MotionCommand motion_command_;
-
   // Trajectory Managers
   FootPosTrajectoryManager* foot_trajectory_manager_;
   CoMTrajectoryManager* com_trajectory_manager_;

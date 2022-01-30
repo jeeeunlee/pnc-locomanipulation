@@ -5,12 +5,16 @@
 
 #include <my_robot_core/control_architecture.hpp>
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
+
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/state_machine_set.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbmc.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbrmc.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
+
 #include <my_robot_core/magneto_core/magneto_planner/magneto_planner_set.hpp>
+
 
 namespace CONTROLLER_TYPES {
 constexpr int WBMC = 0;
@@ -37,15 +41,15 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
   void getIVDCommand(void* _command);
   void smoothing_torque(void* _cmd);
 
-
   // states_sequence_ : deque of pair<StateIdentifier, motion_command*>
   // int get_num_states();  
   // void get_next_state(StateIdentifier &_state);
   // void add_next_state(StateIdentifier _st_id, int _mt_id,
   //                     const MotionCommand &_motion_command);
   // void add_next_state(STMCommand _stm_cmd);
+  StateSequence<SimMotionCommand> states_sequence_;
+  SimMotionCommand user_cmd_;
   
-
   // initialize parameters
   void _ReadParameters();
   void _InitializeParameters();
@@ -70,5 +74,6 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
   private:
     Eigen::VectorXd tau_min_;
     Eigen::VectorXd tau_max_;
-
 };
+
+

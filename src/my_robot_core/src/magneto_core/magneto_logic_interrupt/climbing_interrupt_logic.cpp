@@ -1,4 +1,4 @@
-#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
 #include <my_robot_core/magneto_core/magneto_logic_interrupt/ClimbingInterruptLogic.hpp>
 
 ClimbingInterruptLogic::ClimbingInterruptLogic(
@@ -27,12 +27,12 @@ void ClimbingInterruptLogic::processInterrupts() {
 
           for(auto &it : script_user_cmd_deque_) {
             // set env for simulation
-            sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it) ;
-            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
-            sp_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
-            sp_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it ) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
           }
-          sp_->states_sequence_->addState(MAGNETO_STATES::BALANCE, new SimMotionCommand() );
+          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, SimMotionCommand() );
         }
       break;
       default:
@@ -75,7 +75,7 @@ void ClimbingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg) {
   double fm;
   my_utils::readParameter(motion_cfg, "mu", mu);
   my_utils::readParameter(motion_cfg, "fm", fm);
-  SimMotionCommand* smc_temp = new SimMotionCommand(mc_temp, mu, fm);
+  SimMotionCommand smc_temp = SimMotionCommand(mc_temp, mu, fm);
 
   script_user_cmd_deque_.push_back( smc_temp );
 }

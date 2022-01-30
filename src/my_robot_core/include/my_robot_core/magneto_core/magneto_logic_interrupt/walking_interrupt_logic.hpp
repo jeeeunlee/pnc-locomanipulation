@@ -18,5 +18,5 @@ class WalkingInterruptLogic : public InterruptLogic {
   MagnetoWbmcControlArchitecture* ctrl_arch_;
   MagnetoStateProvider* sp_;
 
-  std::deque<MotionCommand*> script_user_cmd_deque_;
+  std::deque<MotionCommand> script_user_cmd_deque_;
 };

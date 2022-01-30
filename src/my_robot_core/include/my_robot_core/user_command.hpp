@@ -8,78 +8,23 @@ class UserCommand {
   public:
     UserCommand() {};
     virtual ~UserCommand() {}; 
-    virtual void CopyCommand(UserCommand* _cmd)=0;
 };
 
 // container
-class UserCommandSequence {
-  private:
-    std::deque< UserCommand* > sequence_;
-  public:
-    UserCommandSequence() { sequence_.clear(); }
-    ~UserCommandSequence() { for(auto &cmd: sequence_) delete cmd; delete sequence_;}
-    void addCommand(UserCommand* _cmd) {
-      sequence_.push_back(_cmd);
-    }
-    bool getNextCommand(UserCommand* _cmd) {
-        if(sequence_.empty())
-            return false;
-        _cmd->CopyCommand(sequence_.front());
-        delete (sequence_.front());
-        sequence_.pop_front();
-        return true;
-    }
-};
+template<class T>
+class StateSequence{
+  protected:
+    std::deque<std::pair<int,T>> state_sequence_;
 
-    
-// for state machine
-class StateCommand{
   public:
-    StateCommand() { 
-      state_id = -1;
-      user_cmd = new UserCommand();
+    void addState(int state_id, const T& state_cmd){
+      state_sequence_.push_back( std::make_pair(state_id, state_cmd) );
     }
-    StateCommand(int id, UserCommand* _cmd){
-      state_id = id;
-      user_cmd = _cmd;
+    bool getNextState(int& state_id, T& state_cmd){
+      auto pair = state_sequence_.front();
+      state_id = pair.first;
+      state_cmd = pair.second;
+      state_sequence_.pop_front();
     }
-    ~StateCommand() {delete user_cmd;}
-    void getStateCommand(int& _state_id, UserCommand* _cmd){
-      _state_id = state_id;
-      _cmd->CopyCommand(user_cmd);
-    }
-    void CopyStateCommand(StateCommand* _st_cmd){
-      state_id = _st_cmd->state_id;
-      user_cmd->CopyCommand(_st_cmd->user_cmd);
-    }
-  public:
-    int state_id;
-    UserCommand* user_cmd;
-};
-    
-class StateSequence {
-  private:
-    StateCommand* current_state_;
-    std::deque< StateCommand* > sequence_;
-  public:
-    StateSequence() { sequence_.clear(); 
-    current_state_ = new StateCommand();}
-    ~StateSequence() { for(auto &cmd: sequence_) delete cmd; delete sequence_;}
-    void addState(int state_id, UserCommand* _cmd) {
-      sequence_.push_back( new StateCommand(state_id, _cmd) );
-    }
-    bool getNextState(int& state_id, UserCommand* _cmd) {
-        if(sequence_.empty())
-            return false;
-        StateCommand* state_cmd = sequence_.front();        
-        current_state_->CopyStateCommand(state_cmd);
-        current_state_->getStateCommand(state_id, _cmd);
 
-        delete (state_cmd);
-        sequence_.pop_front();
-        return true;
-    };
-    bool getCurrentState(){
-
-    }
-};
+}
