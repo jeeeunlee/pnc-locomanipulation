@@ -3,7 +3,7 @@
 #include <my_robot_core/reference_generator/transition_manager_base.hpp>
 
 // Object to manage common transectory primitives
-template<typename T>
+template<class T>
 class SmoothTransitionManager : public TransitionManagerBase {
  public:
   SmoothTransitionManager();

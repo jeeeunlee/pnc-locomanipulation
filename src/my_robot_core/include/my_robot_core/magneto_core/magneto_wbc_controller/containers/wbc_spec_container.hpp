@@ -22,6 +22,7 @@ class MagnetoWbcSpecContainer {
   void paramInitialization(const YAML::Node& node);
   void setContactFriction();
   void setContactFriction(const Eigen::VectorXd& _mu_vec);
+  void setContactFriction(int foot_idx, double mu);
   
   RobotSystem* robot_;
   std::vector<Task*> task_list_;
@@ -133,5 +134,9 @@ class MagnetoWbcSpecContainer {
   void add_task_list(Task* task);
   Task* get_foot_pos_task(int moving_cop);
   Task* get_foot_ori_task(int moving_cop);
+
+  // 
+  int footLink2FootIdx(int moving_cop);
+  int footIdx2FootLink(int foot_idx);
 
 };

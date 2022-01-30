@@ -10,6 +10,8 @@
 #include <my_utils/Math/hermite_curve_vec.hpp>
 #include <my_utils/Math/hermite_quaternion_curve.hpp>
 
+class MagnetoStateProvider;
+
 // Object to manage common trajectory primitives
 class FootPosTrajectoryManager : public TrajectoryManagerBase {
  public:
@@ -63,6 +65,7 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   HermiteQuaternionCurve quat_hermite_curve_;
 
  protected:
+  MagnetoStateProvider* sp_;
   void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in, 
                               Eigen::VectorXd& ori_out);
   void setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 

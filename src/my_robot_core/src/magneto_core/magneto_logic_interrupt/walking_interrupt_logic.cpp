@@ -9,7 +9,7 @@ WalkingInterruptLogic::WalkingInterruptLogic(
   sp_ = MagnetoStateProvider::getStateProvider(ctrl_arch_->robot_);
   
   // Initialize motion commands
-  motion_command_script_list_.clear();
+  script_user_cmd_deque_.clear();
 }
 
 WalkingInterruptLogic::~WalkingInterruptLogic() {}
@@ -27,12 +27,13 @@ void WalkingInterruptLogic::processInterrupts() {
           // set stateMachine sequences
           for(auto &it : script_user_cmd_deque_) {
             // set env for simulation
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
+            SimMotionCommand smc_tmp = SimMotionCommand(it);
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, smc_tmp) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, smc_tmp) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING, smc_tmp) ;
+            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, smc_tmp) ;
           }
-          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, MotionCommand() );
+          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, SimMotionCommand() );
         }
       break;
       case 'w':

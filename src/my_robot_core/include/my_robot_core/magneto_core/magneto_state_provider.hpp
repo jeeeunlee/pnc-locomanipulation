@@ -5,10 +5,11 @@
 #include <my_utils/General/Clock.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 //#include <RobotSystem/include/CentroidModel.hpp>
+#include <my_robot_core/magneto_core/magneto_command_api.hpp>
 
 class RobotSystem;
-class MotionCommand;
-class SimulationCommand;
+// class MotionCommand;
+// class SimulationCommand;
 
 class MagnetoStateProvider {
    public:
@@ -34,6 +35,7 @@ class MagnetoStateProvider {
     int curr_state;
     MotionCommand curr_motion_command;
     SimulationCommand curr_simulation_command;
+    int num_state; // num of remaining states to run
     //
 
     Eigen::VectorXd q_des;

@@ -1,5 +1,5 @@
-#include </my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
-#include </my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/full_support.hpp>
 
 FullSupport::FullSupport(const StateIdentifier state_identifier_in,
@@ -31,8 +31,8 @@ void FullSupport::firstVisit() {
   //      Planning
   // ---------------------------------------
   Eigen::VectorXd q_goal; 
-  rg_container->goal_planner_->computeGoal(mc_curr_);  
-  rg_container->goal_planner_->getGoalConfiguration(q_goal);
+  rg_container_->goal_planner_->computeGoal(mc_curr_);  
+  rg_container_->goal_planner_->getGoalConfiguration(q_goal);
 
     // ---------------------------------------
   //      TASK - SET TRAJECTORY
@@ -42,16 +42,16 @@ void FullSupport::firstVisit() {
   // _set_moving_foot_frame();
 
   // --set com traj
-  rg_container->com_trajectory_manager_
+  rg_container_->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, &mc_curr_);
-  ctrl_duration_ = rg_container->com_trajectory_manager_->getTrajDuration();
-  ctrl_end_time_ = rg_container->com_trajectory_manager_->getTrajEndTime();
+  ctrl_duration_ = rg_container_->com_trajectory_manager_->getTrajDuration();
+  ctrl_end_time_ = rg_container_->com_trajectory_manager_->getTrajEndTime();
   // -- set base ori traj
-  rg_container->base_ori_trajectory_manager_
+  rg_container_->base_ori_trajectory_manager_
             ->setBaseOriTrajectory(ctrl_start_time_, ctrl_duration_);
 
   // -- set joint traj
-  rg_container->joint_trajectory_manager_
+  rg_container_->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
                                 ctrl_duration_);
  
@@ -95,16 +95,16 @@ void FullSupport::firstVisit() {
 }
 
 void FullSupport::_taskUpdate() {
-  rg_container->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
-  rg_container->com_trajectory_manager_->updateTask(sp_->curr_time,
+  rg_container_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  rg_container_->com_trajectory_manager_->updateTask(sp_->curr_time,
                                       ws_container_->com_task_);
 
-  rg_container->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
-  rg_container->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
+  rg_container_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  rg_container_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
                                       ws_container_->base_ori_task_);
   
-  rg_container->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
-  rg_container->joint_trajectory_manager_->updateTask(sp_->curr_time,
+  rg_container_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  rg_container_->joint_trajectory_manager_->updateTask(sp_->curr_time,
                                       ws_container_->joint_task_);
 }
 
@@ -122,15 +122,11 @@ void FullSupport::lastVisit() {}
 
 bool FullSupport::endOfState() {
   // Also check if footstep list is non-zero
-  if ( state_machine_time_ > ctrl_duration_ && ctrl_arch_->get_num_states() > 0) {
+  if ( state_machine_time_ > ctrl_duration_ && sp_->num_state > 0) {
     std::cout << "[Full Support Balance] End" << std:: endl;
     return true;
   }
   return false;
-}
-
-StateIdentifier FullSupport::getNextState() {
-  return MAGNETO_STATES::SWING_START_TRANS;
 }
 
 void FullSupport::initialization(const YAML::Node& node) {}

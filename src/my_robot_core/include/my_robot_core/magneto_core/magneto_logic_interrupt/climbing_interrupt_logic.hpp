@@ -17,5 +17,5 @@ class ClimbingInterruptLogic : public InterruptLogic {
   MagnetoWbmcControlArchitecture* ctrl_arch_;
   MagnetoStateProvider* sp_;
 
-  std::deque<UserCommand> script_user_cmd_deque_;
+  std::deque<SimMotionCommand> script_user_cmd_deque_;
 };

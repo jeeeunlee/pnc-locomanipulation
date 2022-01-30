@@ -1,10 +1,12 @@
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_robot_core/reference_generator/foot_trajectory_manager.hpp>
-
+#include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 
 FootPosTrajectoryManager::FootPosTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {
   my_utils::pretty_constructor(2, "TrajectoryManager: FootPos");
+
+  sp_ = MagnetoStateProvider::getStateProvider(robot_);
 
   // Initialize member variables
   foot_pos_des_.setZero();

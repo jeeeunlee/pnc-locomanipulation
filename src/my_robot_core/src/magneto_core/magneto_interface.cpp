@@ -40,10 +40,12 @@ MagnetoInterface::MagnetoInterface() : EnvInterface() {
     switch(run_mode_) {
         case RUN_MODE::BALANCE:
         case RUN_MODE::STATICWALK:
-            interrupt_ = new WalkingInterruptLogic(robot_);
+            interrupt_ = new WalkingInterruptLogic(
+                static_cast<MagnetoWbmcControlArchitecture*>(control_architecture_));
         break;
         case RUN_MODE::MPCCLIMBING:
-            interrupt_ = new ClimbingInterruptLogic(robot_);  
+            interrupt_ = new ClimbingInterruptLogic(
+                static_cast<MagnetoWbmcControlArchitecture*>(control_architecture_));  
         break;
         default:
         break;
