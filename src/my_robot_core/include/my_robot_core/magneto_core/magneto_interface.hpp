@@ -118,4 +118,6 @@ class MagnetoInterface : public EnvInterface {
     bool IsFootPlannerUpdated();
 
     void AddScriptMotion(const YAML::Node& motion_cfg);
+    int getCurrentMovingFoot();
+    void updateSimulationEnvironment(double& mu, double& f_adhesive);
 };

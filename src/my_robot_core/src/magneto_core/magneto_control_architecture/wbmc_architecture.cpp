@@ -13,6 +13,7 @@ MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _rob
   rg_container_ = new MagnetoReferenceGeneratorContainer(robot_);
 
   _ReadParameters();
+  
   switch(controller_type_) {
     case(CONTROLLER_TYPES::WBMC):
       wbc_controller = new MagnetoWBMC(ws_container_, robot_);
@@ -76,14 +77,17 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
 
   // Update State Machine
   state_machines_[state_]->oneStep();
+
   // Get Wholebody control commands
   if (state_ == MAGNETO_STATES::INITIALIZE) {
     getIVDCommand(_command);
   } else {
     wbc_controller->getCommand(_command);
   }
+
   // Smoothing trq for initial state
   smoothing_torque(_command);
+
   // Save Data
   saveData();
 
@@ -96,10 +100,10 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
     sp_->curr_state = state_;
     sp_->curr_motion_command = (MotionCommand)user_cmd_;
     sp_->curr_simulation_command = (SimulationCommand)user_cmd_;
-    sp_->num_state = states_sequence_->getNumStates();
 
     b_state_first_visit_ = true;
   }
+  sp_->num_state = states_sequence_->getNumStates();
 };
 
 ///////////////////////////////////////////////////////////////////////

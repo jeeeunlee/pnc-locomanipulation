@@ -3,22 +3,39 @@
 #include <my_robot_core/reference_generator/transition_manager_base.hpp>
 
 // Object to manage common transectory primitives
-template<class T>
 class SmoothTransitionManager : public TransitionManagerBase {
  public:
   SmoothTransitionManager();
   ~SmoothTransitionManager(){};
 
-  T weight_init_;
-  T weight_target_;
+  double weight_init_;
+  double weight_target_;
 
   // Initialize transition init to target
   void setTransition(const double& _start_time, 
                     const double& _duration,
-                    const T& _init,
-                    const T& _target);
+                    const double& _init,
+                    const double& _target);
 
   void updateTransition(const double& current_time,
-                T &_val);
+                double &_val); 
+};
+
+class SmoothVectorTransitionManager : public TransitionManagerBase {
+ public:
+  SmoothVectorTransitionManager();
+  ~SmoothVectorTransitionManager(){};
+
+  Eigen::VectorXd weight_init_;
+  Eigen::VectorXd weight_target_;
+
+  // Initialize transition init to target
+  void setTransition(const double& _start_time, 
+                    const double& _duration,
+                    const Eigen::VectorXd& _init,
+                    const Eigen::VectorXd& _target);
+
+  void updateTransition(const double& current_time,
+                Eigen::VectorXd &_val);
   
 };

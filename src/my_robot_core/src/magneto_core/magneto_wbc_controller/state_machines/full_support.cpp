@@ -34,13 +34,10 @@ void FullSupport::firstVisit() {
   rg_container_->goal_planner_->computeGoal(mc_curr_);  
   rg_container_->goal_planner_->getGoalConfiguration(q_goal);
 
-    // ---------------------------------------
+  // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
-
-  // --moving foot setting
-  // _set_moving_foot_frame();
-
+  mc_curr_.printMotionInfo();
   // --set com traj
   rg_container_->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, &mc_curr_);
@@ -53,7 +50,8 @@ void FullSupport::firstVisit() {
   // -- set joint traj
   rg_container_->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
-                                ctrl_duration_);
+                                ctrl_duration_,
+                                q_goal);
  
   // -- set task_list in taf with hierachy
   ws_container_->clear_task_list();
@@ -122,6 +120,8 @@ void FullSupport::lastVisit() {}
 
 bool FullSupport::endOfState() {
   // Also check if footstep list is non-zero
+  // std::cout<<"state_machine_time_ = "<<state_machine_time_<<", ctrl_duration_ = " << ctrl_duration_;
+  // std::cout<<", sp_->num_state = "<< sp_->num_state<< std::endl;
   if ( state_machine_time_ > ctrl_duration_ && sp_->num_state > 0) {
     std::cout << "[Full Support Balance] End" << std:: endl;
     return true;

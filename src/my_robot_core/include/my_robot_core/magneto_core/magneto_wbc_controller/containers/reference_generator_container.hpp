@@ -21,11 +21,11 @@ class MagnetoReferenceGeneratorContainer {
   BaseOriTrajectoryManager* base_ori_trajectory_manager_;
 
   // QP weight / max force transition manager
-  SmoothTransitionManager<double>* max_normal_force_manager_;
-  SmoothTransitionManager<Eigen::VectorXd>* QPweight_qddot_manager_;
-  SmoothTransitionManager<Eigen::VectorXd>* QPweight_xddot_manager_;
-  SmoothTransitionManager<Eigen::VectorXd>* QPweight_reactforce_manager_;
-  SmoothTransitionManager<double>* weight_residualforce_manager_;
+  SmoothTransitionManager* max_normal_force_manager_;
+  SmoothVectorTransitionManager* QPweight_qddot_manager_;
+  SmoothVectorTransitionManager* QPweight_xddot_manager_;
+  SmoothVectorTransitionManager* QPweight_reactforce_manager_;
+  SmoothTransitionManager* weight_residualforce_manager_;
 
   // Planner
   MagnetoGoalPlanner* goal_planner_;

@@ -11,11 +11,11 @@ MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(RobotSyst
   joint_trajectory_manager_ = new JointTrajectoryManager(robot_);
   base_ori_trajectory_manager_ = new BaseOriTrajectoryManager(robot_);
 
-  max_normal_force_manager_ = new SmoothTransitionManager<double>();
-  QPweight_qddot_manager_ = new SmoothTransitionManager<Eigen::VectorXd>();
-  QPweight_xddot_manager_ = new SmoothTransitionManager<Eigen::VectorXd>();
-  QPweight_reactforce_manager_ = new SmoothTransitionManager<Eigen::VectorXd>();
-  weight_residualforce_manager_ = new SmoothTransitionManager<double>();
+  max_normal_force_manager_ = new SmoothTransitionManager();
+  QPweight_qddot_manager_ = new SmoothVectorTransitionManager();
+  QPweight_xddot_manager_ = new SmoothVectorTransitionManager();
+  QPweight_reactforce_manager_ = new SmoothVectorTransitionManager();
+  weight_residualforce_manager_ = new SmoothTransitionManager();
 
   goal_planner_ = new MagnetoGoalPlanner(robot_);
 }
