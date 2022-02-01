@@ -2,6 +2,7 @@
 
 #include <my_robot_core/user_command.hpp>
 #include <Eigen/Dense>
+#include <iostream>
 
 typedef int TARGET_LINK_IDX;
 
@@ -55,6 +56,10 @@ struct MOTION_DATA {
         pose = _pose;
         motion_period = _motion_period;
         swing_height = _swing_height;
+    }
+
+    void printMotionInfo(){
+      std::cout<<"@("<<pose.pos[0]<<","<<pose.pos[1]<<","<<pose.pos[2]<< ")["<<pose.is_baseframe<<"] / motion period : "<<motion_period<<std::endl;
     }
 };
 
@@ -119,6 +124,19 @@ class MotionCommand : public UserCommand {
     }
     double get_foot_motion_period(){
       return foot_motion_data.motion_period;
+    }
+
+    void printMotionInfo(){
+      std::cout<<" ---------------- "<<std::endl;
+      std::cout<<" MotionCommand"<<std::endl;
+      std::cout<<"  * com motion : ";
+      if(com_motion_given){ com_motion_data.printMotionInfo(); }
+      else { std::cout<< "not given"<< std::endl; }
+      std::cout<<"  * foot motion";
+      if(foot_motion_given){ std::cout<<"["<<swing_foot_idx<<"] : "; 
+                            foot_motion_data.printMotionInfo(); }
+      else { std::cout<< " : not given"<< std::endl; }
+      std::cout<<" ---------------- "<<std::endl;
     }
 
   protected:

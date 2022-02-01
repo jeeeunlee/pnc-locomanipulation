@@ -134,30 +134,6 @@ void MagnetoWorldNode::customPreStep() {
                           kp_ * (command_->q[i] - sensor_data_->q[i]);
     }
 
-    // for(int i=0; i< Magneto::n_adof; ++i) {
-    //     trq_cmd_[Magneto::idx_adof[i]] 
-    //                     = kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
-    //                       kp_ * (command_->q[i] - sensor_data_->q[i]);
-    // }
-    
-    // for(int i=0; i< Magneto::n_adof; ++i) {
-    //     trq_cmd_[Magneto::idx_adof[i]] 
-    //                     = command_->jtrq[i] + 
-    //                       kd_ * ( - sensor_data_->qdot[i]) +
-    //                       kp_ * (command_->q[i] - sensor_data_->q[i]);
-    // }
-
-    // for(int i=0; i< Magneto::n_adof; ++i) {
-    //     trq_cmd_[Magneto::idx_adof[i]] 
-    //                     = command_->jtrq[i];
-    // }
-
-    // for(int i=0; i< Magneto::n_adof; ++i) {
-    //     trq_cmd_[Magneto::idx_adof[i]] 
-    //                     = kd_ * ( 0.0 - sensor_data_->qdot[i]) +
-    //                       kp_ * ( qInit[Magneto::idx_adof[i]] - sensor_data_->q[i]);
-    // }
-
     EnforceTorqueLimit();
     updateContactEnvSetup();
     setFrictionCoeff();
@@ -177,25 +153,23 @@ void MagnetoWorldNode::setFrictionCoeff(){
     // =========================================================================
     // Friction & Restitution Coefficient
     // =========================================================================
-    ground->getBodyNode("ground_link")->setFrictionCoeff(coef_fric_);
+    // ground_->getBodyNode("ground_link")->setFrictionCoeff(0.7);
 
-    robot->getBodyNode("BL_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BL_foot_link]);
-    robot->getBodyNode("AL_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AL_foot_link]);
-    robot->getBodyNode("AR_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AR_foot_link]);
-    robot->getBodyNode("BR_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BR_foot_link]);
+    robot_->getBodyNode("BL_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BL_foot_link]);
+    robot_->getBodyNode("AL_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AL_foot_link]);
+    robot_->getBodyNode("AR_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AR_foot_link]);
+    robot_->getBodyNode("BR_foot_link")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BR_foot_link]);
 
-    robot->getBodyNode("BL_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BL_foot_link]);
-    robot->getBodyNode("AL_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AL_foot_link]);
-    robot->getBodyNode("AR_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AR_foot_link]);
-    robot->getBodyNode("BR_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BR_foot_link]);
+    robot_->getBodyNode("BL_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BL_foot_link]);
+    robot_->getBodyNode("AL_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AL_foot_link]);
+    robot_->getBodyNode("AR_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::AR_foot_link]);
+    robot_->getBodyNode("BR_foot_link_3")->setFrictionCoeff(coef_fric_map_[MagnetoBodyNode::BR_foot_link]);
 }
 
 void MagnetoWorldNode::updateContactEnvSetup() {
-    SimulationCommand sim_env = sp_->curr_simulation_command; 
-
-    int foot_idx =  sp_-> curr_motion_command.get_moving_foot();
-    coef_fric_map_[foot_idx] = sim_env.mu;
-    magnetic_force_map_[foot_idx] = sim_env.f_adhesive;
+    int foot_idx =  ((MagnetoInterface*)interface_)->getCurrentMovingFoot();
+    ((MagnetoInterface*)interface_)->updateSimulationEnvironment(
+        coef_fric_map_[foot_idx], magnetic_force_map_[foot_idx]);
 } 
 
 void MagnetoWorldNode::ApplyMagneticForce()  {
@@ -217,7 +191,9 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
             // distance 0->1 , infinite->0
             distance_ratio = distance_constant / (contact_distance_[it.first] + distance_constant);
             distance_ratio = distance_ratio*distance_ratio;
-            force[2] = - distance_ratio*(residual_magnetism_/100.)*magnetic_force_map_[it.first];
+            force[2] = - distance_ratio
+                        * (residual_magnetism_map_[it.first]/100.)
+                        * magnetic_force_map_[it.first];
             // std::cout<<"res: dist = "<<contact_distance_[it.first]<<", distance_ratio=" << distance_ratio << std::endl;
         }       
         robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);
@@ -349,21 +325,26 @@ void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
     // std::cout<<"trq_lb_ = "<<trq_lb_.transpose() << std::endl;
     // std::cout<<"trq_ub_ = "<<trq_ub_.transpose() << std::endl; 
 
+    my_utils::pretty_print(magnetic_force_, std::cout, "sim : magnetic_force_");
+    my_utils::pretty_print(residual_magnetism_, std::cout, "sim : residual_magnetism_");
+    my_utils::pretty_print(coef_fric_, std::cout, "sim : coef_fric_");
+    
+
     // ---- SET MAGNETISM MAP
-    magnetic_force_map_[MagnetoBodyNode::AL_foot_link] = magnetic_force_;
-    magnetic_force_map_[MagnetoBodyNode::BL_foot_link] = magnetic_force_;
-    magnetic_force_map_[MagnetoBodyNode::AR_foot_link] = magnetic_force_;
-    magnetic_force_map_[MagnetoBodyNode::BR_foot_link] = magnetic_force_;
+    magnetic_force_map_[MagnetoBodyNode::AL_foot_link] = magnetic_force_[MagnetoFoot::AL];
+    magnetic_force_map_[MagnetoBodyNode::BL_foot_link] = magnetic_force_[MagnetoFoot::BL];
+    magnetic_force_map_[MagnetoBodyNode::AR_foot_link] = magnetic_force_[MagnetoFoot::AR];
+    magnetic_force_map_[MagnetoBodyNode::BR_foot_link] = magnetic_force_[MagnetoFoot::BR];
 
-    residual_magnetism_map_[MagnetoBodyNode::AL_foot_link] = residual_magnetism_;
-    residual_magnetism_map_[MagnetoBodyNode::BL_foot_link] = residual_magnetism_;
-    residual_magnetism_map_[MagnetoBodyNode::AR_foot_link] = residual_magnetism_;
-    residual_magnetism_map_[MagnetoBodyNode::BR_foot_link] = residual_magnetism_;
+    residual_magnetism_map_[MagnetoBodyNode::AL_foot_link] = residual_magnetism_[MagnetoFoot::AL];
+    residual_magnetism_map_[MagnetoBodyNode::BL_foot_link] = residual_magnetism_[MagnetoFoot::BL];
+    residual_magnetism_map_[MagnetoBodyNode::AR_foot_link] = residual_magnetism_[MagnetoFoot::AR];
+    residual_magnetism_map_[MagnetoBodyNode::BR_foot_link] = residual_magnetism_[MagnetoFoot::BR];
 
-    coef_fric_map_[MagnetoBodyNode::AL_foot_link] = coef_fric_;
-    coef_fric_map_[MagnetoBodyNode::BL_foot_link] = coef_fric_;
-    coef_fric_map_[MagnetoBodyNode::AR_foot_link] = coef_fric_;
-    coef_fric_map_[MagnetoBodyNode::BR_foot_link] = coef_fric_;
+    coef_fric_map_[MagnetoBodyNode::AL_foot_link] = coef_fric_[MagnetoFoot::AL];
+    coef_fric_map_[MagnetoBodyNode::BL_foot_link] = coef_fric_[MagnetoFoot::BL];
+    coef_fric_map_[MagnetoBodyNode::AR_foot_link] = coef_fric_[MagnetoFoot::AR];
+    coef_fric_map_[MagnetoBodyNode::BR_foot_link] = coef_fric_[MagnetoFoot::BR];
     setFrictionCoeff();
 }
 

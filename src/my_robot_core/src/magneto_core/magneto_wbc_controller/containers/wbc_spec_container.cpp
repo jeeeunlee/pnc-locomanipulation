@@ -102,6 +102,7 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
 void MagnetoWbcSpecContainer::_InitializeMagnetisms(){
   magnetic_force_ = Eigen::VectorXd::Zero(4);
   residual_ratio_ = Eigen::VectorXd::Zero(4);
+  residual_force_ = Eigen::VectorXd::Zero(4);
   b_magnetism_map_[MagnetoBodyNode::AL_foot_link] = false;
   b_magnetism_map_[MagnetoBodyNode::BL_foot_link] = false;
   b_magnetism_map_[MagnetoBodyNode::AR_foot_link] = false;

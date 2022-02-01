@@ -200,6 +200,15 @@ void MagnetoInterface::AddScriptMotion(const YAML::Node& motion_cfg){
     interrupt_->setInterruptRoutine(motion_cfg);
 }
 
+int MagnetoInterface::getCurrentMovingFoot() {
+    return sp_-> curr_motion_command.get_moving_foot(); 
+}
+
+void MagnetoInterface::updateSimulationEnvironment(double& mu, double& f_adhesive){
+    SimulationCommand sim_env = sp_->curr_simulation_command; 
+    sim_env.getSimEnv(mu, f_adhesive);
+}
+
 
 
 

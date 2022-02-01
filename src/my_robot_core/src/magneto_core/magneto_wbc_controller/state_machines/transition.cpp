@@ -58,6 +58,7 @@ void Transition::firstVisit() {
   ws_container_->add_task_list(ws_container_->joint_task_);
 
 
+
   // ---------------------------------------
   //      QP PARAM - SET MAGNETISM
   // ---------------------------------------
@@ -73,7 +74,6 @@ void Transition::firstVisit() {
     ws_container_->set_residual_magnetic_force(moving_foot_idx_);
     ws_container_->set_contact_magnetic_force(-1); // build full contact dim F_magnetic_    
   }
-
 
   // ---------------------------------------
   //      CONTACT LIST
@@ -102,7 +102,6 @@ void Transition::firstVisit() {
                                 ws_container_->W_rf_contact_,
                                 ws_container_->W_rf_nocontact_,
                                 W_rf_full_contact); 
-
 
   // rg_container_->QPweight_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
   if(b_contact_start_) {
@@ -136,6 +135,7 @@ void Transition::firstVisit() {
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       0.0, 1.0);
   }
+
 }
 
 void Transition::_taskUpdate() {

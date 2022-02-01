@@ -20,9 +20,7 @@ void ClimbingInterruptLogic::processInterrupts() {
     // std::cout << "[Climbing Interrupt Logic] button pressed : " << pressed_button << std::endl;
     switch(pressed_button){
       case 's':
-        std::cout << "[Climbing Interrupt Logic] button S pressed" << std::endl;
-        std::cout << "---------                        ---------" << std::endl;
-        std::cout << "---------     SCRIPT MOTION      ---------" << std::endl;
+        std::cout << "@@@@ [Climbing Interrupt Logic] button S pressed << SCRIPT MOTION ADDED" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           // set stateMachine sequences
 
@@ -41,6 +39,7 @@ void ClimbingInterruptLogic::processInterrupts() {
     }
   }
   resetFlags();
+  
 }
 
 // climbset.yaml
@@ -69,7 +68,15 @@ void ClimbingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg) {
   my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
   my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
   md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0);
-  MotionCommand mc_temp = MotionCommand(foot_idx, md_temp);
+
+  int moving_cop = -1;
+  if(foot_idx==MagnetoFoot::AL) moving_cop=MagnetoFootLink::AL;
+  else if(foot_idx==MagnetoFoot::BL) moving_cop=MagnetoFootLink::BL;
+  else if(foot_idx==MagnetoFoot::AR) moving_cop=MagnetoFootLink::AR;
+  else if(foot_idx==MagnetoFoot::BR) moving_cop=MagnetoFootLink::BR;
+
+  
+  MotionCommand mc_temp = MotionCommand(moving_cop, md_temp);
 
   // simulation enviroment spec
   double mu;

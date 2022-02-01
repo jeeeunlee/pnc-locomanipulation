@@ -232,6 +232,7 @@ int main(int argc, char** argv) {
     bool b_show_joint_frame;
     bool b_show_link_frame;
     std::string ground_file;
+    std::string robot_file;
     Eigen::VectorXd q_floating_base_init = Eigen::VectorXd::Zero(6);
     double q_temp;
     double coef_fric;
@@ -245,9 +246,9 @@ int main(int argc, char** argv) {
         my_utils::readParameter(simulation_cfg, "show_joint_frame", b_show_joint_frame);
         my_utils::readParameter(simulation_cfg, "show_link_frame", b_show_link_frame);
         my_utils::readParameter(simulation_cfg, "ground", ground_file);
+        my_utils::readParameter(simulation_cfg, "robot", robot_file);
 
-        my_utils::readParameter(simulation_cfg, "initial_pose", q_floating_base_init); 
-                        
+        my_utils::readParameter(simulation_cfg, "initial_pose", q_floating_base_init);                         
 
     } catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
@@ -263,11 +264,12 @@ int main(int argc, char** argv) {
     dart::simulation::WorldPtr world(new dart::simulation::World);
     dart::utils::DartLoader urdfLoader;
     ground_file.insert(0, THIS_COM);
+    robot_file.insert(0, THIS_COM);
     std::cout << ground_file << std::endl;
-    dart::dynamics::SkeletonPtr ground = urdfLoader.parseSkeleton(
-        ground_file);
-    dart::dynamics::SkeletonPtr robot = urdfLoader.parseSkeleton(
-        THIS_COM "robot_description/Robot/Magneto/MagnetoSim_Dart.urdf");
+    dart::dynamics::SkeletonPtr ground 
+                        = urdfLoader.parseSkeleton(ground_file);
+    dart::dynamics::SkeletonPtr robot 
+                        = urdfLoader.parseSkeleton(robot_file);
 
     world->addSkeleton(ground);
     world->addSkeleton(robot);
