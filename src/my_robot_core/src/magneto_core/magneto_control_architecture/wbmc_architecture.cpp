@@ -1,4 +1,4 @@
-#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture_set.hpp>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 
 MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _robot)
@@ -85,9 +85,6 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
     wbc_controller->getCommand(_command);
   }
 
-  // Smoothing trq for initial state
-  smoothing_torque(_command);
-
   // Save Data
   saveData();
 
@@ -106,17 +103,13 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
   sp_->num_state = states_sequence_->getNumStates();
 };
 
-///////////////////////////////////////////////////////////////////////
-void MagnetoWbmcControlArchitecture::smoothing_torque(void* _cmd) {
-  // if (state_ == MAGNETO_STATES::INITIALIZE) {
-  //   double rat = ((Initialize*)state_machines_[state_])->progression_variable();
-  //   for (int i = 0; i < Magneto::n_adof; ++i) {
-  //     ((MagnetoCommand*)_cmd)->jtrq[i] =
-  //         my_utils::smoothing(0, ((MagnetoCommand*)_cmd)->jtrq[i], rat);
-  //     sp_->prev_trq_cmd[i] = ((MagnetoCommand*)_cmd)->jtrq[i];
-  //   }
-  // }
+void MagnetoWbmcControlArchitecture::addState(void* _user_state_command) {
+  states_sequence_->addState(
+    ((MagnetoUserCommandData*)_user_state_command)->state_id, 
+    ((MagnetoUserCommandData*)_user_state_command)->user_cmd);
 }
+
+///////////////////////////////////////////////////////////////////////
 
 void MagnetoWbmcControlArchitecture::getIVDCommand(void* _cmd) {
   Eigen::VectorXd tau_cmd = Eigen::VectorXd::Zero(Magneto::n_adof);

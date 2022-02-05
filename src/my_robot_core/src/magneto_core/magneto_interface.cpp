@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <my_robot_system/RobotSystem.hpp>
-#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture_set.hpp>
 #include <my_robot_core/magneto_core/magneto_interface.hpp>
 #include <my_robot_core/magneto_core/magneto_state_estimator.hpp>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
@@ -35,17 +35,16 @@ MagnetoInterface::MagnetoInterface() : EnvInterface() {
     state_estimator_ = new MagnetoStateEstimator(robot_);
     sp_ = MagnetoStateProvider::getStateProvider(robot_);
 
-    control_architecture_ = new MagnetoWbmcControlArchitecture(robot_);
+    // control_architecture_ = new MagnetoWbmcControlArchitecture(robot_);
+    control_architecture_ = new MagnetoMpcControlArchitecture(robot_);
 
     switch(run_mode_) {
         case RUN_MODE::BALANCE:
         case RUN_MODE::STATICWALK:
-            interrupt_ = new WalkingInterruptLogic(
-                static_cast<MagnetoWbmcControlArchitecture*>(control_architecture_));
+            interrupt_ = new WalkingInterruptLogic(control_architecture_);
         break;
         case RUN_MODE::MPCCLIMBING:
-            interrupt_ = new ClimbingInterruptLogic(
-                static_cast<MagnetoWbmcControlArchitecture*>(control_architecture_));  
+            interrupt_ = new ClimbingInterruptLogic(control_architecture_);  
         break;
         default:
         break;

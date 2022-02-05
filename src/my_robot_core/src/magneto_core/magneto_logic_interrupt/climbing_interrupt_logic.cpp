@@ -1,9 +1,10 @@
-#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
 #include <my_robot_core/magneto_core/magneto_logic_interrupt/climbing_interrupt_logic.hpp>
+#include <my_robot_core/magneto_core/magneto_logic_interrupt/magneto_control_architecture_set.hpp>
+
 
 
 ClimbingInterruptLogic::ClimbingInterruptLogic(
-        MagnetoWbmcControlArchitecture* _ctrl_arch)
+        ControlArchitecture* _ctrl_arch)
         : InterruptLogic() {
   my_utils::pretty_constructor(1, "Magneto Climbing Interrupt Logic");
   ctrl_arch_ = _ctrl_arch;
@@ -23,15 +24,14 @@ void ClimbingInterruptLogic::processInterrupts() {
         std::cout << "@@@@ [Climbing Interrupt Logic] button S pressed << SCRIPT MOTION ADDED" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           // set stateMachine sequences
-
           for(auto &it : script_user_cmd_deque_) {
             // set env for simulation
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, it ) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, it) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING, it) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, it) ;
-          }
-          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, SimMotionCommand() );
+            addStateCommand(MAGNETO_STATES::BALANCE, it);
+            addStateCommand(MAGNETO_STATES::SWING_START_TRANS, it);
+            addStateCommand(MAGNETO_STATES::SWING, it);
+            addStateCommand(MAGNETO_STATES::SWING_END_TRANS, it); 
+            }         
+          addStateCommand(MAGNETO_STATES::BALANCE, SimMotionCommand() );
         }
       break;
       default:
@@ -41,6 +41,13 @@ void ClimbingInterruptLogic::processInterrupts() {
   resetFlags();
   
 }
+
+void ClimbingInterruptLogic::addStateCommand(int _state_id, 
+                              const SimMotionCommand& _smc){
+  user_state_cmd_->setCommand(_state_id, _smc)
+  ctrl_arch_->addState(user_state_cmd_);
+}
+
 
 // climbset.yaml
 // # foot : AL-0, AR-1, BL-2, BR-3

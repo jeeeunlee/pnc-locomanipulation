@@ -30,5 +30,4 @@ class StateSequence{
     int getNumStates(){
       return state_sequence_.size();
     }
-
 };
