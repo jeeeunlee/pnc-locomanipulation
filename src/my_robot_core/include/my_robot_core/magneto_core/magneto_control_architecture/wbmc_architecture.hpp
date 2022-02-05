@@ -37,16 +37,11 @@ class MagnetoWbmcControlArchitecture : public ControlArchitecture {
   virtual ~MagnetoWbmcControlArchitecture();
   virtual void ControlArchitectureInitialization();
   virtual void getCommand(void* _command);
+  virtual void addState(void* _user_state_command);
+
   void saveData();
   void getIVDCommand(void* _command);
-  void smoothing_torque(void* _cmd);
 
-  // states_sequence_ : deque of pair<StateIdentifier, motion_command*>
-  // int get_num_states();  
-  // void get_next_state(StateIdentifier &_state);
-  // void add_next_state(StateIdentifier _st_id, int _mt_id,
-  //                     const MotionCommand &_motion_command);
-  // void add_next_state(STMCommand _stm_cmd);
   StateSequence<SimMotionCommand>* states_sequence_;
   SimMotionCommand user_cmd_;
   

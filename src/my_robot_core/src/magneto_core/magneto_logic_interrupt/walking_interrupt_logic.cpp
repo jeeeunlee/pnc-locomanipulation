@@ -1,8 +1,8 @@
-#include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
 #include <my_robot_core/magneto_core/magneto_logic_interrupt/walking_interrupt_logic.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture_set.hpp>
 
 WalkingInterruptLogic::WalkingInterruptLogic(
-        MagnetoWbmcControlArchitecture* _ctrl_arch)
+        ControlArchitecture* _ctrl_arch)
         : InterruptLogic() {
   my_utils::pretty_constructor(1, "Magneto Walking Interrupt Logic");
   ctrl_arch_ = _ctrl_arch;
@@ -27,13 +27,13 @@ void WalkingInterruptLogic::processInterrupts() {
           // set stateMachine sequences
           for(auto &it : script_user_cmd_deque_) {
             // set env for simulation
-            SimMotionCommand smc_tmp = SimMotionCommand(it);
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, smc_tmp) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_START_TRANS, smc_tmp) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING, smc_tmp) ;
-            ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::SWING_END_TRANS, smc_tmp) ;
+            addStateCommand(MAGNETO_STATES::BALANCE, it);
+            addStateCommand(MAGNETO_STATES::SWING_START_TRANS, it);
+            addStateCommand(MAGNETO_STATES::SWING, it);
+            addStateCommand(MAGNETO_STATES::SWING_END_TRANS, it);
           }
-          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, SimMotionCommand() );
+          addStateCommand(MAGNETO_STATES::BALANCE, MotionCommand());
+
         }
       break;
       case 'w':
@@ -64,6 +64,12 @@ void WalkingInterruptLogic::processInterrupts() {
   }
   resetFlags();
 }
+
+void WalkingInterruptLogic::addStateCommand(int _state_id, const MotionCommand& _mc){
+  user_state_cmd_->setCommand(_state_id, SimMotionCommand(_mc))
+  ctrl_arch_->addState(user_state_cmd_);
+}
+
 
 void WalkingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
   // add motion_command_script_list_
