@@ -168,8 +168,9 @@ class SimMotionCommand : public MotionCommand, public SimulationCommand {
     SimMotionCommand(const MotionCommand& motion_cmd)
                     : MotionCommand(motion_cmd), SimulationCommand() {}
     SimMotionCommand(const MotionCommand& motion_cmd,
-                    double _mu, double _fm )
+                    double _mu,  double _fm )
                     : MotionCommand(motion_cmd), SimulationCommand(_mu, _fm) {}
-    ~SimMotionCommand() {};
+    // SimMotionCommand(const SimMotionCommand& sim_motion_cmd);
+    ~SimMotionCommand() {}
 };
 

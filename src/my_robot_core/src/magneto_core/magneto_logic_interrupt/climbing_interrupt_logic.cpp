@@ -1,5 +1,5 @@
 #include <my_robot_core/magneto_core/magneto_logic_interrupt/climbing_interrupt_logic.hpp>
-#include <my_robot_core/magneto_core/magneto_logic_interrupt/magneto_control_architecture_set.hpp>
+#include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture_set.hpp>
 
 
 
@@ -9,7 +9,9 @@ ClimbingInterruptLogic::ClimbingInterruptLogic(
   my_utils::pretty_constructor(1, "Magneto Climbing Interrupt Logic");
   ctrl_arch_ = _ctrl_arch;
   sp_ = MagnetoStateProvider::getStateProvider(ctrl_arch_->robot_);
+  
   script_user_cmd_deque_.clear();
+  user_state_cmd_ = new MagnetoUserStateCommand(); 
 }
 
 ClimbingInterruptLogic::~ClimbingInterruptLogic() {
@@ -44,8 +46,11 @@ void ClimbingInterruptLogic::processInterrupts() {
 
 void ClimbingInterruptLogic::addStateCommand(int _state_id, 
                               const SimMotionCommand& _smc){
-  user_state_cmd_->setCommand(_state_id, _smc)
+  std::cout<<" ClimbingInterruptLogic::addStateCommand " << std::endl;
+  user_state_cmd_->setCommand(_state_id, _smc);
+  std::cout<<" ClimbingInterruptLogic::setCommand done" << std::endl;
   ctrl_arch_->addState(user_state_cmd_);
+  std::cout<<" ClimbingInterruptLogic::addState done" << std::endl;
 }
 
 

@@ -104,9 +104,9 @@ void MagnetoWbmcControlArchitecture::getCommand(void* _command) {
 };
 
 void MagnetoWbmcControlArchitecture::addState(void* _user_state_command) {
-  states_sequence_->addState(
-    ((MagnetoUserCommandData*)_user_state_command)->state_id, 
-    ((MagnetoUserCommandData*)_user_state_command)->user_cmd);
+  MagnetoUserStateCommand* state_pair = ((MagnetoUserStateCommand*)_user_state_command); 
+  states_sequence_->addState( state_pair->state_id, 
+                            state_pair->user_cmd);
 }
 
 ///////////////////////////////////////////////////////////////////////

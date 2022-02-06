@@ -14,13 +14,14 @@ class ControlArchitecture {
  public:
   ControlArchitecture(RobotSystem* _robot) {
     robot_ = _robot;
-  };
-  virtual ~ControlArchitecture(){};
+  }
+
+  virtual ~ControlArchitecture() {}
 
   virtual void ControlArchitectureInitialization() = 0;
-  virtual void getCommand(void* _command){};
+  virtual void getCommand(void* _command) = 0;  
+  virtual void addState(void* _user_state_command) = 0;
   
-  virtual void addState(void* _user_state_command);
   int getState() { return state_; }
   int getPrevState() { return prev_state_; }
   RobotSystem* robot_;

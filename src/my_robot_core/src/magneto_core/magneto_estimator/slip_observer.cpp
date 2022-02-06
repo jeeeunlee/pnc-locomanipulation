@@ -3,8 +3,7 @@
 
 
 SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
-                             RobotSystem* _robot);
-            : StateEstimator(_robot) {
+              RobotSystem* _robot) : StateEstimator(_robot) {
   my_utils::pretty_constructor(2, "StateEstimator: SlipObserver");
 
   // Set Pointer to wbc spec / reference generator container
@@ -14,10 +13,13 @@ SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
   sp_ = MagnetoStateProvider::getStateProvider(robot_);
 
 }
-~SlipObserver::SlipObserver() {}
 
+SlipObserver::~SlipObserver() {}
 
 void SlipObserver::checkVelocity(int foot_idx) {
+
+  // if velocity at contact > 50mm/s significant amount?
+  // TODO : add threshold in climb_param.yaml
 
     auto contact = ws_container_->foot_contact_map_[foot_idx];
     
@@ -25,7 +27,7 @@ void SlipObserver::checkVelocity(int foot_idx) {
     Eigen::VectorXd JcDotQdot;
 
     contact->updateContactSpec();
-    contact->getContactJacobian(Jc)
+    contact->getContactJacobian(Jc);
     contact->getJcDotQdot(JcDotQdot);
 
     Eigen::VectorXd q = robot_->getQ();

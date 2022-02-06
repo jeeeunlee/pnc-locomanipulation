@@ -2,8 +2,6 @@
 #include <my_robot_core/magneto_core/magneto_control_architecture/magneto_control_architecture_set.hpp>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 
-#include <my_robot_core/magneto_core/magneto_estimator/slip_observer.hpp>
-
 
 MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot)
     : ControlArchitecture(_robot) {
@@ -32,6 +30,7 @@ MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot
   slip_ob_data_ = new SlipObserverData();
 
   states_sequence_ = new StateSequence<SimMotionCommand>();
+  user_cmd_ = SimMotionCommand();
 
   // Initialize states: add all states to the state machine map
   state_machines_[MAGNETO_STATES::BALANCE] =
@@ -58,6 +57,9 @@ MagnetoMpcControlArchitecture::~MagnetoMpcControlArchitecture() {
   delete rg_container_;
   delete wbc_controller;
 
+  delete slip_ob_;
+  delete slip_ob_data_;
+
   // Delete the state machines
   // delete state_machines_[MAGNETO_STATES::INITIALIZE];
   // delete state_machines_[MAGNETO_STATES::STAND];
@@ -73,9 +75,15 @@ void MagnetoMpcControlArchitecture::ControlArchitectureInitialization() {}
 void MagnetoMpcControlArchitecture::getCommand(void* _command) {
 
   // State Estimator / Observer
-    
-
-
+  
+  static double print_time = 0.0;
+  if( (sp_->curr_time-print_time) > 0.05 ){
+    slip_ob_->checkVelocity(MagnetoFoot::AL);
+    slip_ob_->checkVelocity(MagnetoFoot::BL);
+    // slip_ob_->checkVelocity(MagnetoFoot::AR);
+    // slip_ob_->checkVelocity(MagnetoFoot::BR);
+    print_time = sp_->curr_time;
+  }
 
   // Initialize State
   if (b_state_first_visit_) {
@@ -111,9 +119,12 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
 };
 
 void MagnetoMpcControlArchitecture::addState(void* _user_state_command) {
-  states_sequence_->addState(
-    ((MagnetoUserCommandData*)_user_state_command)->state_id, 
-    ((MagnetoUserCommandData*)_user_state_command)->user_cmd);
+  std::cout<<" MagnetoMpcControlArchitecture::addState" << std::endl;
+  MagnetoUserStateCommand* state_pair = ((MagnetoUserStateCommand*)_user_state_command); 
+  std::cout<<" MagnetoMpcControlArchitecture::state_pair done" << std::endl;
+  states_sequence_->addState( state_pair->state_id, 
+                            state_pair->user_cmd);
+  std::cout<<" MagnetoMpcControlArchitecture::states_sequence_->addState done" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////
