@@ -6,11 +6,12 @@
 class MagnetoWbcSpecContainer;
 class MagnetoReferenceGeneratorContainer;
 
-class SlipObserverData() {
+class SlipObserverData {
     public:
     SlipObserverData() {
 
     }
+    ~SlipObserverData() {}
 
 };
 

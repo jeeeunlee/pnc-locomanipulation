@@ -10,6 +10,7 @@ WalkingInterruptLogic::WalkingInterruptLogic(
   
   // Initialize motion commands
   script_user_cmd_deque_.clear();
+  user_state_cmd_ = new MagnetoUserStateCommand(); 
 }
 
 WalkingInterruptLogic::~WalkingInterruptLogic() {}
@@ -43,8 +44,8 @@ void WalkingInterruptLogic::processInterrupts() {
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           POSE_DATA pose_up(0,0,0.01, 1,0,0,0);
           MOTION_DATA motion_com_up(pose_up, 0.5);
-          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
-                                                MotionCommand(motion_com_up) );
+          addStateCommand(MAGNETO_STATES::BALANCE, 
+                            MotionCommand(motion_com_up) );
         }
       break;
       case 'x':
@@ -54,8 +55,8 @@ void WalkingInterruptLogic::processInterrupts() {
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           POSE_DATA pose_dn(0,0,-0.01, 1,0,0,0);
           MOTION_DATA motion_com_dn(pose_dn, 0.5);
-          ctrl_arch_->states_sequence_->addState(MAGNETO_STATES::BALANCE, 
-                                                MotionCommand(motion_com_dn) );
+          addStateCommand(MAGNETO_STATES::BALANCE, 
+                          MotionCommand(motion_com_dn) );
         }
       break;
       default:
@@ -66,7 +67,7 @@ void WalkingInterruptLogic::processInterrupts() {
 }
 
 void WalkingInterruptLogic::addStateCommand(int _state_id, const MotionCommand& _mc){
-  user_state_cmd_->setCommand(_state_id, SimMotionCommand(_mc))
+  user_state_cmd_->setCommand(_state_id, SimMotionCommand(_mc));
   ctrl_arch_->addState(user_state_cmd_);
 }
 

@@ -14,20 +14,7 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
 
 #include <my_robot_core/magneto_core/magneto_planner/magneto_planner_set.hpp>
-
-
-namespace CONTROLLER_TYPES {
-constexpr int WBMC = 0;
-constexpr int WBRMC = 1;
-}; // namespace CONTROLLER_TYPES
-
-namespace MAGNETO_STATES {
-constexpr int INITIALIZE = 0;
-constexpr int BALANCE = 1; // DEFAULT
-constexpr int SWING_START_TRANS = 2;
-constexpr int SWING = 3;
-constexpr int SWING_END_TRANS = 4;
-};  // namespace MAGNETO_STATES
+#include <my_robot_core/magneto_core/magneto_estimator/slip_observer.hpp>
 
 class MagnetoStateProvider;
 

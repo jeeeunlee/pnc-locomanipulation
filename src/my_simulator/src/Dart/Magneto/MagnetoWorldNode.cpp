@@ -322,14 +322,14 @@ void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
     trq_ub_ = Eigen::VectorXd::Constant(n_dof_, torque_limit_);
     // trq_lb_ = robot_->getForceLowerLimits();
     // trq_ub_ = robot_->getForceUpperLimits();
+
+    // ---- CHECK 
     // std::cout<<"trq_lb_ = "<<trq_lb_.transpose() << std::endl;
     // std::cout<<"trq_ub_ = "<<trq_ub_.transpose() << std::endl; 
-
-    my_utils::pretty_print(magnetic_force_, std::cout, "sim : magnetic_force_");
-    my_utils::pretty_print(residual_magnetism_, std::cout, "sim : residual_magnetism_");
-    my_utils::pretty_print(coef_fric_, std::cout, "sim : coef_fric_");
+    // my_utils::pretty_print(magnetic_force_, std::cout, "sim : magnetic_force_");
+    // my_utils::pretty_print(residual_magnetism_, std::cout, "sim : residual_magnetism_");
+    // my_utils::pretty_print(coef_fric_, std::cout, "sim : coef_fric_");
     
-
     // ---- SET MAGNETISM MAP
     magnetic_force_map_[MagnetoBodyNode::AL_foot_link] = magnetic_force_[MagnetoFoot::AL];
     magnetic_force_map_[MagnetoBodyNode::BL_foot_link] = magnetic_force_[MagnetoFoot::BL];
