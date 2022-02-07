@@ -35,6 +35,7 @@ class BodyFrameSurfaceContactSpec : public ContactSpec {
     int getLinkIdx() { return link_idx_; }
     void setMaxFz(double max_fz) { max_Fz_ = max_fz; }
     void setFrictionCoeff(double _mu) { mu_ = _mu/sqrt(2.0); }
+    double getFrictionCoeff() { return mu_; } //*sqrt(2.0); }
 
    protected:
     double mu_;

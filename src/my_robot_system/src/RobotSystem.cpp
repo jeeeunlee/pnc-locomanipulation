@@ -287,9 +287,9 @@ Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const std::string& na
     Eigen::VectorXd ClassicDerivVec(Eigen::Map<Eigen::VectorXd>(ClassicDeriv.data(), ClassicDeriv.cols()*ClassicDeriv.rows()));
 
 
-    my_utils::saveVector(JacobVec, "JacobVec");
-    my_utils::saveVector(SpatialDerivVec, "SpatialDerivVec");
-    my_utils::saveVector(ClassicDerivVec, "ClassicDerivVec");
+    // my_utils::saveVector(JacobVec, "JacobVec");
+    // my_utils::saveVector(SpatialDerivVec, "SpatialDerivVec");
+    // my_utils::saveVector(ClassicDerivVec, "ClassicDerivVec");
         
     return skel_ptr_->getJacobianClassicDeriv(
                             skel_ptr_->getBodyNode(name_),
