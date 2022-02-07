@@ -98,7 +98,7 @@ void MagnetoWBMC::getCommand(void* _cmd) {
   wbmc_->makeTorqueGivenRef(jacc_des_cmd, contact_list_, jtrq_des_, wbmc_param_);
 
   // my_utils::pretty_print(jtrq_des_, std::cout, "jtrq_des_");
-
+  
   // // Integrate Joint Velocities and Positions
   // des_jacc_ = qddot_cmd_;
   // if (joint_integrator_->isInitialized()) {

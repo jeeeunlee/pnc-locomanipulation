@@ -77,11 +77,11 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   // State Estimator / Observer
   
   static double print_time = 0.0;
-  if( (sp_->curr_time-print_time) > 0.05 ){
+  if( (sp_->curr_time-print_time) > 0.01 ){
     slip_ob_->checkVelocity(MagnetoFoot::AL);
     slip_ob_->checkVelocity(MagnetoFoot::BL);
-    // slip_ob_->checkVelocity(MagnetoFoot::AR);
-    // slip_ob_->checkVelocity(MagnetoFoot::BR);
+    slip_ob_->checkVelocity(MagnetoFoot::AR);
+    slip_ob_->checkVelocity(MagnetoFoot::BR);
     print_time = sp_->curr_time;
   }
 
