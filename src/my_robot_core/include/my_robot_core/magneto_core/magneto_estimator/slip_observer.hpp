@@ -24,6 +24,10 @@ class SlipObserver : public StateEstimator {
     void initialization(const YAML::Node& node);
 
     void checkVelocity(int foot_idx);
+    void checkForce(const Eigen::VectorXd& tau);
+    
+    Eigen::VectorXd computeForceDesired(const Eigen::VectorXd& tau);
+    
 
   protected:
     MagnetoStateProvider* sp_;
