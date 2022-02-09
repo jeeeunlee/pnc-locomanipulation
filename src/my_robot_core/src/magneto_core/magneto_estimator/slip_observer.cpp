@@ -44,8 +44,26 @@ void SlipObserver::checkVelocity(int foot_idx) {
         std::cout<< "acc: "<< xcddot.transpose() << std::endl;
     }
 
-    std::string foot_vel_name = "foot_vel_"+ std::to_string(foot_idx);
-    my_utils::saveVector(xcdot,foot_vel_name);    
+    std::string foot_name;
+    switch(foot_idx) {
+      case MagnetoFoot::AL:
+          foot_name = "al";
+          break;
+      case MagnetoFoot::BL:
+          foot_name = "bl";
+          break;
+      case MagnetoFoot::AR:
+          foot_name = "ar";
+          break;
+      case MagnetoFoot::BR:
+          foot_name = "br";
+          break;
+    }
+
+    std::string foot_vel_name = foot_name + "_vel";
+    my_utils::saveVector(xcdot, foot_vel_name);    
+    std::string foot_acc_name = foot_name + "_acc";
+    my_utils::saveVector(xcddot, foot_acc_name);
 }
 
 Eigen::VectorXd SlipObserver::computeForceDesired(const Eigen::VectorXd& tau) {    
@@ -131,10 +149,18 @@ void SlipObserver::checkForce(const Eigen::VectorXd& tau) {
     }
 
     std::cout<<"swingfootlinkidx = " << swingfootlinkidx << std::endl;
-    my_utils::pretty_print(grf_des_stacked, std::cout, "grf_des_stacked");
+    my_utils::pretty_print(grf_des_stacked, std::cout, "grf_des_stacked");    
+
+    Eigen::VectorXd grf_al = Eigen::VectorXd::Zero(12);
+    Eigen::VectorXd grf_bl = Eigen::VectorXd::Zero(12);
+    Eigen::VectorXd grf_ar = Eigen::VectorXd::Zero(12);
+    Eigen::VectorXd grf_br = Eigen::VectorXd::Zero(12);
+
+    grf_al.head(6) = sp_->al_rf;
+    grf_bl.head(6) = sp_->bl_rf;
+    grf_ar.head(6) = sp_->ar_rf;
+    grf_br.head(6) = sp_->br_rf;
     
-
-
     int dim_rf_stacked = 0;
     for ( auto &[foot_idx, dim_rf] : dim_rf_map ) {
         // desired force (estimated from observation)
@@ -147,28 +173,38 @@ void SlipObserver::checkForce(const Eigen::VectorXd& tau) {
         switch(foot_idx) {
             case MagnetoFoot::AL:
                 grf_act = sp_->al_rf;
+                grf_al.tail(6) = grf_des;
                 break;
             case MagnetoFoot::BL:
                 grf_act = sp_->bl_rf;
+                grf_bl.tail(6) = grf_des;
                 break;
             case MagnetoFoot::AR:
                 grf_act = sp_->ar_rf;
+                grf_ar.tail(6) = grf_des;
                 break;
             case MagnetoFoot::BR:
                 grf_act = sp_->br_rf;
+                grf_br.tail(6) = grf_des;
                 break;
         }
 
-        std::cout << "grf @ foot " << foot_idx <<"["<<dim_rf<<"]: des / act"<< std::endl;
-        for(int i(0); i<dim_rf; ++i){
-            std::cout << grf_des[i] <<",";
-        }
-        std::cout<<std::endl;
-        for(int i(0); i<dim_rf; ++i){
-            std::cout << grf_act[i] <<",";
-        }
-        std::cout<<std::endl;
+        // std::cout << "grf @ foot " << foot_idx <<"["<<dim_rf<<"]: des / act"<< std::endl;
+        // for(int i(0); i<dim_rf; ++i){
+        //     std::cout << grf_des[i] <<",";
+        // }
+        // std::cout<<std::endl;
+        // for(int i(0); i<dim_rf; ++i){
+        //     std::cout << grf_act[i] <<",";
+        // }
+        // std::cout<<std::endl;
     }
+    
+    my_utils::saveVector(grf_al, "grf_al_act_des");
+    my_utils::saveVector(grf_bl, "grf_bl_act_des");
+    my_utils::saveVector(grf_ar, "grf_ar_act_des");
+    my_utils::saveVector(grf_br, "grf_br_act_des");
+
 }
 
 // void SlipObserver::checkJointConfiguration(int foot_idx) {
