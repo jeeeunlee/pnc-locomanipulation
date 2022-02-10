@@ -228,21 +228,6 @@ int MagnetoWbcSpecContainer::footLink2FootIdx(int moving_cop){
   }
 } 
 
-int MagnetoWbcSpecContainer::footIdx2FootLink(int foot_idx){
-  switch(foot_idx){
-      case  MagnetoFoot::AL :
-        return MagnetoFootLink::AL;
-      case  MagnetoFoot::BL :
-        return MagnetoFootLink::BL;
-      case  MagnetoFoot::AR :
-        return MagnetoFootLink::AR;
-      case  MagnetoFoot::BR :
-        return MagnetoFootLink::BR;
-      default:
-          return -1;
-  }
-} 
-
 void MagnetoWbcSpecContainer::set_residual_magnetic_force(int moving_cop, double contact_distance) {
 
   if( moving_cop >= 0 && moving_cop < robot_->getNumBodyNodes() ){
@@ -291,7 +276,7 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   dim_contact_=0;
   contact_list_.clear();
   for(auto &[leg_idx, contact] : foot_contact_map_) {
-    if( footIdx2FootLink(leg_idx) != moving_cop ) {
+    if( MagnetoContactLinks[leg_idx] != moving_cop ) {
       contact_list_.push_back((BodyFrameSurfaceContactSpec*)(contact));
       dim_contact_ += (contact)->getDim();
     }

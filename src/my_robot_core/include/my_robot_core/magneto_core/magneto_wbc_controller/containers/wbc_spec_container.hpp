@@ -140,6 +140,5 @@ class MagnetoWbcSpecContainer {
 
   // 
   int footLink2FootIdx(int moving_cop);
-  int footIdx2FootLink(int foot_idx);
 
 };
