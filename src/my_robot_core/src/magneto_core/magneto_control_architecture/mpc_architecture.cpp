@@ -74,6 +74,17 @@ void MagnetoMpcControlArchitecture::ControlArchitectureInitialization() {}
 
 void MagnetoMpcControlArchitecture::getCommand(void* _command) {
 
+  // --------------------------------------------------
+  // State Estimator / Observer
+
+  static double print_time = 0.0;
+  if( (sp_->curr_time-print_time) > 0.0001 ){
+    slip_ob_->checkVelocity();    
+    slip_ob_->checkForce();
+    print_time = sp_->curr_time;
+  }
+  // --------------------------------------------------
+
   // Initialize State
   if (b_state_first_visit_) {
     state_machines_[state_]->firstVisit();
@@ -81,6 +92,7 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   }
   // Update State Machine
   state_machines_[state_]->oneStep();
+  slip_ob_->weightShaping();
 
   // Get Wholebody control commands
   if (state_ == MAGNETO_STATES::INITIALIZE) {
@@ -88,21 +100,6 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   } else {
     wbc_controller->getCommand(_command);
   }
-
-  // --------------------------------------------------
-  // State Estimator / Observer  
-  static double print_time = 0.0;
-  if( (sp_->curr_time-print_time) > 0.01 ){
-    slip_ob_->checkVelocity(MagnetoFoot::AL);
-    slip_ob_->checkVelocity(MagnetoFoot::BL);
-    slip_ob_->checkVelocity(MagnetoFoot::AR);
-    slip_ob_->checkVelocity(MagnetoFoot::BR);
-    print_time = sp_->curr_time;
-  }
-  Eigen::VectorXd tau = sp_->getFullJointValue(((MagnetoCommand*)_command)->jtrq);
-  
-  slip_ob_->checkForce(tau);
-  // --------------------------------------------------
 
   // Save Data
   saveData();

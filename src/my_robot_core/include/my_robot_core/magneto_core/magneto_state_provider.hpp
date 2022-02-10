@@ -41,6 +41,7 @@ class MagnetoStateProvider {
     Eigen::VectorXd q_des;
     Eigen::VectorXd q;
     Eigen::VectorXd qdot;
+    Eigen::VectorXd tau_cmd_prev;
 
     Eigen::VectorXd jpos_ini;
 
