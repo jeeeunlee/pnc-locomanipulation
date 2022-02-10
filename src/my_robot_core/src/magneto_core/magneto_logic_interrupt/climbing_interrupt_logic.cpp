@@ -67,28 +67,21 @@ void ClimbingInterruptLogic::addStateCommand(int _state_id,
 
 void ClimbingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg) {
   // motion
-  int foot_idx;
-  MOTION_DATA md_temp;
+  int foot_idx;  
   Eigen::VectorXd pos_temp;
   Eigen::VectorXd ori_temp;
-  int frame;  
+  int frame;
+  MOTION_DATA md_temp;
   
   my_utils::readParameter(motion_cfg, "foot", foot_idx);
   my_utils::readParameter(motion_cfg, "pos",pos_temp);
   my_utils::readParameter(motion_cfg, "ori", ori_temp);
-  my_utils::readParameter(motion_cfg, "frame", frame);
+  my_utils::readParameter(motion_cfg, "frame", frame);  
   my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
   my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
-  md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0);
-
-  int moving_cop = -1;
-  if(foot_idx==MagnetoFoot::AL) moving_cop=MagnetoFootLink::AL;
-  else if(foot_idx==MagnetoFoot::BL) moving_cop=MagnetoFootLink::BL;
-  else if(foot_idx==MagnetoFoot::AR) moving_cop=MagnetoFootLink::AR;
-  else if(foot_idx==MagnetoFoot::BR) moving_cop=MagnetoFootLink::BR;
-
-  
-  MotionCommand mc_temp = MotionCommand(moving_cop, md_temp);
+  md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0);  
+  MotionCommand mc_temp = MotionCommand(
+                          MagnetoContactLinks[foot_idx], md_temp);
 
   // simulation enviroment spec
   double mu;

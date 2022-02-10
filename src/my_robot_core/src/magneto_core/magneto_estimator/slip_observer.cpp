@@ -177,7 +177,7 @@ void SlipObserver::weightShaping() {
                 std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;  
 
                 ws_container_->reshape_weight_param( slip_level,
-                                        ws_container_->footIdx2FootLink(foot_idx),
+                                        MagnetoContactLinks[foot_idx],
                                         ws_container_->W_rf_ );
 
             }

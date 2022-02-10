@@ -16,6 +16,10 @@ constexpr int idx_adof [n_adof] = {6,7,8,12,13,14,18,19,20,24,25,26};
 const std::string MagnetoFootNames[] = {
     "AL", "AR", "BL", "BR" };
 
+const int MagnetoContactLinks[] = {
+    14, 23, 32, 41};
+// AL_foot_link, AR_foot_link, BL_foot_link, BR_foot_link
+
 namespace MagnetoFoot {
 constexpr int AL = 0;
 constexpr int AR = 1;
