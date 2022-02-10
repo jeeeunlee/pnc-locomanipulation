@@ -336,6 +336,30 @@ void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
   }
 }
 
+void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
+                                              int slip_cop, 
+                                              Eigen::VectorXd &W_result) {
+  // assume coefficient alpha > 1.0
+  int dim_vec, dim_accum(0);
+  Eigen::VectorXd W_slip;
+
+  for(auto& contact : contact_list_) {
+    dim_vec = contact->getDim();  
+    if(((BodyFrameSurfaceContactSpec*)(contact))->getLinkIdx()==slip_cop) {      
+      W_slip = W_result.segment(dim_accum,dim_vec);
+      std::cout<<"W_slip(before)="<<W_slip.transpose()<<std::endl;
+      int idx_rfz = contact->getFzIndex();
+      for(int i(0); i<dim_vec; ++i){
+        if(i==idx_rfz)  W_slip[i]=W_slip[i]/alpha; //decrease w_rf_z
+        else  W_slip[i]=W_slip[i]*alpha; //increase w_rf = decrease rf_xy
+      }
+      W_result.segment(dim_accum,dim_vec) = W_slip;
+      std::cout<<"W_slip(after)="<<W_slip.transpose()<<std::endl;
+    }
+    dim_accum += dim_vec;
+  }
+}
+
 void MagnetoWbcSpecContainer::clear_task_list() {
   task_list_.clear();
 }

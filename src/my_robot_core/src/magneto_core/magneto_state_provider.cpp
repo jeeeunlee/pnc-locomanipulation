@@ -22,11 +22,13 @@ MagnetoStateProvider::MagnetoStateProvider(RobotSystem* _robot) {
 
     q = Eigen::VectorXd::Zero(Magneto::n_dof);
     qdot = Eigen::VectorXd::Zero(Magneto::n_dof);
+    tau_cmd_prev = Eigen::VectorXd::Zero(Magneto::n_dof);
 
     b_arfoot_contact = 0;
     b_brfoot_contact = 0;
     b_alfoot_contact = 0;
     b_blfoot_contact = 0;
+    
 
     foot_pos_target = Eigen::VectorXd::Zero(3);
 

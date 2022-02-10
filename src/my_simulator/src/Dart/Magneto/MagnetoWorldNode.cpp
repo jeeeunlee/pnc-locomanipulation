@@ -90,6 +90,7 @@ void MagnetoWorldNode::customPreStep() {
     for(int i=0; i< Magneto::n_adof; ++i) {
         sensor_data_->q[i] = q[Magneto::idx_adof[i]];
         sensor_data_->qdot[i] = qdot[Magneto::idx_adof[i]];
+        sensor_data_->tau_cmd_prev[i] = trq_cmd_[Magneto::idx_adof[i]];
     }
 
     for(int i=0; i< Magneto::n_vdof; ++i) {

@@ -42,6 +42,10 @@ void MagnetoStateEstimator::_JointUpdate(MagnetoSensorData* data) {
         curr_config_[Magneto::idx_adof[i]] = data->q[i];
         curr_qdot_[Magneto::idx_adof[i]] = data->qdot[i];
     }
+    sp_->tau_cmd_prev.setZero();
+    for (int i = 0; i < Magneto::n_adof; ++i) {
+        sp_->tau_cmd_prev[Magneto::idx_adof[i]] = data->tau_cmd_prev[i];
+    }
 
     sp_->al_rf = data->alf_wrench;
     sp_->bl_rf = data->blf_wrench;

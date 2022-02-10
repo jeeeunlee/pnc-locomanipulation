@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 namespace Magneto {
 constexpr int n_bodynode = 81;
 constexpr int n_leg = 4;
@@ -11,6 +13,8 @@ constexpr int idx_vdof [n_vdof] = {0,1,2,3,4,5,9,10,11,15,16,17,21,22,23,27,28,2
 constexpr int idx_adof [n_adof] = {6,7,8,12,13,14,18,19,20,24,25,26};
 }  // namespace Magneto
 
+const std::string MagnetoFootNames[] = {
+    "AL", "AR", "BL", "BR" };
 
 namespace MagnetoFoot {
 constexpr int AL = 0;

@@ -21,7 +21,6 @@ class MagnetoSensorData {
         qdot = Eigen::VectorXd::Zero(Magneto::n_adof);
         virtual_q = Eigen::VectorXd::Zero(Magneto::n_vdof);
         virtual_qdot = Eigen::VectorXd::Zero(Magneto::n_vdof);
-
         alf_wrench = Eigen::VectorXd::Zero(6);
         blf_wrench = Eigen::VectorXd::Zero(6);
         arf_wrench = Eigen::VectorXd::Zero(6);
@@ -32,6 +31,7 @@ class MagnetoSensorData {
         brfoot_contact = false;
 
         R_ground = Eigen::MatrixXd::Identity(3,3);
+        tau_cmd_prev = Eigen::VectorXd::Zero(Magneto::n_adof);
     }
     virtual ~MagnetoSensorData() {}
 
@@ -49,6 +49,7 @@ class MagnetoSensorData {
     bool brfoot_contact;
 
     Eigen::MatrixXd R_ground;
+    Eigen::VectorXd tau_cmd_prev;
 };
 
 class MagnetoCommand {
