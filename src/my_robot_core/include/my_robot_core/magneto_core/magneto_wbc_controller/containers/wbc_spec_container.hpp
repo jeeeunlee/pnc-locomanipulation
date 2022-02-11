@@ -15,6 +15,9 @@
 
 
 // Object which publicly contains all the tasks, contacts and reaction forces
+typedef int FootIdx;
+typedef int FootLinkIdx;
+
 class MagnetoWbcSpecContainer {
  public:
   MagnetoWbcSpecContainer(RobotSystem* _robot);
@@ -43,33 +46,36 @@ class MagnetoWbcSpecContainer {
   Task* joint_task_;
   Task* base_ori_task_;
 
-  Task* alfoot_pos_task_;
-  Task* arfoot_pos_task_;
-  Task* blfoot_pos_task_;
-  Task* brfoot_pos_task_;
+  // Task* alfoot_pos_task_;
+  // Task* arfoot_pos_task_;
+  // Task* blfoot_pos_task_;
+  // Task* brfoot_pos_task_;
+  Task* feet_pos_tasks_[Magneto::n_leg];
 
-  Task* alfoot_ori_task_;
-  Task* arfoot_ori_task_;
-  Task* blfoot_ori_task_;
-  Task* brfoot_ori_task_;
+  // Task* alfoot_ori_task_;
+  // Task* arfoot_ori_task_;
+  // Task* blfoot_ori_task_;
+  // Task* brfoot_ori_task_;
+  Task* feet_ori_tasks_[Magneto::n_leg];
 
   // -------------------------------------------------------
   // Contact Member variables
   // -------------------------------------------------------
-  ContactSpec* alfoot_contact_;
-  ContactSpec* arfoot_contact_;
-  ContactSpec* blfoot_contact_;
-  ContactSpec* brfoot_contact_;
-  std::map<int, ContactSpec*> foot_contact_map_;
+  // ContactSpec* alfoot_contact_;
+  // ContactSpec* arfoot_contact_;
+  // ContactSpec* blfoot_contact_;
+  // ContactSpec* brfoot_contact_;  
+  // std::map<FootIdx, ContactSpec*> foot_contact_map_;
+  ContactSpec* feet_contacts_[Magneto::n_leg];
   int dim_contact_;
   int full_dim_contact_;
-
-  double max_fz_;
 
   // -------------------------------------------------------
   // Magnetic
   // -------------------------------------------------------
-  std::map<int, bool> b_magnetism_map_;
+  MagnetSpec* feet_magnets_[Magneto::n_leg];
+
+  std::map<FootLinkIdx, bool> b_magnetism_map_;
   Eigen::VectorXd F_magnetic_;
   
   Eigen::VectorXd F_residual_;

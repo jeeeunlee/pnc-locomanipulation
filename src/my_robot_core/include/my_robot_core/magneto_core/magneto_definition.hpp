@@ -13,26 +13,22 @@ constexpr int idx_vdof [n_vdof] = {0,1,2,3,4,5,9,10,11,15,16,17,21,22,23,27,28,2
 constexpr int idx_adof [n_adof] = {6,7,8,12,13,14,18,19,20,24,25,26};
 }  // namespace Magneto
 
-const std::string MagnetoFootNames[] = {
+namespace MagnetoFoot {
+const std::string Names[4] = {
     "AL", "AR", "BL", "BR" };
 
-const int MagnetoContactLinks[] = {
-    14, 23, 32, 41};
-// AL_foot_link, AR_foot_link, BL_foot_link, BR_foot_link
+constexpr int LinkIdx[4] = {
+    14, // AL_foot_link
+    23, // AR_foot_link
+    32, // BL_foot_link
+    41 // BR_foot_link
+};
 
-namespace MagnetoFoot {
 constexpr int AL = 0;
 constexpr int AR = 1;
 constexpr int BL = 2;
 constexpr int BR = 3;
 }// namespace MagnetoFoot
-
-namespace MagnetoFootLink {
-constexpr int AL = 14; // AL_foot_link
-constexpr int AR = 23; // AR_foot_link
-constexpr int BL = 32; // BL_foot_link
-constexpr int BR = 41; // BR_foot_link
-}// namespace MagnetoFootLink
 
 namespace MagnetoBodyNode {
 constexpr int basePosX = 0;

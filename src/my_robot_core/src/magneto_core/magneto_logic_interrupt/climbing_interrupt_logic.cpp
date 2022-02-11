@@ -81,7 +81,7 @@ void ClimbingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg) {
   my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
   md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0);  
   MotionCommand mc_temp = MotionCommand(
-                          MagnetoContactLinks[foot_idx], md_temp);
+                          MagnetoFoot::LinkIdx[foot_idx], md_temp);
 
   // simulation enviroment spec
   double mu;
