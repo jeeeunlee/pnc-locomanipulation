@@ -116,8 +116,8 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
     foot_acc_map_[foot_idx] = xcddot;
 
     // data saving
-    std::string foot_vel_name = MagnetoFootNames[foot_idx] + "_vel";
-    std::string foot_acc_name = MagnetoFootNames[foot_idx] + "_acc";
+    std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
+    std::string foot_acc_name = MagnetoFoot::Names[foot_idx] + "_acc";
     my_utils::saveVector(xcdot, foot_vel_name);    
     my_utils::saveVector(xcddot, foot_acc_name);
 }
@@ -146,7 +146,7 @@ void SlipObserver::checkForce() {
     std::string filename;
     Eigen::VectorXd grf_tmp;
     for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
-        filename = MagnetoFootNames[foot_idx] + "_grf_act_des";
+        filename = MagnetoFoot::Names[foot_idx] + "_grf_act_des";
         dim_grf = dim_grf_map_[foot_idx];
         grf_tmp = Eigen::VectorXd::Zero(2*dim_grf);
         grf_tmp.head(dim_grf) = grf_act_map_[foot_idx];
@@ -177,7 +177,7 @@ void SlipObserver::weightShaping() {
                 std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;  
 
                 ws_container_->reshape_weight_param( slip_level,
-                                        MagnetoContactLinks[foot_idx],
+                                        MagnetoFoot::LinkIdx[foot_idx],
                                         ws_container_->W_rf_ );
 
             }
