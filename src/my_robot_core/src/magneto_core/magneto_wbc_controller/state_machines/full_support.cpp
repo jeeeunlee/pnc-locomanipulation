@@ -65,7 +65,7 @@ void FullSupport::firstVisit() {
   // ---------------------------------------
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
-  ws_container_->set_magnetism(-1);  
+  ws_container_->set_foot_magnet_off(-1);  
   ws_container_->set_residual_magnetic_force(-1);
   ws_container_->set_contact_magnetic_force(-1);
   ws_container_->w_res_ = 0.0;

@@ -109,7 +109,7 @@ class MagnetoWbcSpecContainer {
   // magnetism
   void update_magnetism_map(
               std::map<FootLinkIdx, bool> & b_map);
-  void set_magnetism(int moving_cop);
+  void set_foot_magnet_off(int moving_cop);
   void set_contact_magnetic_force(int moving_cop);
   void set_residual_magnetic_force(int moving_cop, double contact_distance=0.0);
   // contact
