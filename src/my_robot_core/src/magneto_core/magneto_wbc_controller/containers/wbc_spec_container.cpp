@@ -77,11 +77,6 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
   dim_contact_ = alfoot_contact_->getDim() + arfoot_contact_->getDim() +
                  blfoot_contact_->getDim() + brfoot_contact_->getDim();
 
-  // max_z_ = 500.;
-
-  // // Set desired reaction forces
-  // Fd_des_ = Eigen::VectorXd::Zero(dim_contact_);
-
   // Add all contacts initially. Remove later as needed.
   contact_list_.clear();
   contact_list_.push_back(alfoot_contact_);
@@ -148,7 +143,7 @@ void MagnetoWbcSpecContainer::setContactFriction(const Eigen::VectorXd& _mu_vec)
 
 void MagnetoWbcSpecContainer::setContactFriction(int foot_idx, double mu) {
   // initialize contact
-  ((BodyFrameSurfaceContactSpec*)foot_contact_map_[foot_idx])->setFrictionCoeff(mu);
+  foot_contact_map_[foot_idx]->setFrictionCoeff(mu);
 }
 
 void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
@@ -185,10 +180,10 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
   W_rf_nocontact_[idx_rf_z] = w_rf_z_nocontact_;
 
   // Set Maximum Forces
-  ((BodyFrameSurfaceContactSpec*)alfoot_contact_)->setMaxFz(max_rf_z_contact_);
-  ((BodyFrameSurfaceContactSpec*)blfoot_contact_)->setMaxFz(max_rf_z_contact_);
-  ((BodyFrameSurfaceContactSpec*)arfoot_contact_)->setMaxFz(max_rf_z_contact_);
-  ((BodyFrameSurfaceContactSpec*)brfoot_contact_)->setMaxFz(max_rf_z_contact_);
+  alfoot_contact_->setMaxFz(max_rf_z_contact_);
+  blfoot_contact_->setMaxFz(max_rf_z_contact_);
+  arfoot_contact_->setMaxFz(max_rf_z_contact_);
+  brfoot_contact_->setMaxFz(max_rf_z_contact_);
 }
 
 // -------------------------------------------------------
@@ -254,9 +249,9 @@ void MagnetoWbcSpecContainer::set_contact_magnetic_force(int moving_cop) {
   int contact_link_idx, fz_idx;
   int dim_contact(0);
   for(auto &[leg_idx, contact] : foot_contact_map_) {
-    contact_link_idx = ((BodyFrameSurfaceContactSpec*)(contact))->getLinkIdx();
+    contact_link_idx = contact->getLinkIdx();
     if( contact_link_idx != moving_cop) {  
-      fz_idx = dim_contact + ((BodyFrameSurfaceContactSpec*)(contact))->getFzIndex();    
+      fz_idx = dim_contact + contact->getFzIndex();    
       if(b_magnetism_map_[contact_link_idx]){
         F_magnetic_[fz_idx] = magnetic_force_[leg_idx];
       }
@@ -264,7 +259,7 @@ void MagnetoWbcSpecContainer::set_contact_magnetic_force(int moving_cop) {
         F_magnetic_[fz_idx] = residual_force_[leg_idx];
         // F_magnetic_[fz_idx] = -residual_force_;
       }
-      dim_contact += ((BodyFrameSurfaceContactSpec*)(contact))->getDim();
+      dim_contact += contact->getDim();
     }
   }
   F_magnetic_ = F_magnetic_.head(dim_contact);  
@@ -277,29 +272,40 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   contact_list_.clear();
   for(auto &[leg_idx, contact] : foot_contact_map_) {
     if( MagnetoContactLinks[leg_idx] != moving_cop ) {
-      contact_list_.push_back((BodyFrameSurfaceContactSpec*)(contact));
-      dim_contact_ += (contact)->getDim();
+      contact_list_.push_back(contact));
+      dim_contact_ += contact->getDim();
     }
   }
 }
 
-void MagnetoWbcSpecContainer::set_maxfz_contact(int moving_cop) {
-  set_maxfz_contact(moving_cop,
+void MagnetoWbcSpecContainer::set_contact_maxfz(int moving_cop) {
+  set_contact_maxfz(moving_cop,
                     max_rf_z_contact_, 
                     max_rf_z_nocontact_);
 }
 
-void MagnetoWbcSpecContainer::set_maxfz_contact(int moving_cop,
+void MagnetoWbcSpecContainer::set_contact_maxfz(int moving_cop,
                                                   double max_rfz_cntct,
                                                   double max_rfz_nocntct) {
-  for(auto &it : contact_list_) {
-    if(((BodyFrameSurfaceContactSpec*)(it))->getLinkIdx() == moving_cop) {
-      ((BodyFrameSurfaceContactSpec*)(it))->setMaxFz(max_rfz_nocntct);
+  for(auto &contact : contact_list_) {
+    if( contact->getLinkIdx() == moving_cop) {
+      contact->setMaxFz(max_rfz_nocntct);
     } else {
-      ((BodyFrameSurfaceContactSpec*)(it))->setMaxFz(max_rfz_cntct);
+      contact->setMaxFz(max_rfz_cntct);
     }
   }
 }
+
+void MagnetoWbcSpecContainer::set_weight_vector(){
+
+}
+
+void MagnetoWbcSpecContainer::get_weight_vector(){
+  
+}
+
+
+
 void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
                                     const Eigen::VectorXd &W_contact,
                                     const Eigen::VectorXd &W_nocontact,
@@ -308,9 +314,8 @@ void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
   int num_contact = contact_list_.size();
   int idx_accum = 0;
   W_result = Eigen::VectorXd::Zero(dim_vec*num_contact);
-  for(auto it = contact_list_.begin(); 
-        it != contact_list_.end(); it++) {
-    if(((BodyFrameSurfaceContactSpec*)(*it))->getLinkIdx()==moving_cop) {
+  for(auto &contact : contact_list_) {
+    if(contact->getLinkIdx()==moving_cop) {
       // swing foot - no contact
       W_result.segment(idx_accum,dim_vec) = W_nocontact;
 
@@ -330,7 +335,7 @@ void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
 
   for(auto& contact : contact_list_) {
     dim_vec = contact->getDim();  
-    if(((BodyFrameSurfaceContactSpec*)(contact))->getLinkIdx()==slip_cop) {      
+    if((contact))->getLinkIdx()==slip_cop) {      
       W_slip = W_result.segment(dim_accum,dim_vec);
       std::cout<<"W_slip(before)="<<W_slip.transpose()<<std::endl;
       int idx_rfz = contact->getFzIndex();

@@ -7,15 +7,9 @@ class RobotSystem;
 class PointContactSpec : public ContactSpec {
    public:
     PointContactSpec(RobotSystem* robot, int _link_idx, double _mu);
-    virtual ~PointContactSpec();
-
-    void setMaxFz(double max_fz) { max_Fz_ = max_fz; }
+    virtual ~PointContactSpec();   
 
    protected:
-    double mu_;
-    double max_Fz_;
-    int link_idx_;
-
     virtual bool _UpdateJc();
     virtual bool _UpdateJcDotQdot();
     virtual bool _UpdateJcQdot();
@@ -28,13 +22,8 @@ class SurfaceContactSpec : public ContactSpec {
     SurfaceContactSpec(RobotSystem* robot, int _link_idx, double _x, double _y,
                        double _mu);
     virtual ~SurfaceContactSpec();
-
-    void setMaxFz(double max_fz) { max_Fz_ = max_fz; }
-
+    
    protected:
-    double mu_;
-    double max_Fz_;
-    int link_idx_;
     double x_;
     double y_;
 

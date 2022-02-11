@@ -83,19 +83,19 @@ void Swing::firstVisit() {
   //      CONTACT LIST
   // --------------------------------------- 
   ws_container_->set_contact_list(moving_foot_idx_);
-
+  ws_container_->set_contact_maxfz(moving_foot_idx_);
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
   // ---------------------------------------  
   // rg_container_->max_normal_force_manager_->
-  // rg_container_->QPweight_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
-  // rg_container_->QPweight_xddot_manager_
+  // rg_container_->W_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
+  // rg_container_->W_xddot_manager_
   //           ->setTransition(ctrl_start_time_,ctrl_duration_, )
-  // rg_container_->QPweight_reactforce_manager_
+  // rg_container_->W_rf_manager_
   //           ->setTransition(ctrl_start_time_,ctrl_duration_, )
 
-  ws_container_->set_maxfz_contact(moving_foot_idx_);
+  
   // ws_container_->W_qddot_ : will be always same  
   ws_container_->compute_weight_param(moving_foot_idx_, 
                                   ws_container_->W_xddot_contact_,

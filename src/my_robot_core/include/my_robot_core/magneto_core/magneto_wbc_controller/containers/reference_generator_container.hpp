@@ -22,9 +22,9 @@ class MagnetoReferenceGeneratorContainer {
 
   // QP weight / max force transition manager
   SmoothTransitionManager* max_normal_force_manager_;
-  SmoothVectorTransitionManager* QPweight_qddot_manager_;
-  SmoothVectorTransitionManager* QPweight_xddot_manager_;
-  SmoothVectorTransitionManager* QPweight_reactforce_manager_;
+  SmoothVectorTransitionManager* W_qddot_manager_;
+  SmoothVectorTransitionManager* W_xddot_manager_;
+  SmoothVectorTransitionManager* W_rf_manager_;
   SmoothTransitionManager* weight_residualforce_manager_;
 
   // Planner

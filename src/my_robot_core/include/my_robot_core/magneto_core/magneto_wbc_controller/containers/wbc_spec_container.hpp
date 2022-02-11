@@ -121,8 +121,8 @@ class MagnetoWbcSpecContainer {
   // contact
   void set_contact_list(int moving_cop);
   // contact spec
-  void set_maxfz_contact(int moving_cop);
-  void set_maxfz_contact(int moving_cop,
+  void set_contact_maxfz(int moving_cop);
+  void set_contact_maxfz(int moving_cop,
                         double max_rfz_cntct,
                         double max_rfz_nocntct);
   void compute_weight_param(int moving_cop,
