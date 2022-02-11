@@ -34,10 +34,10 @@ void SlipObserver::initParams(){
 
 void SlipObserver::initContact(){
     int dim_grf;
-    for ( auto &[foot_idx, contact] : ws_container_->foot_contact_map_)
+    for( int foot_idx(0); foot_idx<Magneto::n_leg; foot_idx++ )
     {
         b_foot_contact_map_[foot_idx] =  true;
-        dim_grf = contact->getDim();
+        dim_grf = ws_container_->feet_contacts_[foot_idx]->getDim();
 
         dim_grf_map_[foot_idx] = dim_grf;
         foot_vel_map_[foot_idx] = Eigen::VectorXd::Zero(dim_grf); 
@@ -65,10 +65,10 @@ void SlipObserver::updateContact(){
         // update contact
         initContact();
         swing_foot_link_idx_ = sp_->curr_motion_command.get_moving_foot();        
-        for ( auto &[foot_idx, contact] : ws_container_->foot_contact_map_){
-            contact->updateContactSpec();
+        for( int foot_idx(0); foot_idx<Magneto::n_leg; foot_idx++ ){
+            ws_container_->feet_contacts_[foot_idx]->updateContactSpec();
             if( b_swing_phase_ && swing_foot_link_idx_ ==
-                ((BodyFrameSurfaceContactSpec*)(contact))->getLinkIdx() ) {
+                ws_container_->feet_contacts_[foot_idx]->getLinkIdx() ) {
                     b_foot_contact_map_[foot_idx] = false; }            
         }
 
@@ -93,7 +93,7 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
   // TODO : add threshold in climb_param.yaml
     updateContact();
 
-    auto contact = ws_container_->foot_contact_map_[foot_idx];
+    auto contact = ws_container_->feet_contacts_[foot_idx];
     
     Eigen::MatrixXd Jc;
     Eigen::VectorXd JcDotQdot;
@@ -193,11 +193,11 @@ Eigen::VectorXd SlipObserver::computeGRFDesired(const Eigen::VectorXd& tau) {
     Eigen::VectorXd fa = Eigen::VectorXd::Zero(6); // swing foot adhesive force
 
     int dim_grf= 0;
-    for ( auto &[foot_idx, contact] : ws_container_->foot_contact_map_ ) {       
+    for( int foot_idx(0); foot_idx<Magneto::n_leg; foot_idx++ ) {       
         // foot in contact
         if( b_foot_contact_map_[foot_idx] ) {
-            contact->getContactJacobian(Jc_i);
-            contact->getJcDotQdot(JcDotQdot_i);
+            ws_container_->feet_contacts_[foot_idx]->getContactJacobian(Jc_i);
+            ws_container_->feet_contacts_[foot_idx]->getJcDotQdot(JcDotQdot_i);
 
             // stack Matrices & Vectors
             if(dim_grf==0){
@@ -212,8 +212,8 @@ Eigen::VectorXd SlipObserver::computeGRFDesired(const Eigen::VectorXd& tau) {
             dim_grf += Jc_i.rows();            
         } // swing foot
         else {
-            contact->getContactJacobian(Js);
-            int fz_idx = ((BodyFrameSurfaceContactSpec*)(contact))->getFzIndex();    
+            ws_container_->feet_contacts_[foot_idx]->getContactJacobian(Js);
+            int fz_idx = ws_container_->feet_contacts_[foot_idx]->getFzIndex();    
             fa[fz_idx] =  ws_container_->residual_force_[foot_idx];
         }
     }
