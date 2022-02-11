@@ -49,7 +49,7 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
                         MagnetoFoot::LinkIdx[i], 
                         foot_x, foot_y, 
                         friction_coeff_[i]);
-                        
+
     full_dim_contact_ += feet_contacts_[i]->getDim();
   }
 
@@ -106,7 +106,7 @@ void MagnetoWbcSpecContainer::setContactFriction(const Eigen::VectorXd& _mu_vec)
 
 void MagnetoWbcSpecContainer::setContactFriction(int foot_idx, double mu) {
   // initialize contact
-  foot_contact_map_[foot_idx]->setFrictionCoeff(mu);
+  feet_contacts_[foot_idx]->setFrictionCoeff(mu);
 }
 
 void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
@@ -192,18 +192,19 @@ void MagnetoWbcSpecContainer::set_contact_magnetic_force(int moving_cop) {
 
   int contact_link_idx, fz_idx;
   int dim_contact(0);
-  for(auto &[leg_idx, contact] : foot_contact_map_) {
-    contact_link_idx = contact->getLinkIdx();
+  for(int i(0); i<Magneto::n_leg; i++)
+  {
+    contact_link_idx = feet_contacts_[i]->getLinkIdx();
     if( contact_link_idx != moving_cop) {  
-      fz_idx = dim_contact + contact->getFzIndex();    
+      fz_idx = dim_contact + feet_contacts_[i]->getFzIndex();    
       if(b_magnetism_map_[contact_link_idx]){
-        F_magnetic_[fz_idx] = magnetic_force_[leg_idx];
+        F_magnetic_[fz_idx] = magnetic_force_[i];
       }
       else {
-        F_magnetic_[fz_idx] = residual_force_[leg_idx];
+        F_magnetic_[fz_idx] = residual_force_[i];
         // F_magnetic_[fz_idx] = -residual_force_;
       }
-      dim_contact += contact->getDim();
+      dim_contact += feet_contacts_[i]->getDim();
     }
   }
   F_magnetic_ = F_magnetic_.head(dim_contact);  
@@ -214,10 +215,11 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   // build contact_list_
   dim_contact_=0;
   contact_list_.clear();
-  for(auto &[leg_idx, contact] : foot_contact_map_) {
-    if( MagnetoFoot::LinkIdx[leg_idx] != moving_cop ) {
-      contact_list_.push_back(contact));
-      dim_contact_ += contact->getDim();
+  for(int i(0); i<Magneto::n_leg; i++)
+  {
+    if( MagnetoFoot::LinkIdx[i] != moving_cop ) {
+      contact_list_.push_back(feet_contacts_[i]);
+      dim_contact_ += feet_contacts_[i]->getDim();
     }
   }
 }
