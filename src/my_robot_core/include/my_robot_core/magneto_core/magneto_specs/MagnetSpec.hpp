@@ -18,7 +18,9 @@ class MagnetSpec {
     }
     ~MagnetSpec() {}
 
-    void MagnetOnOff(bool _onoff) { onoff_ = _onoff}
+    void MagnetOnOff(bool _onoff) { onoff_ = _onoff; }
+    bool getOnOff() {return onoff_;}
+    int getLinkIdx() {return link_idx_;}
 
 
   protected:

@@ -42,7 +42,7 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
   double foot_x = 0.02; // 0.05; 
   double foot_y = 0.02; 
 
-  full_dim_contact_ = 0;
+  full_contact_dim_ = 0;
   for(int i(0); i<Magneto::n_leg; ++i){
     feet_contacts_[i] = new BodyFrameSurfaceContactSpec(
                         robot_, 
@@ -50,7 +50,7 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
                         foot_x, foot_y, 
                         friction_coeff_[i]);
 
-    full_dim_contact_ += feet_contacts_[i]->getDim();
+    full_contact_dim_ += feet_contacts_[i]->getDim();
   }
 
   // Add all contacts initially. Remove later as needed.
@@ -59,7 +59,6 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
   contact_list_.push_back(feet_contacts_[MagnetoFoot::AR]);
   contact_list_.push_back(feet_contacts_[MagnetoFoot::BL]);  
   contact_list_.push_back(feet_contacts_[MagnetoFoot::BR]); 
-  dim_contact_ = full_dim_contact_;
 }
 
 
@@ -67,10 +66,13 @@ void MagnetoWbcSpecContainer::_InitializeMagnetisms(){
   magnetic_force_ = Eigen::VectorXd::Zero(4);
   residual_ratio_ = Eigen::VectorXd::Zero(4);
   residual_force_ = Eigen::VectorXd::Zero(4);
-  b_magnetism_map_[MagnetoBodyNode::AL_foot_link] = false;
-  b_magnetism_map_[MagnetoBodyNode::BL_foot_link] = false;
-  b_magnetism_map_[MagnetoBodyNode::AR_foot_link] = false;
-  b_magnetism_map_[MagnetoBodyNode::BR_foot_link] = false;
+  for(int i(0); i<Magneto::n_leg; ++i){
+    //RobotSystem* _robot, int _link_idx, double _fm, double _res_ratio){
+        
+    feet_magnets_[i] = new MagnetSpec(robot_, 
+      MagnetoFoot::LinkIdx[i], magnetic_force_[i], residual_ratio_[i]); 
+  }
+
 }
 
 void MagnetoWbcSpecContainer::_DeleteTasks() {
@@ -83,7 +85,7 @@ void MagnetoWbcSpecContainer::_DeleteTasks() {
   for( auto &task : feet_pos_tasks_)
     delete task;
 
-  for( auto &task : feet_oti_tasks_)
+  for( auto &task : feet_ori_tasks_)
     delete task;
 }
 
@@ -130,8 +132,8 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
   }
 
   // initialize parameters
-  int dim_contact = alfoot_contact_->getDim();
-  int idx_rf_z = alfoot_contact_->getFzIndex();
+  int dim_contact = feet_contacts_[0]->getDim();
+  int idx_rf_z = feet_contacts_[0]->getFzIndex();
 
   W_qddot_ = Eigen::VectorXd::Constant(Magneto::n_dof, w_qddot_);
   W_xddot_contact_  = Eigen::VectorXd::Constant(dim_contact, w_xddot_contact_);
@@ -143,29 +145,30 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
   W_rf_nocontact_[idx_rf_z] = w_rf_z_nocontact_;
 
   // Set Maximum Forces
-  alfoot_contact_->setMaxFz(max_rf_z_contact_);
-  blfoot_contact_->setMaxFz(max_rf_z_contact_);
-  arfoot_contact_->setMaxFz(max_rf_z_contact_);
-  brfoot_contact_->setMaxFz(max_rf_z_contact_);
+  for(int i(0); i<Magneto::n_leg; ++i)
+    feet_contacts_[i]->setMaxFz(max_rf_z_contact_);
 }
 
 // -------------------------------------------------------
 //    set functions
 // -------------------------------------------------------
 void MagnetoWbcSpecContainer::set_magnetism(int moving_cop) {
-  b_magnetism_map_[MagnetoBodyNode::AL_foot_link]
-                        = (moving_cop != MagnetoBodyNode::AL_tibia_link && 
-                        moving_cop != MagnetoBodyNode::AL_foot_link);
-  b_magnetism_map_[MagnetoBodyNode::BL_foot_link] 
-                        = (moving_cop != MagnetoBodyNode::BL_tibia_link && 
-                        moving_cop != MagnetoBodyNode::BL_foot_link); 
-  b_magnetism_map_[MagnetoBodyNode::AR_foot_link] 
-                        = (moving_cop != MagnetoBodyNode::AR_tibia_link && 
-                        moving_cop != MagnetoBodyNode::AR_foot_link);
-  b_magnetism_map_[MagnetoBodyNode::BR_foot_link] 
-                        = (moving_cop != MagnetoBodyNode::BR_tibia_link && 
-                        moving_cop != MagnetoBodyNode::BR_foot_link);
+  bool onoff;
+  for( auto &magnet : feet_magnets_){
+    // onoff 
+    onoff = moving_cop != magnet->getLinkIdx();
+    magnet->MagnetOnOff(onoff);
+  }
 }
+
+void MagnetoWbcSpecContainer::update_magnetism_map(
+              std::map<FootLinkIdx, bool> & b_map){
+  b_map.clear();
+  for( auto &magnet : feet_magnets_){
+    b_map[magnet->getLinkIdx()] = magnet->getOnOff();
+  }
+}
+
 
 void MagnetoWbcSpecContainer::set_residual_magnetic_force(int moving_cop, double contact_distance) {
 
@@ -188,16 +191,15 @@ void MagnetoWbcSpecContainer::set_residual_magnetic_force(int moving_cop, double
 
 void MagnetoWbcSpecContainer::set_contact_magnetic_force(int moving_cop) {
   // set F_magnetic_ based on b_magnetism_map_  
-  F_magnetic_ = Eigen::VectorXd::Zero(full_dim_contact_);
+  F_magnetic_ = Eigen::VectorXd::Zero(full_contact_dim_);
 
-  int contact_link_idx, fz_idx;
+  int fz_idx;
   int dim_contact(0);
   for(int i(0); i<Magneto::n_leg; i++)
   {
-    contact_link_idx = feet_contacts_[i]->getLinkIdx();
-    if( contact_link_idx != moving_cop) {  
+    if( feet_contacts_[i]->getLinkIdx() != moving_cop) {  
       fz_idx = dim_contact + feet_contacts_[i]->getFzIndex();    
-      if(b_magnetism_map_[contact_link_idx]){
+      if( feet_magnets_[i]->getOnOff() ){
         F_magnetic_[fz_idx] = magnetic_force_[i];
       }
       else {
@@ -213,13 +215,11 @@ void MagnetoWbcSpecContainer::set_contact_magnetic_force(int moving_cop) {
 
 void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   // build contact_list_
-  dim_contact_=0;
   contact_list_.clear();
   for(int i(0); i<Magneto::n_leg; i++)
   {
     if( MagnetoFoot::LinkIdx[i] != moving_cop ) {
       contact_list_.push_back(feet_contacts_[i]);
-      dim_contact_ += feet_contacts_[i]->getDim();
     }
   }
 }
@@ -242,13 +242,13 @@ void MagnetoWbcSpecContainer::set_contact_maxfz(int moving_cop,
   }
 }
 
-void MagnetoWbcSpecContainer::set_weight_vector(){
+// void MagnetoWbcSpecContainer::set_weight_vector(){
 
-}
+// }
 
-void MagnetoWbcSpecContainer::get_weight_vector(){
+// void MagnetoWbcSpecContainer::get_weight_vector(){
   
-}
+// }
 
 
 
@@ -264,7 +264,6 @@ void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
     if(contact->getLinkIdx()==moving_cop) {
       // swing foot - no contact
       W_result.segment(idx_accum,dim_vec) = W_nocontact;
-
     } else {
       W_result.segment(idx_accum,dim_vec) = W_contact;
     }
@@ -273,15 +272,15 @@ void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
 }
 
 void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
-                                              int slip_cop, 
-                                              Eigen::VectorXd &W_result) {
+                                            int slip_cop, 
+                                            Eigen::VectorXd &W_result) {
   // assume coefficient alpha > 1.0
   int dim_vec, dim_accum(0);
   Eigen::VectorXd W_slip;
 
   for(auto& contact : contact_list_) {
     dim_vec = contact->getDim();  
-    if((contact))->getLinkIdx()==slip_cop) {      
+    if( contact->getLinkIdx()==slip_cop) {      
       W_slip = W_result.segment(dim_accum,dim_vec);
       std::cout<<"W_slip(before)="<<W_slip.transpose()<<std::endl;
       int idx_rfz = contact->getFzIndex();
@@ -302,47 +301,22 @@ void MagnetoWbcSpecContainer::clear_task_list() {
 void MagnetoWbcSpecContainer::add_task_list(Task* task) {
   task_list_.push_back(task);
 }
+
 Task* MagnetoWbcSpecContainer::get_foot_pos_task(int moving_cop) {
-  switch(moving_cop){
-        case MagnetoBodyNode::AL_foot_link :
-        case MagnetoBodyNode::AL_tibia_link :
-            return alfoot_pos_task_;
-        case MagnetoBodyNode::BL_foot_link :
-        case MagnetoBodyNode::BL_tibia_link :
-            return blfoot_pos_task_;
-        case MagnetoBodyNode::AR_foot_link :
-        case MagnetoBodyNode::AR_tibia_link :
-            return arfoot_pos_task_;
-        case MagnetoBodyNode::BR_foot_link :
-        case MagnetoBodyNode::BR_tibia_link :
-            return brfoot_pos_task_;
-        default:
-            return NULL;
-  }
+  int foot_idx = footLink2FootIdx(moving_cop);
+  if(foot_idx>0) return feet_pos_tasks_[foot_idx];
+  else return NULL;  
 }
+
 Task* MagnetoWbcSpecContainer::get_foot_ori_task(int moving_cop) {
-  switch(moving_cop){
-        case MagnetoBodyNode::AL_foot_link :
-        case MagnetoBodyNode::AL_tibia_link :
-            return alfoot_ori_task_;
-        case MagnetoBodyNode::BL_foot_link :
-        case MagnetoBodyNode::BL_tibia_link :
-            return blfoot_ori_task_;
-        case MagnetoBodyNode::AR_foot_link :
-        case MagnetoBodyNode::AR_tibia_link :
-            return arfoot_ori_task_;
-        case MagnetoBodyNode::BR_foot_link :
-        case MagnetoBodyNode::BR_tibia_link :
-            return brfoot_ori_task_;
-        default:
-            return NULL;
-  }
+  int foot_idx = footLink2FootIdx(moving_cop);
+  if(foot_idx>0) return feet_ori_tasks_[foot_idx];
+  else return NULL;  
 }
 
 int MagnetoWbcSpecContainer::footLink2FootIdx(int moving_cop){
   for( int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx){
     if(MagnetoFoot::LinkIdx[foot_idx] == moving_cop)
-      return foot_idx;
-  }
+      return foot_idx;  }
   return -1;
 } 

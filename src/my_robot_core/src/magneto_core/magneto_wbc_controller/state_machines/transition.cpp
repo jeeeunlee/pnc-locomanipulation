@@ -110,10 +110,10 @@ void Transition::firstVisit() {
               ->setTransition(ctrl_start_time_, ctrl_duration_,
                                   ws_container_->max_rf_z_nocontact_,
                                   ws_container_->max_rf_z_contact_);
-    rg_container_->QPweight_xddot_manager_
+    rg_container_->W_xddot_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_xddot_swing_, W_xddot_full_contact);
-    rg_container_->QPweight_reactforce_manager_
+    rg_container_->W_rf_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_rf_swing_, W_rf_full_contact);
     rg_container_->weight_residualforce_manager_
@@ -125,10 +125,10 @@ void Transition::firstVisit() {
               ->setTransition(ctrl_start_time_, ctrl_duration_,
                                   ws_container_->max_rf_z_contact_, 
                                   ws_container_->max_rf_z_nocontact_);
-    rg_container_->QPweight_xddot_manager_
+    rg_container_->W_xddot_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_xddot_full_contact, W_xddot_swing_);
-    rg_container_->QPweight_reactforce_manager_
+    rg_container_->W_rf_manager_
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       W_rf_full_contact, W_rf_swing_);
     rg_container_->weight_residualforce_manager_
@@ -155,10 +155,10 @@ void Transition::_weightUpdate() {
   // rg_container_->QPweight_qddot_manager_
   //           ->updateTransition(sp_->curr_time, 
   //                           ws_container_->W_qddot_);
-  rg_container_->QPweight_xddot_manager_
+  rg_container_->W_xddot_manager_
             ->updateTransition(sp_->curr_time, 
                             ws_container_->W_xddot_);
-  rg_container_->QPweight_reactforce_manager_
+  rg_container_->W_rf_manager_
             ->updateTransition(sp_->curr_time, 
                             ws_container_->W_rf_);
   // rg_container_->weight_residualforce_manager_
@@ -170,7 +170,7 @@ void Transition::_weightUpdate() {
   rg_container_->max_normal_force_manager_
             ->updateTransition(sp_->curr_time, 
                                   ws_container_->max_rf_z_trans_);
-  ws_container_->set_maxfz_contact(moving_foot_idx_, 
+  ws_container_->set_contact_maxfz(moving_foot_idx_, 
                               ws_container_->max_rf_z_contact_,
                               ws_container_->max_rf_z_trans_);
 }

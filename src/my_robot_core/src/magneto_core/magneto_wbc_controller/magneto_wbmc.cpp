@@ -92,26 +92,13 @@ void MagnetoWBMC::getCommand(void* _cmd) {
   wbmc_->updateSetting(A_, Ainv_, coriolis_, grav_);
   wbmc_->makeTorqueGivenRef(jacc_des_cmd, contact_list_, jtrq_des_, wbmc_param_);
 
-  // my_utils::pretty_print(jtrq_des_, std::cout, "jtrq_des_");
-  
-  // // Integrate Joint Velocities and Positions
-  // des_jacc_ = qddot_cmd_;
-  // if (joint_integrator_->isInitialized()) {
-  //   joint_integrator_->integrate(
-  //       des_jacc_, sp_->qdot.segment(Magneto::n_vdof, Magneto::n_adof),
-  //       sp_->q.segment(Magneto::n_vdof, Magneto::n_adof), des_jvel_, des_jpos_);
-  // } else {
-  //   des_jpos_ = sp_->q.segment(Magneto::n_vdof, Magneto::n_adof);
-  //   des_jvel_ = sp_->qdot.segment(Magneto::n_vdof, Magneto::n_adof);
-  // }
-
   for (int i(0); i < Magneto::n_adof; ++i) {
       ((MagnetoCommand*)_cmd)->jtrq[i] = jtrq_des_[i];
       ((MagnetoCommand*)_cmd)->q[i] = jpos_des_[i];
       ((MagnetoCommand*)_cmd)->qdot[i] = jvel_des_[i];
   }
 
-  ((MagnetoCommand*)_cmd)->b_magnetism_map = ws_container_->b_magnetism_map_;
+  ws_container_->update_magnetism_map(((MagnetoCommand*)_cmd)->b_magnetism_map );
 
 
   // _PostProcessing_Command(); // unset task and contact

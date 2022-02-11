@@ -10,6 +10,7 @@
 #include <my_wbc/Contact/BasicContactSpec.hpp>
 #include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/Task.hpp>
+#include <my_robot_core/magneto_core/magneto_specs/MagnetSpec.hpp>
 
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/tasks/task_set.hpp>
@@ -46,34 +47,14 @@ class MagnetoWbcSpecContainer {
   Task* com_task_;
   Task* joint_task_;
   Task* base_ori_task_;
-
-  // Task* alfoot_pos_task_;
-  // Task* arfoot_pos_task_;
-  // Task* blfoot_pos_task_;
-  // Task* brfoot_pos_task_;
-  // Task* feet_pos_tasks_[Magneto::n_leg];
   std::array<Task*, Magneto::n_leg> feet_pos_tasks_;
-
-  // Task* alfoot_ori_task_;
-  // Task* arfoot_ori_task_;
-  // Task* blfoot_ori_task_;
-  // Task* brfoot_ori_task_;
-  // Task* feet_ori_tasks_[Magneto::n_leg];
-  std::array<Task*, Magneto::n_leg> brfoot_ori_task_;
+  std::array<Task*, Magneto::n_leg> feet_ori_tasks_;
 
   // -------------------------------------------------------
   // Contact Member variables
   // -------------------------------------------------------
-  // ContactSpec* alfoot_contact_;
-  // ContactSpec* arfoot_contact_;
-  // ContactSpec* blfoot_contact_;
-  // ContactSpec* brfoot_contact_;  
-  // std::map<FootIdx, ContactSpec*> foot_contact_map_;
-  // ContactSpec* feet_contacts_[Magneto::n_leg];
   std::array<ContactSpec*, Magneto::n_leg> feet_contacts_;
-  
-  int dim_contact_;
-  int full_dim_contact_;
+  int full_contact_dim_;
 
   // -------------------------------------------------------
   // Magnetic
@@ -81,7 +62,6 @@ class MagnetoWbcSpecContainer {
   // MagnetSpec* feet_magnets_[Magneto::n_leg];
   std::array<MagnetSpec*, Magneto::n_leg> feet_magnets_;
 
-  std::map<FootLinkIdx, bool> b_magnetism_map_;
   Eigen::VectorXd F_magnetic_;
   
   Eigen::VectorXd F_residual_;
@@ -127,6 +107,8 @@ class MagnetoWbcSpecContainer {
   //    set functions
   // -------------------------------------------------------
   // magnetism
+  void update_magnetism_map(
+              std::map<FootLinkIdx, bool> & b_map);
   void set_magnetism(int moving_cop);
   void set_contact_magnetic_force(int moving_cop);
   void set_residual_magnetic_force(int moving_cop, double contact_distance=0.0);
