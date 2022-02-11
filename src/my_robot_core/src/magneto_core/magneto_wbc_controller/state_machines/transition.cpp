@@ -65,12 +65,12 @@ void Transition::firstVisit() {
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
   if(b_contact_start_){
-    ws_container_->set_magnetism(-1);
+    ws_container_->set_foot_magnet_off(-1);
     ws_container_->set_residual_magnetic_force(-1);
     ws_container_->set_contact_magnetic_force(-1);
     
   }  else {
-    ws_container_->set_magnetism(moving_foot_idx_); // off-magnetism on moving foot
+    ws_container_->set_foot_magnet_off(moving_foot_idx_); // off-magnetism on moving foot
     ws_container_->set_residual_magnetic_force(moving_foot_idx_);
     ws_container_->set_contact_magnetic_force(-1); // build full contact dim F_magnetic_    
   }

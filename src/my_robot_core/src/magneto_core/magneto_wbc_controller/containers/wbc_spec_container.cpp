@@ -152,15 +152,6 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
 // -------------------------------------------------------
 //    set functions
 // -------------------------------------------------------
-void MagnetoWbcSpecContainer::set_magnetism(int moving_cop) {
-  bool onoff;
-  for( auto &magnet : feet_magnets_){
-    // onoff 
-    onoff = moving_cop != magnet->getLinkIdx();
-    magnet->MagnetOnOff(onoff);
-  }
-}
-
 void MagnetoWbcSpecContainer::update_magnetism_map(
               std::map<FootLinkIdx, bool> & b_map){
   b_map.clear();
@@ -169,6 +160,15 @@ void MagnetoWbcSpecContainer::update_magnetism_map(
   }
 }
 
+
+void MagnetoWbcSpecContainer::set_foot_magnet_off(int moving_cop) {
+  bool onoff;
+  for( auto &magnet : feet_magnets_){
+    // onoff 
+    onoff = moving_cop != magnet->getLinkIdx();
+    magnet->magnetOnOff(onoff);
+  }
+}
 
 void MagnetoWbcSpecContainer::set_residual_magnetic_force(int moving_cop, double contact_distance) {
 

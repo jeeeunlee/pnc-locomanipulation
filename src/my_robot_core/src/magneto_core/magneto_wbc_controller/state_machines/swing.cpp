@@ -74,7 +74,7 @@ void Swing::firstVisit() {
   // ---------------------------------------
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
-  ws_container_->set_magnetism(moving_foot_idx_);    
+  ws_container_->set_foot_magnet_off(moving_foot_idx_);    
   ws_container_->set_residual_magnetic_force(moving_foot_idx_);
   ws_container_->set_contact_magnetic_force(moving_foot_idx_);
   ws_container_->w_res_ = 1.0;
