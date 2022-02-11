@@ -1,17 +1,12 @@
 #include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 
 
-BodyFramePointContactSpec::BodyFramePointContactSpec(RobotSystem* robot, int _link_idx,
-                                   double _mu)
-    : ContactSpec(robot, 3) {
+BodyFramePointContactSpec::BodyFramePointContactSpec(RobotSystem* robot, 
+                                                int _link_idx, double _mu)
+    : ContactSpec(robot, 3, _link_idx, _mu) {
     my_utils::pretty_constructor(3, "Body Frame Point Contact Spec");
 
-    link_idx_ = _link_idx;
-    max_Fz_ = 500.;
-    // mu_ = _mu/ sqrt(2);
-    setFrictionCoeff(_mu);
     updateContactSpec();
-
 }
 
 BodyFramePointContactSpec::~BodyFramePointContactSpec() {}
@@ -80,15 +75,11 @@ bool BodyFramePointContactSpec::_UpdateInequalityVector() {
 
 
 
-BodyFrameSurfaceContactSpec::BodyFrameSurfaceContactSpec(RobotSystem* robot, int _link_idx,
-                                       double _x, double _y, double _mu)
-    : ContactSpec(robot, 6) {
+BodyFrameSurfaceContactSpec::BodyFrameSurfaceContactSpec(RobotSystem* robot,
+                        int _link_idx, double _x, double _y, double _mu)
+    : ContactSpec(robot, 6, _link_idx, _mu) {
     my_utils::pretty_constructor(3, "BodyFrame Surface Contact Spec");
 
-    link_idx_ = _link_idx;
-    max_Fz_ = 1500.;
-    // mu_ = _mu / sqrt(2);
-    setFrictionCoeff(_mu);
     x_ = _x;
     y_ = _y;
     updateContactSpec();

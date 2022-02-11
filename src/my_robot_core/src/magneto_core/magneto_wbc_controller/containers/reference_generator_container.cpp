@@ -12,9 +12,9 @@ MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(RobotSyst
   base_ori_trajectory_manager_ = new BaseOriTrajectoryManager(robot_);
 
   max_normal_force_manager_ = new SmoothTransitionManager();
-  QPweight_qddot_manager_ = new SmoothVectorTransitionManager();
-  QPweight_xddot_manager_ = new SmoothVectorTransitionManager();
-  QPweight_reactforce_manager_ = new SmoothVectorTransitionManager();
+  W_qddot_manager_ = new SmoothVectorTransitionManager();
+  W_xddot_manager_ = new SmoothVectorTransitionManager();
+  W_rf_manager_ = new SmoothVectorTransitionManager();
   weight_residualforce_manager_ = new SmoothTransitionManager();
 
   goal_planner_ = new MagnetoGoalPlanner(robot_);
@@ -27,9 +27,9 @@ MagnetoReferenceGeneratorContainer::~MagnetoReferenceGeneratorContainer(){
     delete base_ori_trajectory_manager_;
 
     delete max_normal_force_manager_;
-    delete QPweight_qddot_manager_;
-    delete QPweight_qddot_manager_;
-    delete QPweight_reactforce_manager_;
+    delete W_qddot_manager_;
+    delete W_xddot_manager_;
+    delete W_rf_manager_;
     delete weight_residualforce_manager_;
 
     delete goal_planner_;

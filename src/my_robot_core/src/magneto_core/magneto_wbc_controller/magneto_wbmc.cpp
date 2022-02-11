@@ -45,15 +45,15 @@ void MagnetoWBMC::_PreProcessing_Command() {
   grav_ = robot_->getGravity();
   coriolis_ = robot_->getCoriolis();
 
-  // Clear out local pointers
-  task_list_.clear();
-  contact_list_.clear();
-
   // Grab Variables from the container.
   wbmc_param_->W_qddot_ = ws_container_->W_qddot_;
   wbmc_param_->W_xddot_ = ws_container_->W_xddot_;
   wbmc_param_->W_rf_ = ws_container_->W_rf_;
   wbmc_param_->F_magnetic_ = ws_container_->F_magnetic_;
+
+  // Clear out local pointers
+  task_list_.clear();
+  contact_list_.clear();
 
   // Update task and contact list pointers from container object
   for (int i = 0; i < ws_container_->task_list_.size(); i++) {
@@ -62,11 +62,6 @@ void MagnetoWBMC::_PreProcessing_Command() {
   for (int i = 0; i < ws_container_->contact_list_.size(); i++) {
     contact_list_.push_back(ws_container_->contact_list_[i]);
   }
-  // Update Task Jacobians and commands
-  // for (int i = 0; i < task_list_.size(); i++) {
-  //   task_list_[i]->updateJacobians();
-  //   task_list_[i]->computeCommands();
-  // }
 
   // Update Contact Spec
   for (int i = 0; i < contact_list_.size(); i++) {

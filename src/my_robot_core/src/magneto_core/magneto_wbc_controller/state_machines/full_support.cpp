@@ -75,11 +75,12 @@ void FullSupport::firstVisit() {
   //      CONTACT LIST
   // --------------------------------------- 
   ws_container_->set_contact_list(-1);
+  ws_container_->set_contact_maxfz(-1);
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
   // ---------------------------------------  
-  ws_container_->set_maxfz_contact(-1);
+  
   // ws_container_->W_qddot_ : will be always same  
   ws_container_->compute_weight_param(-1, 
                       ws_container_->W_xddot_contact_,
