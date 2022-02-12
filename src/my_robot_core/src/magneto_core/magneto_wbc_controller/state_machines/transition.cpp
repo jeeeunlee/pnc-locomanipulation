@@ -29,35 +29,35 @@ void Transition::firstVisit() {
   ctrl_end_time_ = ctrl_start_time_ + ctrl_duration_;
 
   // ---------------------------------------
+  //      CONTACT LIST
+  // --------------------------------------- 
+  ws_container_->set_contact_list(-1);  // contain full contact
+  // ws_container_->set_contact_maxfz(-1);
+
+  // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
   // -- set current motion param
   MotionCommand mc_curr_ = sp_->curr_motion_command;
-
   moving_foot_idx_ = mc_curr_.get_moving_foot();
 
   // --set com traj
   rg_container_->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, 
                               ctrl_duration_);
-
   // -- set base ori traj
   rg_container_->base_ori_trajectory_manager_
             ->setBaseOriTrajectory(ctrl_start_time_,
                                   ctrl_duration_);
-
   // -- set joint traj
   rg_container_->joint_trajectory_manager_
             ->setJointTrajectory(ctrl_start_time_,
                                 ctrl_duration_);
-
   // -- set task_list in taf with hierachy
   ws_container_->clear_task_list();
   ws_container_->add_task_list(ws_container_->com_task_);
   ws_container_->add_task_list(ws_container_->base_ori_task_);
   ws_container_->add_task_list(ws_container_->joint_task_);
-
-
 
   // ---------------------------------------
   //      QP PARAM - SET MAGNETISM
@@ -66,19 +66,13 @@ void Transition::firstVisit() {
   // simulation/real environment magnetism
   if(b_contact_start_){
     ws_container_->set_foot_magnet_off(-1);
-    ws_container_->set_residual_magnetic_force(-1);
-    ws_container_->set_contact_magnetic_force(-1);
-    
+    ws_container_->set_magnet_distance(-1, 0.0);   
   }  else {
     ws_container_->set_foot_magnet_off(moving_foot_idx_); // off-magnetism on moving foot
-    ws_container_->set_residual_magnetic_force(moving_foot_idx_);
-    ws_container_->set_contact_magnetic_force(-1); // build full contact dim F_magnetic_    
+    ws_container_->set_magnet_distance(moving_foot_idx_, 0.0);
   }
 
-  // ---------------------------------------
-  //      CONTACT LIST
-  // --------------------------------------- 
-  ws_container_->set_contact_list(-1);  // contain full contact
+
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
@@ -103,7 +97,7 @@ void Transition::firstVisit() {
                                 ws_container_->W_rf_nocontact_,
                                 W_rf_full_contact); 
 
-  // rg_container_->QPweight_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
+  // rg_container_->W_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
   if(b_contact_start_) {
     // moving foot : nocontact -> contact
     rg_container_->max_normal_force_manager_
@@ -135,7 +129,6 @@ void Transition::firstVisit() {
               ->setTransition(ctrl_start_time_, ctrl_duration_, 
                                       0.0, 1.0);
   }
-
 }
 
 void Transition::_taskUpdate() {
@@ -152,7 +145,7 @@ void Transition::_taskUpdate() {
 
 void Transition::_weightUpdate() {
   // change in weight
-  // rg_container_->QPweight_qddot_manager_
+  // rg_container_->W_qddot_manager_
   //           ->updateTransition(sp_->curr_time, 
   //                           ws_container_->W_qddot_);
   rg_container_->W_xddot_manager_
@@ -161,11 +154,6 @@ void Transition::_weightUpdate() {
   rg_container_->W_rf_manager_
             ->updateTransition(sp_->curr_time, 
                             ws_container_->W_rf_);
-  // rg_container_->weight_residualforce_manager_
-  //           ->updateTransition(sp_->curr_time,
-  //                               ws_container_->w_res_);
-  ws_container_->w_res_ = 0.0;
-
   // change in normal force in contactSpec
   rg_container_->max_normal_force_manager_
             ->updateTransition(sp_->curr_time, 
