@@ -55,7 +55,7 @@ void MagnetoWBRMC::_PreProcessing_Command() {
   wbrmc_param_->W_rf_ = ws_container_->W_rf_;
 
   wbrmc_param_->F_magnetic_ = - ws_container_->F_magnetic_;
-  wbrmc_param_->F_residual_ = - ws_container_->w_res_ * ws_container_->F_residual_;
+  wbrmc_param_->F_residual_ = - ws_container_->F_residual_;
   wbrmc_param_->J_residual_ = ws_container_->J_residual_;
   
   //0112 my_utils::saveVector(wbrmc_param_->F_residual_,"wbc_F_residual");

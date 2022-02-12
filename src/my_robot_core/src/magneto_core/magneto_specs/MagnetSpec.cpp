@@ -10,6 +10,10 @@ double MagnetSpec::getMagneticForce() {
   }
 }
 
+Eigen::MatrixXd MagnetSpec::getJacobian() {
+  return robot_->getBodyNodeBodyJacobian(link_idx_);
+}
+
 
 double MagnetSpec::computeFm(double f0, double d, double d0){
   // f0 : magnetic force when contact(d=0)

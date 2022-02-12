@@ -53,6 +53,7 @@ class MagnetoWbcSpecContainer {
   // -------------------------------------------------------
   // Contact Member variables
   // -------------------------------------------------------
+  std::array<bool, Magneto::n_leg> b_feet_contact_list_;
   std::array<ContactSpec*, Magneto::n_leg> feet_contacts_;
   int full_contact_dim_;
 
@@ -66,7 +67,6 @@ class MagnetoWbcSpecContainer {
   
   Eigen::VectorXd F_residual_;
   Eigen::MatrixXd J_residual_;
-  double w_res_;
 
   Eigen::VectorXd friction_coeff_;
   Eigen::VectorXd magnetic_force_; //[N]

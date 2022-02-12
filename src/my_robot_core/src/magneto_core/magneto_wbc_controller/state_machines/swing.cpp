@@ -26,6 +26,12 @@ void Swing::firstVisit() {
   ctrl_start_time_ = sp_->curr_time;
 
   // ---------------------------------------
+  //      CONTACT LIST
+  // --------------------------------------- 
+  ws_container_->set_contact_list(moving_foot_idx_);
+  ws_container_->set_contact_maxfz(moving_foot_idx_);
+
+  // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
   // -- set current motion param
@@ -68,22 +74,13 @@ void Swing::firstVisit() {
   ws_container_->add_task_list(
         ws_container_->joint_task_);
 
-
   // ---------------------------------------
   //      QP PARAM - SET MAGNETISM
   // ---------------------------------------
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
-  ws_container_->set_foot_magnet_off(moving_foot_idx_);    
-  ws_container_->set_residual_magnetic_force(moving_foot_idx_);
-  ws_container_->set_contact_magnetic_force(moving_foot_idx_);
-  ws_container_->w_res_ = 1.0;
-
-  // ---------------------------------------
-  //      CONTACT LIST
-  // --------------------------------------- 
-  ws_container_->set_contact_list(moving_foot_idx_);
-  ws_container_->set_contact_maxfz(moving_foot_idx_);
+  ws_container_->set_foot_magnet_off(moving_foot_idx_);   
+  ws_container_->set_magnet_distance(moving_foot_idx_, 0.0);
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
@@ -131,10 +128,10 @@ void Swing::_weightUpdate() {
 }
 
 void Swing::_ResidualMagnetismUpdate() {
-  double contact_distance(0.0);
-  contact_distance = rg_container_->foot_trajectory_manager_->getTrajHeight();
-  // std::cout << "contact_distance =  " << contact_distance << std::endl;
-  ws_container_->set_residual_magnetic_force(moving_foot_idx_, contact_distance);
+  double cd = rg_container_->
+              foot_trajectory_manager_->getTrajHeight();
+  // std::cout << "contact_distance =  " << cd << std::endl;
+  ws_container_->set_magnet_distance(moving_foot_idx_, cd);
 }
 
 void Swing::oneStep() {

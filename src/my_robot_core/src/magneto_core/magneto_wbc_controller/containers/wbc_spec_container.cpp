@@ -51,14 +51,15 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
                         friction_coeff_[i]);
 
     full_contact_dim_ += feet_contacts_[i]->getDim();
+    b_feet_contact_list_[i] = true;
   }
 
   // Add all contacts initially. Remove later as needed.
   contact_list_.clear();
-  contact_list_.push_back(feet_contacts_[MagnetoFoot::AL]);
-  contact_list_.push_back(feet_contacts_[MagnetoFoot::AR]);
-  contact_list_.push_back(feet_contacts_[MagnetoFoot::BL]);  
-  contact_list_.push_back(feet_contacts_[MagnetoFoot::BR]); 
+  // contact_list_.push_back(feet_contacts_[MagnetoFoot::AL]);
+  // contact_list_.push_back(feet_contacts_[MagnetoFoot::AR]);
+  // contact_list_.push_back(feet_contacts_[MagnetoFoot::BL]);  
+  // contact_list_.push_back(feet_contacts_[MagnetoFoot::BR]); 
 }
 
 
@@ -160,58 +161,67 @@ void MagnetoWbcSpecContainer::update_magnetism_map(
   }
 }
 
+void MagnetoWbcSpecContainer::update_magnet_forces() {
+  // update F_residual_, J_residual_, F_magnetic_
+  J_residual_ = Eigen::MatrixXd::Zero(0,0);
+  F_residual_ = Eigen::VectorXd::Zero(0);
+  int dim_Fm(0), dim_Fres(0); 
+  int dim_tmp, link_idx; 
+  Eigen::VectorXd Fm_tmp;
+  Eigen::MatrixXd J_tmp;
+
+  for( int i(0); i<Magneto::n_leg; ++i) {
+    link_idx = feet_contacts_[i]->getLinkIdx();
+    dim_tmp = feet_contacts_[i]->getDim();
+    Fm_tmp = Eigen::VectorXd::Zero(dim_tmp);
+    Fm_tmp[feet_contacts_[i]->getFzIndex()] = 
+      feet_magnets_[footLink2FootIdx(link_idx)]->getMagneticForce();
+    if(b_feet_contact_list_[i]){
+      // foot in contactlist : stack F_magnetic_
+      if(dim_Fm == 0){
+        F_magnetic_ = Fm_tmp;
+      }else{
+        F_magnetic_.conservativeResize(dim_Fm+dim_tmp);
+        F_magnetic_.tail(dim_tmp) = Fm_tmp;
+      }
+      dim_Fm += dim_tmp;
+    } else{ 
+      // foot not in contactlist : stack F_residual_, J_residual_
+      J_tmp = feet_magnets_[footLink2FootIdx(link_idx)]->getJacobian();
+      if(dim_Fres == 0){
+        F_residual_ = Fm_tmp;
+        J_residual_ = J_tmp;
+      }else{
+        F_residual_.conservativeResize(dim_Fres+dim_tmp);
+        F_residual_.tail(dim_tmp) = Fm_tmp;
+        J_residual_.conservativeResize(dim_Fres+dim_tmp, J_residual_.cols());
+        J_residual_.block(dim_Fres,0, dim_tmp,J_residual_.cols() ) = J_tmp;
+      }
+      dim_Fres += dim_tmp;
+    }
+  }
+}
 
 void MagnetoWbcSpecContainer::set_foot_magnet_off(int moving_cop) {
   bool onoff;
   for( auto &magnet : feet_magnets_){
     // onoff 
     onoff = moving_cop != magnet->getLinkIdx();
-    magnet->magnetOnOff(onoff);
+    magnet->setMagnetOnoff(onoff);
   }
+  update_magnet_forces();
 }
 
-void MagnetoWbcSpecContainer::set_residual_magnetic_force(int moving_cop, double contact_distance) {
-
-  if( moving_cop >= 0 && moving_cop < robot_->getNumBodyNodes() ){
-    // set foot idx
-    int idx = footLink2FootIdx(moving_cop);
-    // set J_residual_
-    J_residual_ = robot_->getBodyNodeCoMBodyJacobian(moving_cop); // 6 x ndof
-    // set F_residual_
-    double distance_ratio = 0.02 / (contact_distance + 0.02);
-    residual_force_[idx] = distance_ratio * distance_ratio
-                       * magnetic_force_[idx] * (residual_ratio_[idx]/100.);
-    F_residual_ = Eigen::VectorXd::Zero(J_residual_.rows());
-    F_residual_[F_residual_.size()-1] = residual_force_[idx];
-  } else{
-    J_residual_ = Eigen::MatrixXd::Zero(6, robot_->getNumDofs()); // 6 x ndof
-    F_residual_ = Eigen::VectorXd::Zero(J_residual_.rows());
+void MagnetoWbcSpecContainer::set_magnet_distance(int moving_cop, 
+                                          double contact_distance) {
+  for( auto &magnet : feet_magnets_){
+    // onoff 
+    if( moving_cop == magnet->getLinkIdx() ) 
+      magnet->setContactDistance(contact_distance);
+    else magnet->setContactDistance(0.0);
   }
+  update_magnet_forces();
 }
-
-void MagnetoWbcSpecContainer::set_contact_magnetic_force(int moving_cop) {
-  // set F_magnetic_ based on b_magnetism_map_  
-  F_magnetic_ = Eigen::VectorXd::Zero(full_contact_dim_);
-
-  int fz_idx;
-  int dim_contact(0);
-  for(int i(0); i<Magneto::n_leg; i++)
-  {
-    if( feet_contacts_[i]->getLinkIdx() != moving_cop) {  
-      fz_idx = dim_contact + feet_contacts_[i]->getFzIndex();    
-      if( feet_magnets_[i]->getOnOff() ){
-        F_magnetic_[fz_idx] = magnetic_force_[i];
-      }
-      else {
-        F_magnetic_[fz_idx] = residual_force_[i];
-        // F_magnetic_[fz_idx] = -residual_force_;
-      }
-      dim_contact += feet_contacts_[i]->getDim();
-    }
-  }
-  F_magnetic_ = F_magnetic_.head(dim_contact);  
-}
-
 
 void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   // build contact_list_
@@ -220,7 +230,10 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   {
     if( MagnetoFoot::LinkIdx[i] != moving_cop ) {
       contact_list_.push_back(feet_contacts_[i]);
+      b_feet_contact_list_[i] = true;
     }
+    else
+      b_feet_contact_list_[i] = false;
   }
 }
 

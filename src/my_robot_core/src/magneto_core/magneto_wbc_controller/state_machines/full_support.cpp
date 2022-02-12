@@ -35,6 +35,12 @@ void FullSupport::firstVisit() {
   rg_container_->goal_planner_->getGoalConfiguration(q_goal);
 
   // ---------------------------------------
+  //      CONTACT LIST
+  // --------------------------------------- 
+  ws_container_->set_contact_list(-1);
+  ws_container_->set_contact_maxfz(-1);
+
+  // ---------------------------------------
   //      TASK - SET TRAJECTORY
   // ---------------------------------------
   mc_curr_.printMotionInfo();
@@ -66,16 +72,7 @@ void FullSupport::firstVisit() {
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
   ws_container_->set_foot_magnet_off(-1);  
-  ws_container_->set_residual_magnetic_force(-1);
-  ws_container_->set_contact_magnetic_force(-1);
-  ws_container_->w_res_ = 0.0;
-
-
-  // ---------------------------------------
-  //      CONTACT LIST
-  // --------------------------------------- 
-  ws_container_->set_contact_list(-1);
-  ws_container_->set_contact_maxfz(-1);
+  ws_container_->set_magnet_distance(-1, 0.0);
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
