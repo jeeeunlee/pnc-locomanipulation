@@ -1,19 +1,29 @@
 #include <my_robot_core/magneto_core/magneto_specs/MagnetSpec.hpp>
 
-double MagnetSpec::getMagneticForce() { 
+Eigen::VectorXd MagnetSpec::getMagneticForce() { 
   // differ from onoff
   // contact distance
+  Eigen::VectorXd Fm = Eigen::VectorXd::Zero(contact_->getDim());
   if(onoff_){
-    return computeFm( fm_ );
+    Fm[contact_->getFzIndex()] = computeFm( fm_ );
   }else{
-    return computeFm( fm_*residual_ratio_ );
+    Fm[contact_->getFzIndex()] = computeFm( fm_*residual_ratio_ );
   }
+  return Fm;
 }
 
 Eigen::MatrixXd MagnetSpec::getJacobian() {
-  return robot_->getBodyNodeBodyJacobian(link_idx_);
+  contact_->updateContactSpec();
+  contact_->getContactJacobian(J_);
+  return J_;
 }
 
+double MagnetSpec::computeFm(double f0){
+  // f0 : magnetic force when contact(d=0)
+  // d : contact distance
+  // d0 : contact distance criteria
+  return computeFm(f0, contact_distance_, 0.02);
+} 
 
 double MagnetSpec::computeFm(double f0, double d, double d0){
   // f0 : magnetic force when contact(d=0)
