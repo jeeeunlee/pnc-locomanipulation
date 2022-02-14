@@ -10,7 +10,8 @@
 
 class MagnetSpec {
   public:
-    MagnetSpec(ContactSpec* _contact, double _fm, double _res_ratio){
+    MagnetSpec(ContactSpec* _contact, 
+              double _fm, double _res_ratio){
       contact_ = _contact;
       fm_=_fm;
       residual_ratio_ = _res_ratio;   
@@ -21,13 +22,12 @@ class MagnetSpec {
     ~MagnetSpec() {}
 
     int getLinkIdx() {return contact_->getLinkIdx();}
-
     void setContactDistance(double cd) { contact_distance_ = cd; }
     void setResidualRatio(double rr) { residual_ratio_ = rr; }
     void setMagneticForce(double fm) { fm_ = fm; }
     void setMagnetOnoff(bool _onoff) { onoff_ = _onoff; }
-
     bool getOnOff() {return onoff_;}    
+
     Eigen::VectorXd getMagneticForce();    
     Eigen::MatrixXd getJacobian();
 
@@ -39,7 +39,7 @@ class MagnetSpec {
     bool onoff_;
 
   private:
-    double computeFm(double f0, double d=contact_distance_, double d0=0.02);
+    double computeFm(double f0, double d, double d0);
     double computeFm(double f0);
 
     Eigen::MatrixXd J_;

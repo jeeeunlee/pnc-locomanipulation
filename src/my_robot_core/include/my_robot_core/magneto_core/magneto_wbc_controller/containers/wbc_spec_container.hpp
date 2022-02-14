@@ -11,6 +11,7 @@
 #include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/Task.hpp>
 #include <my_robot_core/magneto_core/magneto_specs/MagnetSpec.hpp>
+#include <my_robot_core/magneto_core/magneto_specs/ContactWeight.hpp>
 
 #include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/tasks/task_set.hpp>
@@ -37,8 +38,11 @@ class MagnetoWbcSpecContainer {
   void _InitializeTasks();
   void _InitializeContacts();
   void _InitializeMagnetisms();
+  void _InitializeWeightParams();
   void _DeleteTasks();
   void _DeleteContacts();
+  void _DeleteMagnetisms();
+  void _DeleteOthers();
 
  public:
   // -------------------------------------------------------
@@ -74,8 +78,10 @@ class MagnetoWbcSpecContainer {
   Eigen::VectorXd residual_force_;
 
   // -------------------------------------------------------
-  // Parameters
+  // Weight Parameters
   // -------------------------------------------------------
+  std::array<ContactWeight*, Magneto::n_leg> feet_weights_;
+  
   // Max rf_z for contactSpec in contact_list
   double max_rf_z_contact_;
   double max_rf_z_nocontact_;
@@ -84,8 +90,9 @@ class MagnetoWbcSpecContainer {
 
   // QP weights init & target
   double w_qddot_;
-  double w_xddot_contact_;
-  double w_xddot_nocontact_;
+  double w_xddot_;
+  double w_xddot_z_contact_; // =w_xddot_
+  double w_xddot_z_nocontact_;
   double w_rf_;
   double w_rf_z_contact_;
   double w_rf_z_nocontact_;
@@ -93,7 +100,6 @@ class MagnetoWbcSpecContainer {
   // 
   Eigen::VectorXd W_xddot_contact_; // contact dim for 1 foot 
   Eigen::VectorXd W_rf_contact_;
-
   Eigen::VectorXd W_xddot_nocontact_;
   Eigen::VectorXd W_rf_nocontact_;
 
@@ -109,9 +115,10 @@ class MagnetoWbcSpecContainer {
   // magnetism
   void update_magnetism_map(
               std::map<FootLinkIdx, bool> & b_map);
+  void update_magnet_forces();
   void set_foot_magnet_off(int moving_cop);
   void set_contact_magnetic_force(int moving_cop);
-  void set_residual_magnetic_force(int moving_cop, double contact_distance=0.0);
+  void set_magnet_distance(int moving_cop, double contact_distance=0.0);
   // contact
   void set_contact_list(int moving_cop);
   // contact spec

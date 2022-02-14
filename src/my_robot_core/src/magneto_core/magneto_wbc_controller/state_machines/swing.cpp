@@ -47,6 +47,11 @@ void Swing::firstVisit() {
   ctrl_end_time_ = rg_container_->foot_trajectory_manager_->getTrajEndTime();
   moving_foot_idx_ = rg_container_->foot_trajectory_manager_->getMovingFootIdx();
 
+  int foot_idx = ws_container_->footLink2FootIdx(moving_foot_idx_);
+  std::cout << " swing !! - moving_foot_idx_=" << moving_foot_idx_
+            << "foot_idx" << foot_idx << std::endl;
+
+
   // --set com traj
   rg_container_->com_trajectory_manager_
             ->setCoMTrajectory(ctrl_start_time_, ctrl_duration_);

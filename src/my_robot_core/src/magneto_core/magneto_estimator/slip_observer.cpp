@@ -172,9 +172,9 @@ void SlipObserver::weightShaping() {
             // detect slip
             slip_level = xcdot.tail(3).norm() / linear_velocity_threshold;
             if( slip_level > 1.0 ){         
-                std::cout<<" foot [" << foot_idx << "] is sliding at : ";
-                std::cout<< "vel: "<< xcdot.transpose() << std::endl;
-                std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;  
+                // std::cout<<" foot [" << foot_idx << "] is sliding at : ";
+                // std::cout<< "vel: "<< xcdot.transpose() << std::endl;
+                // std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;  
 
                 ws_container_->reshape_weight_param( slip_level,
                                         MagnetoFoot::LinkIdx[foot_idx],
