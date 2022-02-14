@@ -144,14 +144,14 @@ void SlipObserver::checkForce() {
 
     // DATA SAVING
     std::string filename;
-    Eigen::VectorXd grf_tmp;
+    Eigen::VectorXd grf_act_des;
     for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
         filename = MagnetoFoot::Names[foot_idx] + "_grf_act_des";
         dim_grf = dim_grf_map_[foot_idx];
-        grf_tmp = Eigen::VectorXd::Zero(2*dim_grf);
-        grf_tmp.head(dim_grf) = grf_act_map_[foot_idx];
-        grf_tmp.tail(dim_grf) = grf_des_map_[foot_idx];
-        my_utils::saveVector(grf_tmp, filename);
+        grf_act_des = Eigen::VectorXd::Zero(2*dim_grf);
+        grf_act_des.head(dim_grf) = grf_act_map_[foot_idx];
+        grf_act_des.tail(dim_grf) = grf_des_map_[foot_idx];
+        my_utils::saveVector(grf_act_des, filename);
     }
 }
 

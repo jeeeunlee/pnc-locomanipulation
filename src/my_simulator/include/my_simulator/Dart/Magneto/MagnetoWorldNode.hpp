@@ -31,6 +31,8 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     void ApplyMagneticForce();
     void updateContactEnvSetup();
 
+    void saveData();
+
 
     EnvInterface* interface_;
     MagnetoSensorData* sensor_data_;

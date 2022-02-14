@@ -24,7 +24,7 @@ double MagnetSpec::computeFm(double f0){
   return computeFm(f0, contact_distance_, 0.02);
 } 
 
-double MagnetSpec::computeFm(double f0, double d, double d0){
+double MagnetSpec::computeFm(double f0, double d, double d0) {
   // f0 : magnetic force when contact(d=0)
   // d : contact distance
   // d0 : contact distance criteria

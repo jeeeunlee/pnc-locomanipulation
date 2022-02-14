@@ -135,20 +135,39 @@ void MagnetoWorldNode::customPreStep() {
                           kp_ * (command_->q[i] - sensor_data_->q[i]);
     }
 
-    // my_utils::pretty_print(command_->jtrq, std::cout, "command_->jtrq");
-    // my_utils::pretty_print(command_->qdot,std::cout, "command_->qdot");
-    // my_utils::pretty_print(sensor_data_->qdot, std::cout, "sensor_data_->qdot");
-    // my_utils::pretty_print(command_->q, std::cout, "command_->q");
-    // my_utils::pretty_print(sensor_data_->q, std::cout, "sensor_data_->q");
-    
-
-
     EnforceTorqueLimit();
     updateContactEnvSetup();
     setFrictionCoeff();
     ApplyMagneticForce();
     robot_->setForces(trq_cmd_);
+
+    saveData();
     count_++;
+}
+
+void MagnetoWorldNode::saveData() {
+    // mag onoff
+    double b_mag = 0.0;
+    std::string filename;
+    int link_idx;
+    for(int i(0); i<Magneto::n_leg; ++i){
+        filename = MagnetoFoot::Names[i] + "_mag_onoff_simulation";
+        link_idx = MagnetoFoot::LinkIdx[i];
+        b_mag = (double) command_->b_magnetism_map[link_idx];
+        my_utils::saveValue(b_mag, filename);
+    }
+
+    // joint command
+    my_utils::saveVector(sensor_data_->qdot, "qdot_sen_simulation");
+    my_utils::saveVector(command_->qdot, "qdot_cmd_simulation");
+    my_utils::saveVector(sensor_data_->q, "q_sen_simulation");
+    my_utils::saveVector(command_->q, "q_cmd_simulation");
+    // my_utils::pretty_print(command_->jtrq, std::cout, "command_->jtrq");
+    // my_utils::pretty_print(command_->qdot,std::cout, "command_->qdot");
+    // my_utils::pretty_print(sensor_data_->qdot, std::cout, "sensor_data_->qdot");
+    // my_utils::pretty_print(command_->q, std::cout, "command_->q");
+    // my_utils::pretty_print(sensor_data_->q, std::cout, "sensor_data_->q"); 
+
 }
 
 void MagnetoWorldNode::EnforceTorqueLimit()  {
@@ -205,8 +224,8 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
                         * magnetic_force_map_[it.first];
             // std::cout<<"res: dist = "<<contact_distance_[it.first]<<", distance_ratio=" << distance_ratio << std::endl;
         }       
-        robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);
-    }
+        robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);        
+    }    
 }
 
 void MagnetoWorldNode::PlotResult_() {
