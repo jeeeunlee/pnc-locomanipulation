@@ -14,7 +14,7 @@ double smoothing(double ini, double fin, double rat) {
   }
 }
 
-Eigen::MatrixXd hStack(const Eigen::MatrixXd a, const Eigen::MatrixXd b) {
+Eigen::MatrixXd hStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
     if (a.rows() != b.rows()) {
         std::cout << "[hStack] Matrix Size is Wrong" << std::endl;
         exit(0);
@@ -25,7 +25,17 @@ Eigen::MatrixXd hStack(const Eigen::MatrixXd a, const Eigen::MatrixXd b) {
     return ab;
 }
 
-Eigen::MatrixXd vStack(const Eigen::MatrixXd a, const Eigen::MatrixXd b) {
+Eigen::MatrixXd hStack(const Eigen::VectorXd& a, const Eigen::VectorXd& b) {
+    if (a.size() != b.size()) {
+        std::cout << "[vStack] Vector Size is Wrong" << std::endl;
+        exit(0);
+    }
+    Eigen::MatrixXd ab = Eigen::MatrixXd::Zero(a.size(), 2);
+    ab << a, b;
+    return ab;
+}
+
+Eigen::MatrixXd vStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
     if (a.cols() != b.cols()) {
         std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
         exit(0);
@@ -35,13 +45,10 @@ Eigen::MatrixXd vStack(const Eigen::MatrixXd a, const Eigen::MatrixXd b) {
     return ab;
 }
 
-Eigen::MatrixXd vStack(const Eigen::VectorXd a, const Eigen::VectorXd b) {
-    if (a.size() != b.size()) {
-        std::cout << "[vStack] Vector Size is Wrong" << std::endl;
-        exit(0);
-    }
-    Eigen::MatrixXd ab = Eigen::MatrixXd::Zero(a.size(), 2);
-    ab << a, b;
+Eigen::VectorXd vStack(const Eigen::VectorXd& a, const Eigen::VectorXd& b) {
+    Eigen::VectorXd ab = Eigen::VectorXd::Zero(a.size()+b.size());
+    ab.head( a.size() ) = a; 
+    ab.tail( b.size() ) = b;
     return ab;
 }
 

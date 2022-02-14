@@ -135,6 +135,14 @@ void MagnetoWorldNode::customPreStep() {
                           kp_ * (command_->q[i] - sensor_data_->q[i]);
     }
 
+    // my_utils::pretty_print(command_->jtrq, std::cout, "command_->jtrq");
+    // my_utils::pretty_print(command_->qdot,std::cout, "command_->qdot");
+    // my_utils::pretty_print(sensor_data_->qdot, std::cout, "sensor_data_->qdot");
+    // my_utils::pretty_print(command_->q, std::cout, "command_->q");
+    // my_utils::pretty_print(sensor_data_->q, std::cout, "sensor_data_->q");
+    
+
+
     EnforceTorqueLimit();
     updateContactEnvSetup();
     setFrictionCoeff();

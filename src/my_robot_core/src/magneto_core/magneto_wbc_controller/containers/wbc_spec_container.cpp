@@ -1,20 +1,23 @@
+#include <my_utils/Math/MathUtilities.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 
 MagnetoWbcSpecContainer::MagnetoWbcSpecContainer(RobotSystem* _robot) {
+  my_utils::pretty_constructor(2, "Magneto Task And Force Container");
   robot_ = _robot;
   _InitializeTasks();
   _InitializeContacts();
   _InitializeMagnetisms();
+  _InitializeWeightParams();
 }
 
 MagnetoWbcSpecContainer::~MagnetoWbcSpecContainer() {
   _DeleteTasks();
   _DeleteContacts();
+  _DeleteMagnetisms();
+  _DeleteOthers();
 }
 
 void MagnetoWbcSpecContainer::_InitializeTasks() {
-  my_utils::pretty_constructor(2, "Magneto Task And Force Container");
-
   // CoM and Pelvis Tasks
   com_task_ = 
       new CoMTask(robot_);
@@ -74,6 +77,13 @@ void MagnetoWbcSpecContainer::_InitializeMagnetisms(){
   }
 }
 
+void MagnetoWbcSpecContainer::_InitializeWeightParams(){
+  for(int i(0); i<Magneto::n_leg; ++i){
+    feet_weights_[i] = new ContactWeight(feet_contacts_[i]);
+  }
+}
+
+
 void MagnetoWbcSpecContainer::_DeleteTasks() {
   task_list_.clear();
 
@@ -93,6 +103,16 @@ void MagnetoWbcSpecContainer::_DeleteContacts() {
 
   for( auto &contact : feet_contacts_)
     delete contact;
+}
+
+void MagnetoWbcSpecContainer::_DeleteMagnetisms() {
+    for( auto &mag : feet_magnets_)
+    delete mag;
+}
+
+void MagnetoWbcSpecContainer::_DeleteOthers() {
+    for( auto &we : feet_weights_)
+    delete we;
 }
 
 void MagnetoWbcSpecContainer::setContactFriction() {
@@ -115,10 +135,11 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
   try {
     
     my_utils::readParameter(node, "w_qddot", w_qddot_);
-    my_utils::readParameter(node, "w_xddot", w_xddot_contact_);
-    my_utils::readParameter(node, "w_xddot_nocontact", w_xddot_nocontact_);
+    my_utils::readParameter(node, "w_xddot", w_xddot_);    
+    my_utils::readParameter(node, "w_xddot_z_contact", w_xddot_z_contact_);
+    my_utils::readParameter(node, "w_xddot_z_nocontact", w_xddot_z_nocontact_);
     my_utils::readParameter(node, "w_rf", w_rf_);
-    my_utils::readParameter(node, "w_rf_z", w_rf_z_contact_);
+    my_utils::readParameter(node, "w_rf_z_contact", w_rf_z_contact_);
     my_utils::readParameter(node, "w_rf_z_nocontact", w_rf_z_nocontact_);
     my_utils::readParameter(node, "max_rf_z", max_rf_z_contact_);
     my_utils::readParameter(node, "max_rf_z_nocontact", max_rf_z_nocontact_);
@@ -135,9 +156,11 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
   int idx_rf_z = feet_contacts_[0]->getFzIndex();
 
   W_qddot_ = Eigen::VectorXd::Constant(Magneto::n_dof, w_qddot_);
-  W_xddot_contact_  = Eigen::VectorXd::Constant(dim_contact, w_xddot_contact_);
-  W_xddot_nocontact_ = Eigen::VectorXd::Constant(dim_contact, w_xddot_contact_);
-  W_xddot_nocontact_[idx_rf_z] = w_xddot_nocontact_;
+
+  W_xddot_contact_  = Eigen::VectorXd::Constant(dim_contact, w_xddot_);
+  W_xddot_contact_[idx_rf_z] = w_xddot_z_contact_;
+  W_xddot_nocontact_ = Eigen::VectorXd::Constant(dim_contact, w_xddot_);
+  W_xddot_nocontact_[idx_rf_z] = w_xddot_z_nocontact_;
   W_rf_contact_ = Eigen::VectorXd::Constant(dim_contact, w_rf_);
   W_rf_contact_[idx_rf_z] = w_rf_z_contact_;
   W_rf_nocontact_ = Eigen::VectorXd::Constant(dim_contact, w_rf_);
@@ -146,6 +169,11 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
   // Set Maximum Forces
   for(int i(0); i<Magneto::n_leg; ++i)
     feet_contacts_[i]->setMaxFz(max_rf_z_contact_);
+
+  for(int i(0); i<Magneto::n_leg; ++i){
+    feet_weights_[i]->setWeightRF(w_rf_, w_rf_z_contact_);
+    feet_weights_[i]->setWeightXddot(w_xddot_, w_xddot_z_contact_);
+  }    
 }
 
 // -------------------------------------------------------
@@ -154,7 +182,7 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
 void MagnetoWbcSpecContainer::set_foot_magnet_off(int moving_cop) {
   bool onoff;
   for( auto &magnet : feet_magnets_){
-    // onoff 
+    // magnet on if not swing foot 
     onoff = moving_cop != magnet->getLinkIdx();
     magnet->setMagnetOnoff(onoff);
   }
@@ -197,6 +225,8 @@ void MagnetoWbcSpecContainer::update_magnet_forces() {
       }else{
         F_magnetic_.conservativeResize(dim_Fm+dim_tmp);
         F_magnetic_.tail(dim_tmp) = feet_magnets_[i]->getMagneticForce();
+        // F_magnetic_ = my_utils::vStack(F_magnetic_, 
+        //                         feet_magnets_[i]->getMagneticForce());
       }
       dim_Fm += dim_tmp;
       
@@ -212,6 +242,10 @@ void MagnetoWbcSpecContainer::update_magnet_forces() {
         J_residual_.conservativeResize(dim_Fres+dim_tmp, J_residual_.cols());
         J_residual_.block(dim_Fres,0, dim_tmp,J_residual_.cols() ) = 
                     feet_magnets_[i]->getJacobian();
+        // F_residual_ = my_utils::vStack(F_residual_, 
+        //                         feet_magnets_[i]->getMagneticForce());
+        // J_residual_ = my_utils::vStack(J_residual_, 
+        //                         feet_magnets_[i]->getJacobian());
       }
       dim_Fres += dim_tmp;
     }
@@ -250,16 +284,6 @@ void MagnetoWbcSpecContainer::set_contact_maxfz(int moving_cop,
   }
 }
 
-// void MagnetoWbcSpecContainer::set_weight_vector(){
-// }
-
-// void MagnetoWbcSpecContainer::get_weight_vector(){
-// }
-
-void MagnetoWbcSpecContainer::update_contact_weight_param(){
-
-}
-
 void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
                                   const Eigen::VectorXd &W_contact,
                                   const Eigen::VectorXd &W_nocontact,
@@ -279,6 +303,19 @@ void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
   }
 }
 
+// void MagnetoWbcSpecContainer::update_contact_weight_param(double w_rf,
+//                                                 double w_rf_z_contact, 
+//                                                 double w_xddot, 
+//                                                 double w_xddot_z_contact) {
+//   // update W_xddot_, W_rf_
+
+//   for(int i(0); i<Magneto::n_leg; ++i) {
+//     feet_weights_[i]->setWeightRF(w_rf, w_rf_z_contact);
+//     feet_weights_[i]->setWeightXddot(w_xddot, w_xddot_z_contact);
+//   }
+
+// }
+
 void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
                                             int slip_cop, 
                                             Eigen::VectorXd &W_result) {
@@ -290,14 +327,14 @@ void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
     dim_vec = contact->getDim();  
     if( contact->getLinkIdx()==slip_cop) {      
       W_slip = W_result.segment(dim_accum,dim_vec);
-      std::cout<<"W_slip(before)="<<W_slip.transpose()<<std::endl;
+      // std::cout<<"W_slip(before)="<<W_slip.transpose()<<std::endl;
       int idx_rfz = contact->getFzIndex();
       for(int i(0); i<dim_vec; ++i){
         if(i==idx_rfz)  W_slip[i]=W_slip[i]/alpha; //decrease w_rf_z
         else  W_slip[i]=W_slip[i]*alpha; //increase w_rf = decrease rf_xy
       }
       W_result.segment(dim_accum,dim_vec) = W_slip;
-      std::cout<<"W_slip(after)="<<W_slip.transpose()<<std::endl;
+      // std::cout<<"W_slip(after)="<<W_slip.transpose()<<std::endl;
     }
     dim_accum += dim_vec;
   }

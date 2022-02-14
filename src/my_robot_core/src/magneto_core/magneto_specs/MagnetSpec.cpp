@@ -19,9 +19,8 @@ Eigen::MatrixXd MagnetSpec::getJacobian() {
 }
 
 double MagnetSpec::computeFm(double f0){
-  // f0 : magnetic force when contact(d=0)
-  // d : contact distance
-  // d0 : contact distance criteria
+  // contact_distance_ <- setContactDistance
+  // 0.02 : contact distance criteria
   return computeFm(f0, contact_distance_, 0.02);
 } 
 

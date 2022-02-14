@@ -20,10 +20,13 @@ qp_weights_params:
     # max_rf_z: 150
     w_qddot: 1000.
     w_xddot: 100.
-    w_xddot_nocontact: 0.001
+    w_xddot_z_contact: 100
+    w_xddot_z_nocontact: 0.001
+    # w_xddot_nocontact: 0.001
     w_rf: 1.0
-    w_rf_z: 0.01
+    w_rf_z_contact: 0.01    
     w_rf_z_nocontact: 0.5
+    # w_rf_z: 0.01
     max_rf_z: 250
     max_rf_z_nocontact: 1
 
