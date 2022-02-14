@@ -210,44 +210,22 @@ void MagnetoWbcSpecContainer::update_magnetism_map(
 
 void MagnetoWbcSpecContainer::update_magnet_forces() {
   // update F_residual_, J_residual_, F_magnetic_
+  F_magnetic_ = Eigen::VectorXd::Zero(0);
   J_residual_ = Eigen::MatrixXd::Zero(0,0);
-  F_residual_ = Eigen::VectorXd::Zero(0);
-  int dim_Fm(0), dim_Fres(0); 
-  int dim_tmp; 
+  F_residual_ = Eigen::VectorXd::Zero(0);  
 
-  for( int i(0); i<Magneto::n_leg; ++i) {    
-    dim_tmp = feet_contacts_[i]->getDim();
-      
-    if(b_feet_contact_list_[i]){
-      // foot in contactlist : stack F_magnetic_
-      if(dim_Fm == 0){
-        F_magnetic_ = feet_magnets_[i]->getMagneticForce();
-      }else{
-        F_magnetic_.conservativeResize(dim_Fm+dim_tmp);
-        F_magnetic_.tail(dim_tmp) = feet_magnets_[i]->getMagneticForce();
-        // F_magnetic_ = my_utils::vStack(F_magnetic_, 
-        //                         feet_magnets_[i]->getMagneticForce());
-      }
-      dim_Fm += dim_tmp;
-      
-    } else{ 
-      // foot not in contactlist : stack F_residual_, J_residual_
-      if(dim_Fres == 0){
-        F_residual_ = feet_magnets_[i]->getMagneticForce();
-        J_residual_ = feet_magnets_[i]->getJacobian();
-      }else{
-        F_residual_.conservativeResize(dim_Fres+dim_tmp);
-        F_residual_.tail(dim_tmp) = 
-                    feet_magnets_[i]->getMagneticForce();
-        J_residual_.conservativeResize(dim_Fres+dim_tmp, J_residual_.cols());
-        J_residual_.block(dim_Fres,0, dim_tmp,J_residual_.cols() ) = 
-                    feet_magnets_[i]->getJacobian();
-        // F_residual_ = my_utils::vStack(F_residual_, 
-        //                         feet_magnets_[i]->getMagneticForce());
-        // J_residual_ = my_utils::vStack(J_residual_, 
-        //                         feet_magnets_[i]->getJacobian());
-      }
-      dim_Fres += dim_tmp;
+  for( int i(0); i<Magneto::n_leg; ++i) { 
+    // foot in contactlist : stack F_magnetic_         
+    if(b_feet_contact_list_[i]) {
+      F_magnetic_ = my_utils::vStack(F_magnetic_, 
+                                feet_magnets_[i]->getMagneticForce());
+    }
+    // foot not in contactlist : stack F_residual_, J_residual_
+    else {             
+      F_residual_ = my_utils::vStack(F_residual_, 
+                              feet_magnets_[i]->getMagneticForce());
+      J_residual_ = my_utils::vStack(J_residual_, 
+                              feet_magnets_[i]->getJacobian());
     }
   }
 }
@@ -284,6 +262,8 @@ void MagnetoWbcSpecContainer::set_contact_maxfz(int moving_cop,
   }
 }
 
+////////////////////
+
 void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
                                   const Eigen::VectorXd &W_contact,
                                   const Eigen::VectorXd &W_nocontact,
@@ -303,18 +283,48 @@ void MagnetoWbcSpecContainer::compute_weight_param(int moving_cop,
   }
 }
 
-// void MagnetoWbcSpecContainer::update_contact_weight_param(double w_rf,
-//                                                 double w_rf_z_contact, 
-//                                                 double w_xddot, 
-//                                                 double w_xddot_z_contact) {
-//   // update W_xddot_, W_rf_
+void MagnetoWbcSpecContainer::set_contact_weight_param(){
+  W_xddot_ = Eigen::VectorXd::Zero(0); 
+  W_rf_ = Eigen::VectorXd::Zero(0);
+  for(int i(0); i<Magneto::n_leg; ++i) {
+    // stack weight only if feet in contact list
+    if(b_feet_contact_list_[i]) {
+      feet_weights_[i]->setWeightRF(w_rf_, w_rf_z_contact_);
+      feet_weights_[i]->setWeightXddot(w_xddot_, w_xddot_z_contact_);      
+      // stack weight
+      W_xddot_ = my_utils::vStack(W_xddot_, 
+                  feet_weights_[i]->getWxddot());
+      W_rf_ = my_utils::vStack(W_rf_, 
+                  feet_weights_[i]->getWrf());
+    }
+  }
+}
 
-//   for(int i(0); i<Magneto::n_leg; ++i) {
-//     feet_weights_[i]->setWeightRF(w_rf, w_rf_z_contact);
-//     feet_weights_[i]->setWeightXddot(w_xddot, w_xddot_z_contact);
-//   }
-
-// }
+void MagnetoWbcSpecContainer::set_contact_weight_param(int trans_cop,
+                                                      double w_rf_z_trans,
+                                                      double w_xddot_z_trans) {
+  W_xddot_ = Eigen::VectorXd::Zero(0); 
+  W_rf_ = Eigen::VectorXd::Zero(0);
+  for(int i(0); i<Magneto::n_leg; ++i) {
+    // stack weight only if feet in contact list
+    if(b_feet_contact_list_[i]) {
+      // if trans
+      if(feet_contacts_[i]->getLinkIdx()==trans_cop){
+        feet_weights_[i]->setWeightRF(w_rf_, w_rf_z_trans_);
+        feet_weights_[i]->setWeightXddot(w_xddot_, w_xddot_z_trans_); 
+      }
+      else{
+        feet_weights_[i]->setWeightRF(w_rf_, w_rf_z_contact_);
+        feet_weights_[i]->setWeightXddot(w_xddot_, w_xddot_z_contact_); 
+      }      
+      // stack weight
+      W_xddot_ = my_utils::vStack(W_xddot_, 
+                  feet_weights_[i]->getWxddot());
+      W_rf_ = my_utils::vStack(W_rf_, 
+                  feet_weights_[i]->getWrf());
+    }
+  }
+}
 
 void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
                                             int slip_cop, 
