@@ -79,7 +79,7 @@ BasicTask::BasicTask(RobotSystem* _robot, const BasicTaskType& _taskType,
         default:
             std::cout << "[BasicTask] Type is not Specified" << std::endl;
     }
-    my_utils::pretty_constructor(3, "Basic Task " + task_type_string_);
+    my_utils::pretty_constructor(3, "Basic Task " + task_type_string_ + std::to_string(link_idx_));
 }
 
 bool BasicTask::_UpdateCommand(const Eigen::VectorXd& _pos_des,

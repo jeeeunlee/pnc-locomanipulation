@@ -5,11 +5,12 @@
 // Object to manage common transectory primitives
 class SmoothTransitionManager : public TransitionManagerBase {
  public:
-  SmoothTransitionManager();
+  SmoothTransitionManager(double* _val);
   ~SmoothTransitionManager(){};
 
   double weight_init_;
   double weight_target_;
+  double* val_;
 
   // Initialize transition init to target
   void setTransition(const double& _start_time, 
@@ -17,17 +18,17 @@ class SmoothTransitionManager : public TransitionManagerBase {
                     const double& _init,
                     const double& _target);
 
-  void updateTransition(const double& current_time,
-                double &_val); 
+  void updateTransition(const double& current_time); 
 };
 
 class SmoothVectorTransitionManager : public TransitionManagerBase {
  public:
-  SmoothVectorTransitionManager();
+  SmoothVectorTransitionManager(Eigen::VectorXd* _val);
   ~SmoothVectorTransitionManager(){};
 
   Eigen::VectorXd weight_init_;
   Eigen::VectorXd weight_target_;
+  Eigen::VectorXd* val_;
 
   // Initialize transition init to target
   void setTransition(const double& _start_time, 
@@ -35,7 +36,6 @@ class SmoothVectorTransitionManager : public TransitionManagerBase {
                     const Eigen::VectorXd& _init,
                     const Eigen::VectorXd& _target);
 
-  void updateTransition(const double& current_time,
-                Eigen::VectorXd &_val);
+  void updateTransition(const double& current_time);
   
 };

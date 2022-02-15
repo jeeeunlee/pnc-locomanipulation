@@ -162,6 +162,8 @@ void MagnetoWorldNode::saveData() {
     my_utils::saveVector(command_->qdot, "qdot_cmd_simulation");
     my_utils::saveVector(sensor_data_->q, "q_sen_simulation");
     my_utils::saveVector(command_->q, "q_cmd_simulation");
+    my_utils::saveVector(command_->jtrq, "jtrq_simulation");
+    
     // my_utils::pretty_print(command_->jtrq, std::cout, "command_->jtrq");
     // my_utils::pretty_print(command_->qdot,std::cout, "command_->qdot");
     // my_utils::pretty_print(sensor_data_->qdot, std::cout, "sensor_data_->qdot");

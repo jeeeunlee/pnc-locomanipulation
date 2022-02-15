@@ -1,9 +1,10 @@
 #include <my_robot_core/reference_generator/smooth_transition_manager.hpp>
 
 
-SmoothTransitionManager::SmoothTransitionManager()
+SmoothTransitionManager::SmoothTransitionManager(double* _val)
   :TransitionManagerBase() {
   my_utils::pretty_constructor(2, "SmoothTransitionManager");
+  val_ = _val;
 }
 
 void SmoothTransitionManager::setTransition(const double& _start_time, 
@@ -17,19 +18,19 @@ void SmoothTransitionManager::setTransition(const double& _start_time,
   trans_end_time_ = trans_start_time_ + trans_duration_;
 }
 
-void SmoothTransitionManager::updateTransition(const double& current_time,
-                                                  double &_weight) {
+void SmoothTransitionManager::updateTransition(const double& current_time) {
   double ts = (current_time - trans_start_time_) / trans_duration_; // 0~1
   ts = 0. > ts ? 0. : ts;
   ts = 1. < ts ? 1. : ts;
   double alpha = 0.5 * (1 - cos(M_PI * ts)); // 0~1
-  _weight = (1.-alpha)*weight_init_ + alpha*weight_target_;
+  *val_ = (1.-alpha)*weight_init_ + alpha*weight_target_;
 }
 
 
-SmoothVectorTransitionManager::SmoothVectorTransitionManager()
+SmoothVectorTransitionManager::SmoothVectorTransitionManager(Eigen::VectorXd* _val) 
   :TransitionManagerBase() {
   my_utils::pretty_constructor(2, "SmoothVectorTransitionManager");
+  val_ = _val;
 }
 
 void SmoothVectorTransitionManager::setTransition(const double& _start_time, 
@@ -43,11 +44,10 @@ void SmoothVectorTransitionManager::setTransition(const double& _start_time,
   trans_end_time_ = trans_start_time_ + trans_duration_;
 }
 
-void SmoothVectorTransitionManager::updateTransition(const double& current_time,
-                                                  Eigen::VectorXd &_weight) {
+void SmoothVectorTransitionManager::updateTransition(const double& current_time) {
   double ts = (current_time - trans_start_time_) / trans_duration_; // 0~1
   ts = 0. > ts ? 0. : ts;
   ts = 1. < ts ? 1. : ts;
   double alpha = 0.5 * (1 - cos(M_PI * ts)); // 0~1
-  _weight = (1.-alpha)*weight_init_ + alpha*weight_target_;
+  *val_ = (1.-alpha)*weight_init_ + alpha*weight_target_;
 }

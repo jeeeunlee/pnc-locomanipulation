@@ -97,6 +97,9 @@ class MagnetoWbcSpecContainer {
   double w_rf_z_contact_;
   double w_rf_z_nocontact_;
 
+  double w_xddot_z_trans_;
+  double w_rf_z_trans_;
+
   // 
   Eigen::VectorXd W_xddot_contact_; // contact dim for 1 foot 
   Eigen::VectorXd W_rf_contact_;
@@ -122,14 +125,9 @@ class MagnetoWbcSpecContainer {
   // contact
   void set_contact_list(int moving_cop);
   // contact spec
-  void set_contact_maxfz(int moving_cop);
-  void set_contact_maxfz(int moving_cop,
-                        double max_rfz_cntct,
-                        double max_rfz_nocntct);
-  void compute_weight_param(int moving_cop,
-                            const Eigen::VectorXd &W_contact,
-                            const Eigen::VectorXd &W_nocontact,
-                            Eigen::VectorXd &W_result);
+  void set_contact_maxfz(int moving_cop=-1);
+
+  void set_contact_weight_param(int trans_cop=-1);
   void reshape_weight_param(double alpha,
                             int slip_cop, 
                             Eigen::VectorXd &W_result);

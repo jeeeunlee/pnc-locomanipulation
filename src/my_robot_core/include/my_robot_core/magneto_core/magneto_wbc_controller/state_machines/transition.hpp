@@ -10,8 +10,6 @@ class MagnetoReferenceGeneratorContainer;
 class Transition : public StateMachine {
  public:
   Transition(const StateIdentifier state_identifier_in,
-              RobotSystem* _robot,
-              MagnetoWbcSpecContainer* ws_container, 
               MagnetoReferenceGeneratorContainer* rg_container, 
               bool contact_start);
   ~Transition();

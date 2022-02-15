@@ -10,7 +10,7 @@ MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _rob
 
   // Initialize Main Controller
   ws_container_ = new MagnetoWbcSpecContainer(robot_);
-  rg_container_ = new MagnetoReferenceGeneratorContainer(robot_);
+  rg_container_ = new MagnetoReferenceGeneratorContainer(ws_container_, robot_);
 
   _ReadParameters();
   
@@ -28,13 +28,13 @@ MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _rob
 
   // Initialize states: add all states to the state machine map
   state_machines_[MAGNETO_STATES::BALANCE] =
-      new FullSupport(MAGNETO_STATES::BALANCE, robot_, ws_container_, rg_container_);
+      new FullSupport(MAGNETO_STATES::BALANCE, rg_container_);
   state_machines_[MAGNETO_STATES::SWING_START_TRANS] =
-      new Transition(MAGNETO_STATES::SWING_START_TRANS, robot_, ws_container_, rg_container_, 0);
+      new Transition(MAGNETO_STATES::SWING_START_TRANS, rg_container_, 0);
   state_machines_[MAGNETO_STATES::SWING] =
-      new Swing(MAGNETO_STATES::SWING, robot_, ws_container_, rg_container_);
+      new Swing(MAGNETO_STATES::SWING, rg_container_);
   state_machines_[MAGNETO_STATES::SWING_END_TRANS] =
-      new Transition(MAGNETO_STATES::SWING_END_TRANS, robot_, ws_container_, rg_container_, 1);
+      new Transition(MAGNETO_STATES::SWING_END_TRANS, rg_container_, 1);
   // Set Starting State
   state_ = MAGNETO_STATES::BALANCE;
   prev_state_ = state_;

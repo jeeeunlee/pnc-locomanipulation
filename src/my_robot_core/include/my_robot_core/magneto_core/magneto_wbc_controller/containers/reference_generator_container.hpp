@@ -4,15 +4,18 @@
 #include <my_robot_core/reference_generator/reference_generator_set.hpp>
 
 class RobotSystem;
+class MagnetoWbcSpecContainer;
 class MotionCommand;
+
 
 // Object which publicly contains all the tasks, contacts and reaction forces
 class MagnetoReferenceGeneratorContainer {
  public:
-  MagnetoReferenceGeneratorContainer(RobotSystem* _robot);
+  MagnetoReferenceGeneratorContainer(MagnetoWbcSpecContainer* _ws_container, RobotSystem* _robot);
   ~MagnetoReferenceGeneratorContainer();
 
   RobotSystem* robot_;
+  MagnetoWbcSpecContainer* ws_container_;
 
   // Trajectory Managers
   FootPosTrajectoryManager* foot_trajectory_manager_;
@@ -22,10 +25,8 @@ class MagnetoReferenceGeneratorContainer {
 
   // QP weight / max force transition manager
   SmoothTransitionManager* max_normal_force_manager_;
-  SmoothVectorTransitionManager* W_qddot_manager_;
-  SmoothVectorTransitionManager* W_xddot_manager_;
-  SmoothVectorTransitionManager* W_rf_manager_;
-  SmoothTransitionManager* weight_residualforce_manager_;
+  SmoothTransitionManager* W_xddot_manager_;
+  SmoothTransitionManager* W_rf_manager_;
 
   // Planner
   MagnetoGoalPlanner* goal_planner_;

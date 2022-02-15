@@ -10,8 +10,6 @@ class MagnetoReferenceGeneratorContainer;
 class Swing : public StateMachine {
  public:
   Swing(const StateIdentifier state_identifier_in,
-              RobotSystem* _robot,
-              MagnetoWbcSpecContainer* ws_container, 
               MagnetoReferenceGeneratorContainer* rg_container);
   ~Swing();
 
