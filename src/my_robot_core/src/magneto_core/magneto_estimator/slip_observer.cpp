@@ -164,22 +164,22 @@ void SlipObserver::weightShaping() {
     // increase the normal force & decrease the tangential force
     // should decrease w_rf_z, increase w_rf
     
-    double linear_velocity_threshold = 0.05;
+    double linear_velocity_threshold = 0.02;
     double slip_level = 1.0;
     
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
         if( !b_swing_phase_ && foot_idx!=swing_foot_link_idx_ ) { 
             // detect slip
             slip_level = xcdot.tail(3).norm() / linear_velocity_threshold;
-            if( slip_level > 1.0 ){         
+            if( slip_level > 1.0 ) {
                 // std::cout<<" foot [" << foot_idx << "] is sliding at : ";
                 // std::cout<< "vel: "<< xcdot.transpose() << std::endl;
-                // std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;  
-
-                ws_container_->reshape_weight_param( slip_level,
-                                        MagnetoFoot::LinkIdx[foot_idx],
-                                        ws_container_->W_rf_ );
-
+                // std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;
+                // ws_container_->reshape_weight_param( slip_level,
+                //                         MagnetoFoot::LinkIdx[foot_idx],
+                //                         ws_container_->W_rf_ );
+                ws_container_->reshape_weight_param( 
+                    MagnetoFoot::LinkIdx[foot_idx], slip_level );
             }
         }
     }

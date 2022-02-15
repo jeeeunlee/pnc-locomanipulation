@@ -97,6 +97,8 @@ void FullSupport::_taskUpdate() {
 
 void FullSupport::_weightUpdate() {
   // no change in weight
+  ws_container_->set_contact_weight_param();
+  ws_container_->set_contact_maxfz();
 }
 
 void FullSupport::oneStep() {

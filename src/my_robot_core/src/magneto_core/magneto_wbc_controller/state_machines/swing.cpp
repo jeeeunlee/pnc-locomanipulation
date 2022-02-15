@@ -113,6 +113,8 @@ void Swing::_taskUpdate() {
 
 void Swing::_weightUpdate() {
   // no change in weight
+  ws_container_->set_contact_weight_param();
+  ws_container_->set_contact_maxfz();
 }
 
 void Swing::_ResidualMagnetismUpdate() {

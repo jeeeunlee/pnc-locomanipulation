@@ -128,9 +128,7 @@ class MagnetoWbcSpecContainer {
   void set_contact_maxfz(int moving_cop=-1);
 
   void set_contact_weight_param(int trans_cop=-1);
-  void reshape_weight_param(double alpha,
-                            int slip_cop, 
-                            Eigen::VectorXd &W_result);
+  void reshape_weight_param(int slip_cop, double alpha);
   // task
   void clear_task_list();
   void add_task_list(Task* task);

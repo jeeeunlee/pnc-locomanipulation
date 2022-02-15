@@ -1,12 +1,12 @@
 contact_params:
     # AL,AR,BL,BR
     friction: [0.5, 0.5, 0.5, 0.5]
-    # friction: [0.5, 0.5, 0.3, 0.5] 
+    #friction: [0.5, 0.3, 0.5, 0.5] 
 
 magnetism_params:
     # AL,AR,BL,BR
     magnetic_force: [70., 70., 70., 70.] #[N]
-    # magnetic_force: [70., 70., 30., 70.] #[N]
+    #magnetic_force: [70., 30., 70., 70.] #[N]
     residual_ratio: [5., 5., 5., 5.] #5 #[%]
 
 state_swing_params:
@@ -18,7 +18,7 @@ transition_params:
 
 qp_weights_params:
     # max_rf_z: 150
-    w_qddot: 1000.
+    w_qddot: 10 #1000
     w_xddot: 100.
     w_xddot_z_contact: 100
     w_xddot_z_nocontact: 0.001
