@@ -3,14 +3,12 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/full_support.hpp>
 
 FullSupport::FullSupport(const StateIdentifier state_identifier_in,
-    RobotSystem* _robot,
-    MagnetoWbcSpecContainer* ws_container, 
     MagnetoReferenceGeneratorContainer* rg_container) 
-    : StateMachine(state_identifier_in, _robot) {
+    : StateMachine(state_identifier_in, rg_container->robot_) {
   my_utils::pretty_constructor(2, "StateMachine: Full Support (Balance)");
 
   // Set Pointer to wbc spec / reference generator container
-  ws_container_ = ws_container;
+  ws_container_ = rg_container->ws_container_;
   rg_container_ = rg_container;
 
   // Get State Provider
@@ -38,7 +36,7 @@ void FullSupport::firstVisit() {
   //      CONTACT LIST
   // --------------------------------------- 
   ws_container_->set_contact_list(-1);
-  ws_container_->set_contact_maxfz(-1);
+  ws_container_->set_contact_maxfz();
 
   // ---------------------------------------
   //      TASK - SET TRAJECTORY
@@ -79,14 +77,7 @@ void FullSupport::firstVisit() {
   // ---------------------------------------  
   
   // ws_container_->W_qddot_ : will be always same  
-  ws_container_->compute_weight_param(-1, 
-                      ws_container_->W_xddot_contact_,
-                      ws_container_->W_xddot_nocontact_,
-                      ws_container_->W_xddot_);
-  ws_container_->compute_weight_param(-1, 
-                      ws_container_->W_rf_contact_,
-                      ws_container_->W_rf_nocontact_,
-                      ws_container_->W_rf_);
+  ws_container_->set_contact_weight_param();
 
 }
 

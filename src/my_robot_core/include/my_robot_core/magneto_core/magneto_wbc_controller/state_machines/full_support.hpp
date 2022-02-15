@@ -10,8 +10,6 @@ class MagnetoReferenceGeneratorContainer;
 class FullSupport : public StateMachine {
  public:
   FullSupport(const StateIdentifier state_identifier_in,
-              RobotSystem* _robot,
-              MagnetoWbcSpecContainer* ws_container, 
               MagnetoReferenceGeneratorContainer* rg_container);
   ~FullSupport();
 

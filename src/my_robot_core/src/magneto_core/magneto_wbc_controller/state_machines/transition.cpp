@@ -2,16 +2,14 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/transition.hpp>
 
-Transition::Transition(const StateIdentifier state_identifier_in,
-    RobotSystem* _robot,
-    MagnetoWbcSpecContainer* ws_container, 
+Transition::Transition(const StateIdentifier state_identifier_in, 
     MagnetoReferenceGeneratorContainer* rg_container,
-    bool contact_start)
-    : StateMachine(state_identifier_in, _robot), b_contact_start_(contact_start) {
+    bool contact_start): b_contact_start_(contact_start),
+    StateMachine(state_identifier_in, rg_container->robot_) {
   my_utils::pretty_constructor(2, "StateMachine: Transition");
 
   // Set Pointer to Control Architecture
-  ws_container_ = ws_container;
+  ws_container_ = rg_container->ws_container_;
   rg_container_ = rg_container;
 
   // Get State Provider
@@ -32,7 +30,6 @@ void Transition::firstVisit() {
   //      CONTACT LIST
   // --------------------------------------- 
   ws_container_->set_contact_list(-1);  // contain full contact
-  // ws_container_->set_contact_maxfz(-1);
 
   // ---------------------------------------
   //      TASK - SET TRAJECTORY
@@ -78,56 +75,35 @@ void Transition::firstVisit() {
   //      QP PARAM - SET WEIGHT
   // --------------------------------------- 
   // ws_container_->W_qddot_ : will be always same 
-  Eigen::VectorXd W_xddot_swing_, W_rf_swing_; 
-  Eigen::VectorXd W_xddot_full_contact, W_rf_full_contact; 
-  ws_container_->compute_weight_param(moving_foot_idx_, 
-                                ws_container_->W_xddot_contact_,
-                                ws_container_->W_xddot_nocontact_,
-                                W_xddot_swing_);
-  ws_container_->compute_weight_param(-1, 
-                                ws_container_->W_xddot_contact_,
-                                ws_container_->W_xddot_nocontact_,
-                                W_xddot_full_contact);                                  
-  ws_container_->compute_weight_param(moving_foot_idx_, 
-                                ws_container_->W_rf_contact_,
-                                ws_container_->W_rf_nocontact_,
-                                W_rf_swing_);                                
-  ws_container_->compute_weight_param(-1, 
-                                ws_container_->W_rf_contact_,
-                                ws_container_->W_rf_nocontact_,
-                                W_rf_full_contact); 
-
-  // rg_container_->W_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
+ 
   if(b_contact_start_) {
     // moving foot : nocontact -> contact
-    rg_container_->max_normal_force_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_,
-                                  ws_container_->max_rf_z_nocontact_,
-                                  ws_container_->max_rf_z_contact_);
-    rg_container_->W_xddot_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_, 
-                                      W_xddot_swing_, W_xddot_full_contact);
-    rg_container_->W_rf_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_, 
-                                      W_rf_swing_, W_rf_full_contact);
-    rg_container_->weight_residualforce_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_, 
-                                      1.0, 0.0);
+    rg_container_->max_normal_force_manager_->setTransition(ctrl_start_time_,
+                                      ctrl_duration_,
+                                      ws_container_->max_rf_z_nocontact_,
+                                      ws_container_->max_rf_z_contact_);
+    rg_container_->W_xddot_manager_->setTransition(ctrl_start_time_, 
+                                      ctrl_duration_, 
+                                      ws_container_->w_xddot_z_nocontact_, 
+                                      ws_container_->w_xddot_z_contact_);
+    rg_container_->W_rf_manager_->setTransition(ctrl_start_time_, 
+                                      ctrl_duration_, 
+                                      ws_container_->w_rf_z_nocontact_, 
+                                      ws_container_->w_rf_z_contact_);
   } else {
     // moving foot : contact -> nocontact
-    rg_container_->max_normal_force_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_,
-                                  ws_container_->max_rf_z_contact_, 
-                                  ws_container_->max_rf_z_nocontact_);
-    rg_container_->W_xddot_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_, 
-                                      W_xddot_full_contact, W_xddot_swing_);
-    rg_container_->W_rf_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_, 
-                                      W_rf_full_contact, W_rf_swing_);
-    rg_container_->weight_residualforce_manager_
-              ->setTransition(ctrl_start_time_, ctrl_duration_, 
-                                      0.0, 1.0);
+    rg_container_->max_normal_force_manager_ ->setTransition(ctrl_start_time_,
+                                      ctrl_duration_,
+                                      ws_container_->max_rf_z_contact_, 
+                                      ws_container_->max_rf_z_nocontact_);
+    rg_container_->W_xddot_manager_->setTransition(ctrl_start_time_, 
+                                      ctrl_duration_, 
+                                      ws_container_->w_xddot_z_contact_, 
+                                      ws_container_->w_xddot_z_nocontact_);
+    rg_container_->W_rf_manager_->setTransition(ctrl_start_time_, 
+                                      ctrl_duration_, 
+                                      ws_container_->w_rf_z_contact_, 
+                                      ws_container_->w_rf_z_nocontact_);
   }
 }
 
@@ -145,22 +121,17 @@ void Transition::_taskUpdate() {
 
 void Transition::_weightUpdate() {
   // change in weight
-  // rg_container_->W_qddot_manager_
-  //           ->updateTransition(sp_->curr_time, 
-  //                           ws_container_->W_qddot_);
   rg_container_->W_xddot_manager_
-            ->updateTransition(sp_->curr_time, 
-                            ws_container_->W_xddot_);
+            ->updateTransition(sp_->curr_time);
   rg_container_->W_rf_manager_
-            ->updateTransition(sp_->curr_time, 
-                            ws_container_->W_rf_);
+            ->updateTransition(sp_->curr_time);
+
   // change in normal force in contactSpec
   rg_container_->max_normal_force_manager_
-            ->updateTransition(sp_->curr_time, 
-                                  ws_container_->max_rf_z_trans_);
-  ws_container_->set_contact_maxfz(moving_foot_idx_, 
-                              ws_container_->max_rf_z_contact_,
-                              ws_container_->max_rf_z_trans_);
+            ->updateTransition(sp_->curr_time);
+
+  ws_container_->set_contact_weight_param(moving_foot_idx_);
+  ws_container_->set_contact_maxfz(moving_foot_idx_);
 }
 
 

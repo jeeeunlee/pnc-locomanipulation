@@ -3,14 +3,12 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/swing.hpp>
 
 Swing::Swing(const StateIdentifier state_identifier_in,
-    RobotSystem* _robot,
-    MagnetoWbcSpecContainer* ws_container, 
     MagnetoReferenceGeneratorContainer* rg_container)
-    : StateMachine(state_identifier_in, _robot) {
+    : StateMachine(state_identifier_in, rg_container->robot_) {
   my_utils::pretty_constructor(2, "StateMachine: SWING");
 
   // Set Pointer to Control Architecture
-  ws_container_ = ws_container;
+  ws_container_ = rg_container->ws_container_;
   rg_container_ = rg_container;
 
   // Get State Provider
@@ -24,12 +22,6 @@ void Swing::firstVisit() {
   std::cout << "[SWING] Start" << std::endl;
 
   ctrl_start_time_ = sp_->curr_time;
-
-  // ---------------------------------------
-  //      CONTACT LIST
-  // --------------------------------------- 
-  ws_container_->set_contact_list(moving_foot_idx_);
-  ws_container_->set_contact_maxfz(moving_foot_idx_);
 
   // ---------------------------------------
   //      TASK - SET TRAJECTORY
@@ -80,6 +72,12 @@ void Swing::firstVisit() {
         ws_container_->joint_task_);
 
   // ---------------------------------------
+  //      CONTACT LIST
+  // --------------------------------------- 
+  ws_container_->set_contact_list(moving_foot_idx_);
+  ws_container_->set_contact_maxfz();
+
+  // ---------------------------------------
   //      QP PARAM - SET MAGNETISM
   // ---------------------------------------
   // todo later : implement it with magnetic manager
@@ -90,23 +88,8 @@ void Swing::firstVisit() {
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
   // ---------------------------------------  
-  // rg_container_->max_normal_force_manager_->
-  // rg_container_->W_qddot_manager_->setTransition(ctrl_start_time_,ctrl_duration_, )
-  // rg_container_->W_xddot_manager_
-  //           ->setTransition(ctrl_start_time_,ctrl_duration_, )
-  // rg_container_->W_rf_manager_
-  //           ->setTransition(ctrl_start_time_,ctrl_duration_, )
+  ws_container_->set_contact_weight_param();
 
-  
-  // ws_container_->W_qddot_ : will be always same  
-  ws_container_->compute_weight_param(moving_foot_idx_, 
-                                  ws_container_->W_xddot_contact_,
-                                  ws_container_->W_xddot_nocontact_,
-                                  ws_container_->W_xddot_);
-  ws_container_->compute_weight_param(moving_foot_idx_, 
-                                  ws_container_->W_rf_contact_,
-                                  ws_container_->W_rf_nocontact_,
-                                  ws_container_->W_rf_);
 }
 
 void Swing::_taskUpdate() {
