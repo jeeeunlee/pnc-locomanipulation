@@ -206,5 +206,22 @@ void MagnetoMpcControlArchitecture::_InitializeParameters() {
 
 void MagnetoMpcControlArchitecture::saveData() {
   // 
-  //  sp_->
+  //  fsm state
+  double state_val = (double) state_;
+  my_utils::saveValue( state_val, "fsm_state" );
+
+
+  // weights
+  std::string filename;
+  Eigen::VectorXd W_tmp;
+  for(int i(0); i<Magneto::n_leg; ++i) {
+    filename = MagnetoFoot::Names[i] + "_Wrf";    
+    W_tmp = ws_container_->feet_weights_[i]->getWrf();
+    my_utils::saveVector(W_tmp, filename);
+
+    // ws_container_->feet_weights_[i]->getWxddot()
+
+  }
+
+
 }

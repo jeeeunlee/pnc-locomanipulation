@@ -235,8 +235,6 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
   contact_list_.clear();
   for(int i(0); i<Magneto::n_leg; i++)
   {
-    std::cout<<"moving_cop = "<<moving_cop;
-    std::cout<<" and MagnetoFoot::LinkIdx[i] = " << MagnetoFoot::LinkIdx[i]<<std::endl;
     if( MagnetoFoot::LinkIdx[i] != moving_cop ) {
       contact_list_.push_back(feet_contacts_[i]);
       b_feet_contact_list_[i] = true;
@@ -244,7 +242,6 @@ void MagnetoWbcSpecContainer::set_contact_list(int moving_cop) {
     else
       b_feet_contact_list_[i] = false;
   }
-  std::cout<<"contact_list_ is set : "<< contact_list_.size() <<std::endl;
 }
 
 void MagnetoWbcSpecContainer::set_contact_maxfz(int moving_cop) {
@@ -283,27 +280,27 @@ void MagnetoWbcSpecContainer::set_contact_weight_param(int trans_cop) {
   }
 }
 
-void MagnetoWbcSpecContainer::reshape_weight_param(double alpha,
-                                            int slip_cop, 
-                                            Eigen::VectorXd &W_result) {
-  // assume coefficient alpha > 1.0
-  int dim_vec, dim_accum(0);
-  Eigen::VectorXd W_slip;
 
-  for(auto& contact : contact_list_) {
-    dim_vec = contact->getDim();  
-    if( contact->getLinkIdx()==slip_cop) {      
-      W_slip = W_result.segment(dim_accum,dim_vec);
-      // std::cout<<"W_slip(before)="<<W_slip.transpose()<<std::endl;
-      int idx_rfz = contact->getFzIndex();
-      for(int i(0); i<dim_vec; ++i){
-        if(i==idx_rfz)  W_slip[i]=W_slip[i]/alpha; //decrease w_rf_z
-        else  W_slip[i]=W_slip[i]*alpha; //increase w_rf = decrease rf_xy
+void MagnetoWbcSpecContainer::reshape_weight_param(int slip_cop,
+                                                    double alpha) {
+  W_xddot_ = Eigen::VectorXd::Zero(0); 
+  W_rf_ = Eigen::VectorXd::Zero(0);
+  for(int i(0); i<Magneto::n_leg; ++i) {
+    if(b_feet_contact_list_[i]) {
+      // if trans
+      if(feet_contacts_[i]->getLinkIdx()==slip_cop){
+        feet_weights_[i]->reshapeWeightRF(alpha);  
+        feet_weights_[i]->reshapeWeightXddot(alpha);         
+      }else{
+        feet_weights_[i]->reshapeWeightRF(1/alpha);  // penalty other feet
+        feet_weights_[i]->reshapeWeightXddot(1/alpha); 
       }
-      W_result.segment(dim_accum,dim_vec) = W_slip;
-      // std::cout<<"W_slip(after)="<<W_slip.transpose()<<std::endl;
+      // stack weight
+      W_xddot_ = my_utils::vStack(W_xddot_, 
+                  feet_weights_[i]->getWxddot());
+      W_rf_ = my_utils::vStack(W_rf_, 
+                  feet_weights_[i]->getWrf());
     }
-    dim_accum += dim_vec;
   }
 }
 
@@ -316,14 +313,14 @@ void MagnetoWbcSpecContainer::add_task_list(Task* task) {
 
 Task* MagnetoWbcSpecContainer::get_foot_pos_task(int moving_cop) {
   int foot_idx = footLink2FootIdx(moving_cop);
-  if(foot_idx>0) return feet_pos_tasks_[foot_idx];
-  else return NULL;  
+  if(foot_idx<0) return NULL;  
+  else return feet_pos_tasks_[foot_idx];    
 }
 
 Task* MagnetoWbcSpecContainer::get_foot_ori_task(int moving_cop) {
   int foot_idx = footLink2FootIdx(moving_cop);
-  if(foot_idx>0) return feet_ori_tasks_[foot_idx];
-  else return NULL;  
+  if(foot_idx<0) return NULL;  
+  else return feet_ori_tasks_[foot_idx]; 
 }
 
 int MagnetoWbcSpecContainer::footLink2FootIdx(int moving_cop){

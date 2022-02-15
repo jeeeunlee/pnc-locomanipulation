@@ -121,14 +121,10 @@ void Transition::_taskUpdate() {
 
 void Transition::_weightUpdate() {
   // change in weight
-  rg_container_->W_xddot_manager_
-            ->updateTransition(sp_->curr_time);
-  rg_container_->W_rf_manager_
-            ->updateTransition(sp_->curr_time);
-
+  rg_container_->W_xddot_manager_->updateTransition(sp_->curr_time);
+  rg_container_->W_rf_manager_->updateTransition(sp_->curr_time);
   // change in normal force in contactSpec
-  rg_container_->max_normal_force_manager_
-            ->updateTransition(sp_->curr_time);
+  rg_container_->max_normal_force_manager_->updateTransition(sp_->curr_time);
 
   ws_container_->set_contact_weight_param(moving_foot_idx_);
   ws_container_->set_contact_maxfz(moving_foot_idx_);
