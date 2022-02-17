@@ -8,9 +8,10 @@
 // residual magnetic force acting on swing foot 
 // is considered in the dynamics equation
 
+// MC-WBC (Magnetic Contact - Whole Body Control)
 // force variable to be minimized: Fx=Fc-Fm (friction cone force)
 
-class WBRMRC_ExtraData{
+class MCWBC_ExtraData{
     public:
         // Output
         Eigen::VectorXd opt_result_;
@@ -26,14 +27,14 @@ class WBRMRC_ExtraData{
         Eigen::VectorXd F_residual_;
         Eigen::MatrixXd J_residual_;
 
-        WBRMRC_ExtraData(){}
-        ~WBRMRC_ExtraData(){}
+        MCWBC_ExtraData(){}
+        ~MCWBC_ExtraData(){}
 };
 
-class WBRMRC: public WBC{
+class MCWBC: public WBC{
     public:
-        WBRMRC(const std::vector<bool> & act_list, const Eigen::MatrixXd* Jci = NULL);
-        virtual ~WBRMRC(){}
+        MCWBC(const std::vector<bool> & act_list);
+        virtual ~MCWBC(){}
 
         virtual void updateSetting(const Eigen::MatrixXd & A,
                 const Eigen::MatrixXd & Ainv,
@@ -43,6 +44,7 @@ class WBRMRC: public WBC{
 
         void makeTorqueGivenRef(const Eigen::VectorXd & des_jacc_cmd,
                 const std::vector<ContactSpec*> & contact_list,
+                const std::vector<MagnetSpec*> &magnet_list,
                 Eigen::VectorXd & cmd,
                 void* extra_input = NULL);
 
@@ -74,7 +76,7 @@ class WBRMRC: public WBC{
         int dim_eq_cstr_; // equality constraints
         int dim_ieq_cstr_; // inequality constraints
         int dim_first_task_; // first task dimension
-        WBRMRC_ExtraData* data_;
+        MCWBC_ExtraData* data_;
 
         Eigen::VectorXd tau_min_;
         Eigen::VectorXd tau_max_;
@@ -119,6 +121,6 @@ class WBRMRC: public WBC{
 
         Eigen::MatrixXd Sf_; //floating base
         void _PrintDebug(double i) {
-            //printf("[WBRMRC] %f \n", i);
+            //printf("[MCWBC] %f \n", i);
         }
 };

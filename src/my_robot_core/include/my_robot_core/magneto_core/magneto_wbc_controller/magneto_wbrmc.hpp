@@ -6,7 +6,7 @@
 // #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 // #include <my_wbc/JointIntegrator.hpp>
 // #include <my_wbc/WBLC/KinWBC.hpp>
-#include <my_wbc/WBMC/WBRMRC.hpp>
+#include <my_wbc/WBMC/MCWBC.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbmc.hpp>
 
 class MagnetoWBRMC: public MagnetoWBMC {
@@ -30,8 +30,8 @@ class MagnetoWBRMC: public MagnetoWBMC {
   // WBRMC* wbrmc_;
   // WBRMC_ExtraData* wbrmc_param_;
 
-  WBRMRC* wbrmc_;
-  WBRMRC_ExtraData* wbrmc_param_;
+  MCWBC* wbrmc_;
+  MCWBC_ExtraData* wbrmc_param_;
   
   
 };

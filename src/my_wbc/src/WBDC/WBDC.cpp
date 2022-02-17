@@ -52,12 +52,6 @@ void WBDC::makeTorque(const std::vector<Task*> & task_list,
     // Internal Constraint Check
     Nci_ = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_);
 
-    if(b_internal_constraint_) {
-        Eigen::MatrixXd JciBar;
-        _WeightedInverse(Jci_, Ainv_, JciBar);
-        Nci_ -= JciBar * Jci_;
-    }
-
     _PrintDebug(2);
     // Contact Setting
     _ContactBuilding(contact_list);
