@@ -25,10 +25,16 @@ class MagnetoWbcSpecContainer {
  public:
   MagnetoWbcSpecContainer(RobotSystem* _robot);
   ~MagnetoWbcSpecContainer();
-  void paramInitialization(const YAML::Node& node);
+  void weightParamInitialization(const YAML::Node& node);
+  void contactParamInitialization(const YAML::Node& node);
+  void magneticParamInitialization(const YAML::Node& node);
   void setContactFriction();
   void setContactFriction(const Eigen::VectorXd& _mu_vec);
   void setContactFriction(int foot_idx, double mu);
+  void setMagneticForce();
+  void setMagneticForce(const Eigen::VectorXd& magnetic_force,
+                        const Eigen::VectorXd& residual_ratio);
+  void setMagneticForce(int foot_idx, double fm, double rr);
   
   RobotSystem* robot_;
   std::vector<Task*> task_list_;
@@ -116,8 +122,7 @@ class MagnetoWbcSpecContainer {
   //    set functions
   // -------------------------------------------------------
   // magnetism
-  void update_magnetism_map(
-              std::map<FootLinkIdx, bool> & b_map);
+  std::map<FootLinkIdx, bool> get_magnetism_map();
   void update_magnet_forces();
   void set_foot_magnet_off(int moving_cop);
   void set_contact_magnetic_force(int moving_cop);

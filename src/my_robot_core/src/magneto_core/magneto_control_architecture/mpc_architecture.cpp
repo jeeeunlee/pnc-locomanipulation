@@ -15,17 +15,10 @@ MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot
   rg_container_ = new MagnetoReferenceGeneratorContainer(ws_container_, robot_);
 
   _ReadParameters();
-  
-  switch(controller_type_) {
-    case(CONTROLLER_TYPES::WBMC):
-      wbc_controller = new MagnetoWBMC(ws_container_, robot_);
-      break;
-    case(CONTROLLER_TYPES::WBRMC):
-    default:
-      wbc_controller = new MagnetoWBRMC(ws_container_, robot_);
-      break;
-  }
 
+  // wbc_controller = new MagnetoWBMC(ws_container_, robot_);
+  wbc_controller = new MagnetoMCWBC(ws_container_, robot_);
+  
   slip_ob_ = new SlipObserver(ws_container_, robot_);
   slip_ob_data_ = new SlipObserverData();
 
@@ -92,7 +85,7 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   }
   // Update State Machine
   state_machines_[state_]->oneStep();
-  slip_ob_->weightShaping();
+  // slip_ob_->weightShaping();
 
   // Get Wholebody control commands
   if (state_ == MAGNETO_STATES::INITIALIZE) {
@@ -120,12 +113,8 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
 };
 
 void MagnetoMpcControlArchitecture::addState(void* _user_state_command) {
-  std::cout<<" MagnetoMpcControlArchitecture::addState" << std::endl;
   MagnetoUserStateCommand* state_pair = ((MagnetoUserStateCommand*)_user_state_command); 
-  std::cout<<" MagnetoMpcControlArchitecture::state_pair done" << std::endl;
-  states_sequence_->addState( state_pair->state_id, 
-                            state_pair->user_cmd);
-  std::cout<<" MagnetoMpcControlArchitecture::states_sequence_->addState done" << std::endl;
+  states_sequence_->addState( state_pair->state_id, state_pair->user_cmd);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -168,14 +157,6 @@ void MagnetoMpcControlArchitecture::_ReadParameters() {
   try {
     my_utils::readParameter(cfg_["controller_params"], 
                           "wbc_type", controller_type_);  
-    // magnetism
-    my_utils::readParameter(cfg_["magnetism_params"], 
-                          "magnetic_force", ws_container_->magnetic_force_);  
-    my_utils::readParameter(cfg_["magnetism_params"], 
-                          "residual_ratio", ws_container_->residual_ratio_);  
-
-    my_utils::readParameter(cfg_["contact_params"], 
-                          "friction", ws_container_->friction_coeff_);  
 
   } catch (std::runtime_error& e) {
     std::cout << "Error reading parameter [" << e.what() << "] at file: ["
@@ -183,13 +164,13 @@ void MagnetoMpcControlArchitecture::_ReadParameters() {
               << std::endl;
     exit(0);
   }
-
-  ws_container_->setContactFriction();
 }
 
 void MagnetoMpcControlArchitecture::_InitializeParameters() {
   // weigt parameter initialization
-  ws_container_->paramInitialization(cfg_["qp_weights_params"]);
+  ws_container_->weightParamInitialization(cfg_["qp_weights_params"]);
+  ws_container_->contactParamInitialization(cfg_["contact_params"]);
+  ws_container_->magneticParamInitialization(cfg_["magnetism_params"]);
 
   // Controller initialization
   wbc_controller->ctrlInitialization(cfg_["controller_params"]);

@@ -18,7 +18,7 @@ transition_params:
 
 qp_weights_params:
     # max_rf_z: 150
-    w_qddot: 10 #1000
+    w_qddot: 1000. #1000
     w_xddot: 100.
     w_xddot_z_contact: 100
     w_xddot_z_nocontact: 0.001

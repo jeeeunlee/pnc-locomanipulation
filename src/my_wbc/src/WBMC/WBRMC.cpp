@@ -46,8 +46,7 @@ void WBRMC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     }
     if (extra_input) data_ = static_cast<WBRMC_ExtraData*>(extra_input);
 
-    // Internal Constraint Check
-    Nci_ = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_);
+
 
     if(des_jacc_cmd.size() == num_act_joint_){
         for (int i(0); i < num_act_joint_; ++i) {

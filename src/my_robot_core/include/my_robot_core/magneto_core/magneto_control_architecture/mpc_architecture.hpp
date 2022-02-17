@@ -9,7 +9,7 @@
 
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/state_machine_set.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbmc.hpp>
-#include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbrmc.hpp>
+#include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_mcwbc.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>
 
@@ -50,8 +50,8 @@ class MagnetoMpcControlArchitecture : public ControlArchitecture {
   MagnetoReferenceGeneratorContainer* rg_container_;
 
   // Controller Object
-  MagnetoWBMC* wbc_controller;
-  // MagnetoWBRMC* wbc_controller;
+  // MagnetoWBMC* wbc_controller;
+  MagnetoMCWBC* wbc_controller;
 
   // Observers
   SlipObserver* slip_ob_;
