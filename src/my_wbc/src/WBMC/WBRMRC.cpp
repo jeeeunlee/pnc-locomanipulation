@@ -1,14 +1,12 @@
 #include <Eigen/LU>
 #include <Eigen/SVD>
 
-#include <my_wbc/WBMC/MCWBC.hpp>
+#include <my_wbc/WBMC/WBRMRC.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 
-// MC-WBC (Magnetic Contact - Whole Body Control)
-
-MCWBC::MCWBC(const std::vector<bool>& act_list)
-    : WBC(act_list) {
-    my_utils::pretty_constructor(3, "MCWBC");
+WBRMRC::WBRMRC(const std::vector<bool>& act_list, const Eigen::MatrixXd* Jci)
+    : WBC(act_list, Jci) {
+    my_utils::pretty_constructor(3, "WBRMRC");
     Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
     Sf_.block(0, 0, 6, 6).setIdentity();
 
@@ -20,7 +18,7 @@ MCWBC::MCWBC(const std::vector<bool>& act_list)
     // dynacore::pretty_print(Sv_, std::cout, "Sv");
 }
 
-void MCWBC::updateSetting(const Eigen::MatrixXd& A, const Eigen::MatrixXd& Ainv,
+void WBRMRC::updateSetting(const Eigen::MatrixXd& A, const Eigen::MatrixXd& Ainv,
                          const Eigen::VectorXd& cori,
                          const Eigen::VectorXd& grav, void* extra_setting) {
     A_ = A;
@@ -29,22 +27,33 @@ void MCWBC::updateSetting(const Eigen::MatrixXd& A, const Eigen::MatrixXd& Ainv,
     grav_ = grav;
     b_updatesetting_ = true;
 
+    // dynacore::pretty_print(grav_, std::cout, "grav");
+    // dynacore::pretty_print(cori_, std::cout, "cori");
+    // dynacore::pretty_print(A_, std::cout, "A");
 }
 
-void MCWBC::setTorqueLimits(const Eigen::VectorXd &_tau_min,
+void WBRMRC::setTorqueLimits(const Eigen::VectorXd &_tau_min,
                             const Eigen::VectorXd &_tau_max) {
     tau_min_ = _tau_min;
     tau_max_ = _tau_max;
 }
 
-void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
+void WBRMRC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
                            const std::vector<ContactSpec*>& contact_list,
-                           const std::vector<MagnetSpec*> &magnet_list,
                            Eigen::VectorXd& cmd, void* extra_input) {
     if (!b_updatesetting_) {
-        printf("[Warning] MCWBC setting is not done\n");
+        printf("[Wanning] WBRMRC setting is not done\n");
     }
-    if (extra_input) data_ = static_cast<MCWBC_ExtraData*>(extra_input);
+    if (extra_input) data_ = static_cast<WBRMRC_ExtraData*>(extra_input);
+
+    // Internal Constraint Check
+    Nci_ = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_);
+
+    if (b_internal_constraint_) {
+        Eigen::MatrixXd JciBar;
+        _WeightedInverse(Jci_, Ainv_, JciBar);
+        Nci_ -= JciBar * Jci_;
+    }
 
     if(des_jacc_cmd.size() == num_act_joint_){
         for (int i(0); i < num_act_joint_; ++i) {
@@ -55,22 +64,20 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
             qddot_[i] = des_jacc_cmd[i]; 
         }
     } else {
-        std::cout << " dim of des_jacc_cmd is wrong!!! @ MCWBC" << std::endl;
+        std::cout << " dim of des_jacc_cmd is wrong!!! @ WBRMRC" << std::endl;
         exit(0);
     }
 
+    // my_utils::pretty_print(qddot_, std::cout, "qddot_");
+
+
     // Contact Jacobian & Uf & Fr_ieq
     _BuildContactMtxVect(contact_list);
-
-    // Magnet Jacobian & force : Jm_, Fm_
-    _BuildMagnetMtxVect(magnet_list);
 
     // Dimension Setting
     dim_opt_ = num_qdot_ + 2 * dim_rf_;  // (delta_qddot, Fr, xddot_c)
     dim_eq_cstr_ = num_passive_ + dim_rf_;
     dim_ieq_cstr_ = 2 * num_act_joint_ + Uf_.rows();
-    // std::cout<<"dim_rf_ = "<< dim_rf_<<", num_qdot_=" << num_qdot_ << ", num_passive_" << num_passive_<<", num_act_joint_ = "<<num_act_joint_<<std::endl;
-    // std::cout<<"dim_opt_ = "<<dim_opt_<<", dim_eq_cstr_="<<dim_eq_cstr_<<", dim_ieq_cstr_="<<dim_ieq_cstr_<<std::endl;
 
     _Build_Equality_Constraint(); 
     _Build_Inequality_Constraint(); 
@@ -83,9 +90,6 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
         std::cout << "x: " << z << std::endl;
         // exit(0.0);
     }
-
-    // std::cout<<" solve_quadprog done"<< std::endl;
-
 
 
     _GetSolution(cmd);
@@ -115,8 +119,7 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     // }
 }
 
-
-void MCWBC::_Build_Inequality_Constraint() {
+void WBRMRC::_Build_Inequality_Constraint() {
     Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
     dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
     int row_idx(0);
@@ -130,7 +133,8 @@ void MCWBC::_Build_Inequality_Constraint() {
         -Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
         tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_ 
-                           - Jm_.transpose()*Fm_ );
+                    - Jc_.transpose() * (data_->F_magnetic_) 
+                    - (data_->J_residual_).transpose() * (data_->F_residual_) );
     row_idx += num_act_joint_;
 
     Cieq_.block(row_idx, 0, num_act_joint_, num_qdot_) = -Sa_ * A_;
@@ -138,20 +142,23 @@ void MCWBC::_Build_Inequality_Constraint() {
         Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
         -tau_max_ + Sa_ * (cori_ + grav_ + A_ * qddot_
-                            - Jm_.transpose()*Fm_ );
+                    - Jc_.transpose() * (data_->F_magnetic_) 
+                    - (data_->J_residual_).transpose() * (data_->F_residual_) );
 
     // my_utils::pretty_print(Cieq_, std::cout, "C ieq");
     // my_utils::pretty_print(dieq_, std::cout, "d ieq");
 }
 
-void MCWBC::_Build_Equality_Constraint() {
+void WBRMRC::_Build_Equality_Constraint() {
     Aeq_ = Eigen::MatrixXd::Zero(dim_eq_cstr_, dim_opt_);
     beq_ = Eigen::VectorXd::Zero(dim_eq_cstr_);
 
     // passive joint
     Aeq_.block(0, 0, num_passive_, num_qdot_) = Sv_ * A_;
     Aeq_.block(0, num_qdot_, num_passive_, dim_rf_) = -Sv_ * Jc_.transpose();
-    beq_.head(num_passive_) = -Sv_ * ( A_ * qddot_ + cori_ + grav_ - Jm_.transpose()*Fm_);
+    beq_.head(num_passive_) = -Sv_ * ( A_ * qddot_ + cori_ + grav_ 
+                    - Jc_.transpose() * (data_->F_magnetic_)
+                    - (data_->J_residual_).transpose() * (data_->F_residual_) );
 
     // xddot
     Aeq_.block(num_passive_, 0, dim_rf_, num_qdot_) = Jc_;
@@ -163,52 +170,57 @@ void MCWBC::_Build_Equality_Constraint() {
     // my_utils::pretty_print(beq_, std::cout, "beq");
 }
 
-void MCWBC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
-
-    Jc_ = Eigen::MatrixXd::Zero(0,0);
-    JcDotQdot_ = Eigen::VectorXd::Zero(0);  
-    JcQdot_ = Eigen::VectorXd::Zero(0);  
-    Uf_ = Eigen::MatrixXd::Zero(0,0);
-    Fr_ieq_ = Eigen::VectorXd::Zero(0); 
+void WBRMRC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
+    ContactSpec* contact = contact_list[0];
+    contact->getContactJacobian(Jc_);
+    contact->getJcDotQdot(JcDotQdot_);
+    contact->getJcQdot(JcQdot_);    
+    contact->getRFConstraintMtx(Uf_);
+    contact->getRFConstraintVec(Fr_ieq_);
 
     Eigen::MatrixXd Jc_i, Uf_i;
     Eigen::VectorXd Fr_ieq_i, JcDotQdot_i, JcQdot_i;
 
-    for (auto &contact: contact_list) {
+    dim_rf_ = Jc_.rows();
+    int num_rows_Uf = Uf_.rows();
+    int num_cols_Uf = Uf_.cols();
+    for (int i(1); i < contact_list.size(); ++i) {
+        contact = contact_list[i];
         contact->getContactJacobian(Jc_i);
         contact->getJcDotQdot(JcDotQdot_i);
         contact->getJcQdot(JcQdot_i);
         contact->getRFConstraintMtx(Uf_i);
         contact->getRFConstraintVec(Fr_ieq_i);
 
-        Jc_ = my_utils::vStack(Jc_, Jc_i);
-        JcDotQdot_ = my_utils::vStack(JcDotQdot_, JcDotQdot_i);
-        JcQdot_ = my_utils::vStack(JcQdot_, JcQdot_i);
-        Uf_ = my_utils::dStack(Uf_, Uf_i);
-        Fr_ieq_ = my_utils::vStack(Fr_ieq_, Fr_ieq_i);
+        Jc_.conservativeResize(dim_rf_ + Jc_i.rows(), num_qdot_);
+        Jc_.block(dim_rf_, 0, Jc_i.rows(), num_qdot_) = Jc_i;
+        
+        JcQdot_.conservativeResize(dim_rf_ + Jc_i.rows());
+        JcQdot_.tail(Jc_i.rows()) = JcQdot_i;
+
+        JcDotQdot_.conservativeResize(dim_rf_ + Jc_i.rows());
+        JcDotQdot_.tail(Jc_i.rows()) = JcDotQdot_i;
+
+        Uf_.conservativeResize(num_rows_Uf + Uf_i.rows(),
+                               dim_rf_ + Uf_i.cols());
+        (Uf_.topRightCorner(num_rows_Uf, Uf_i.cols())).setZero();
+        (Uf_.bottomLeftCorner(Uf_i.rows(), dim_rf_)).setZero();
+        Uf_.block(num_rows_Uf, dim_rf_, Uf_i.rows(), Uf_i.cols()) = Uf_i;
+
+        Fr_ieq_.conservativeResize(num_rows_Uf + Uf_i.rows());
+        Fr_ieq_.tail(Uf_i.rows()) = Fr_ieq_i;
+
+        dim_rf_ += Jc_i.rows();
+        num_rows_Uf += Uf_i.rows();
+        num_cols_Uf += Uf_i.cols();
     }
-    dim_rf_ = Jc_.rows();
     // my_utils::pretty_print(Jc_, std::cout, "Jc");
     // my_utils::pretty_print(Uf_, std::cout, "Uf");
     // my_utils::pretty_print(JcDotQdot_, std::cout, "JcDotQdot");
     // my_utils::pretty_print(Fr_ieq_, std::cout, "Fr_ieq");
 }
 
-void MCWBC::_BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) {
-    Jm_ = Eigen::MatrixXd::Zero(0,0);
-    Fm_ = Eigen::VectorXd::Zero(0); 
-    for (auto &magnet : magnet_list) {
-        Jm_ = my_utils::vStack( Jm_, magnet->getJacobian() );
-        Fm_ = my_utils::vStack( Fm_, - magnet->getMagneticForce() );
-    }
-    // my_utils::pretty_print(Fm_, std::cout, "Fm_");
-    // Fm_ = Fm_*0.0;
-    // std::cout<<"Fm = "<<Fm_.transpose() << std::endl;
-    // Eigen::VectorXd tau_ext = Jm_.transpose() * Fm_;
-    // std::cout<<"tau_ext = "<<tau_ext.transpose() << std::endl;
-}
-
-void MCWBC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
+void WBRMRC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
                                     const Eigen::VectorXd& beq,
                                     const Eigen::MatrixXd& Cieq,
                                     const Eigen::VectorXd& dieq) {
@@ -279,7 +291,7 @@ void MCWBC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
     // fout.close();
 }
 
-void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
+void WBRMRC::_GetSolution(Eigen::VectorXd& cmd) {
     Eigen::VectorXd delta_qddot(num_qdot_);
     for (int i(0); i < num_qdot_; ++i) delta_qddot[i] = z[i];
     data_->Fr_ = Eigen::VectorXd(dim_rf_);
@@ -288,13 +300,14 @@ void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
     for (int i = 0; i < dim_rf_; ++i) delta_xddot[i] = z[i + num_qdot_ + dim_rf_];
 
     Eigen::VectorXd tau = A_ * (qddot_ + delta_qddot) + cori_ + grav_ 
-                          - Jc_.transpose() * data_->Fr_ - Jm_*Fm_;
+                          - Jc_.transpose() * (data_->Fr_ + data_->F_magnetic_ )
+                          - (data_->J_residual_).transpose() * (data_->F_residual_);
 
     data_->qddot_ = qddot_ + delta_qddot;
     cmd = Sa_ * tau;
 
     Eigen::VectorXd fr = data_->Fr_.head(6);
-    //0112 my_utils::saveVector(fr, "Fr_MCWBC");
+    //0112 my_utils::saveVector(fr, "Fr_WBRMRC");
     
     // my_utils::pretty_print(qddot_, std::cout, "qddot_");
     // my_utils::pretty_print(delta_qddot, std::cout, "delta_qddot");
@@ -307,4 +320,3 @@ void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
     // Eigen::VectorXd xdot_check = JcQdot_ + (Jc_ * (qddot_ + delta_qddot) + JcDotQdot_)* 0.001;
     // my_utils::pretty_print(xdot_check, std::cout, "xdot check");
 }
-

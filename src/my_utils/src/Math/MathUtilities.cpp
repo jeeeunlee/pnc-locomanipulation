@@ -59,6 +59,18 @@ Eigen::VectorXd vStack(const Eigen::VectorXd& a, const Eigen::VectorXd& b) {
     return ab;
 }
 
+Eigen::MatrixXd dStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
+    // diagonally stack a,b -> [a 0; 0 b]
+    if (a.rows()==0 || a.cols()==0)
+        return b;
+    if (b.rows()==0 || b.cols()==0)
+        return a;
+    Eigen::MatrixXd ab = Eigen::MatrixXd::Zero(a.rows() + b.rows(), a.cols() + b.cols());
+    ab << a, Eigen::MatrixXd::Zero(a.rows(), b.cols()), 
+        Eigen::MatrixXd::Zero(b.rows(), a.cols()), b;
+    return ab;
+}
+
 Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row_) {
     Eigen::MatrixXd ret = Eigen::MatrixXd::Zero(a_.rows() - 1, a_.cols());
     ret.block(0, 0, row_, a_.cols()) = a_.block(0, 0, row_, a_.cols());

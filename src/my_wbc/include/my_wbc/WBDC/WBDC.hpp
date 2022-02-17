@@ -17,7 +17,7 @@ class WBDC_ExtraData{
 
 class WBDC: public WBC{
     public:
-        WBDC(const std::vector<bool> & act_list, const Eigen::MatrixXd* Jci = NULL);
+        WBDC(const std::vector<bool> & act_list);
         virtual ~WBDC(){}
 
         virtual void updateSetting(const Eigen::MatrixXd & A,

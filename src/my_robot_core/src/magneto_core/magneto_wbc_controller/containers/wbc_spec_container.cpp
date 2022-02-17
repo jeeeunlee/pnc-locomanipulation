@@ -59,10 +59,6 @@ void MagnetoWbcSpecContainer::_InitializeContacts() {
 
   // Add all contacts initially. Remove later as needed.
   contact_list_.clear();
-  // contact_list_.push_back(feet_contacts_[MagnetoFoot::AL]);
-  // contact_list_.push_back(feet_contacts_[MagnetoFoot::AR]);
-  // contact_list_.push_back(feet_contacts_[MagnetoFoot::BL]);  
-  // contact_list_.push_back(feet_contacts_[MagnetoFoot::BR]); 
 }
 
 
@@ -82,7 +78,6 @@ void MagnetoWbcSpecContainer::_InitializeWeightParams(){
     feet_weights_[i] = new ContactWeight(feet_contacts_[i]);
   }
 }
-
 
 void MagnetoWbcSpecContainer::_DeleteTasks() {
   task_list_.clear();
@@ -130,7 +125,23 @@ void MagnetoWbcSpecContainer::setContactFriction(int foot_idx, double mu) {
   feet_contacts_[foot_idx]->setFrictionCoeff(mu);
 }
 
-void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
+void MagnetoWbcSpecContainer::setMagneticForce() {
+  setMagneticForce(magnetic_force_, residual_ratio_);
+}
+
+void MagnetoWbcSpecContainer::setMagneticForce(const Eigen::VectorXd& magnetic_force,
+                                            const Eigen::VectorXd& residual_ratio) {
+  for (int foot_idx=0; foot_idx<Magneto::n_leg; ++foot_idx)
+    setMagneticForce(foot_idx, magnetic_force[foot_idx], residual_ratio[foot_idx]);  
+}
+void MagnetoWbcSpecContainer::setMagneticForce(int foot_idx, double fm, double rr){
+  feet_magnets_[foot_idx]->setMagneticForce(fm);
+  feet_magnets_[foot_idx]->setResidualRatio(rr);
+}
+
+
+
+void MagnetoWbcSpecContainer::weightParamInitialization(const YAML::Node& node) {
   
   try {
     
@@ -174,6 +185,35 @@ void MagnetoWbcSpecContainer::paramInitialization(const YAML::Node& node) {
     feet_weights_[i]->setWeightRF(w_rf_, w_rf_z_contact_);
     feet_weights_[i]->setWeightXddot(w_xddot_, w_xddot_z_contact_);
   }    
+  
+  
+}
+
+void MagnetoWbcSpecContainer::contactParamInitialization(const YAML::Node& node){
+try {
+    my_utils::readParameter(node, "friction", friction_coeff_);  
+
+  } catch (std::runtime_error& e) {
+    std::cout << "Error reading parameter [" << e.what() << "] at file: ["
+              << __FILE__ << "]" << std::endl
+              << std::endl;
+    exit(0);
+  }
+  setContactFriction();
+}
+
+void MagnetoWbcSpecContainer::magneticParamInitialization(const YAML::Node& node){
+  try { 
+    // magnetism
+    my_utils::readParameter(node,"magnetic_force", magnetic_force_);  
+    my_utils::readParameter(node,"residual_ratio", residual_ratio_); 
+  } catch (std::runtime_error& e) {
+    std::cout << "Error reading parameter [" << e.what() << "] at file: ["
+              << __FILE__ << "]" << std::endl
+              << std::endl;
+    exit(0);
+  }
+  setMagneticForce();
 }
 
 // -------------------------------------------------------
@@ -200,12 +240,13 @@ void MagnetoWbcSpecContainer::set_magnet_distance(int moving_cop,
   update_magnet_forces();
 }
 
-void MagnetoWbcSpecContainer::update_magnetism_map(
-                std::map<FootLinkIdx, bool> & b_map) {
+std::map<FootLinkIdx, bool> MagnetoWbcSpecContainer::get_magnetism_map() {
+  std::map<FootLinkIdx, bool> b_map;
   b_map.clear();
   for( auto &magnet : feet_magnets_){
     b_map[magnet->getLinkIdx()] = magnet->getOnOff();
   }
+  return b_map;
 }
 
 void MagnetoWbcSpecContainer::update_magnet_forces() {

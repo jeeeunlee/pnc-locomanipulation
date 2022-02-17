@@ -2,6 +2,7 @@
 #define WHOLE_BODY_CONTROLLER
 
 #include <my_utils/IO/IOUtilities.hpp>
+#include <my_utils/Math/MathUtilities.hpp>
 #include <my_utils/Math/pseudo_inverse.hpp>
 #include <my_wbc/Task/Task.hpp>
 #include <my_wbc/Contact/ContactSpec.hpp>
@@ -12,7 +13,7 @@ class WBC{
     public:
         WBC(const std::vector<bool> & act_list):
             num_act_joint_(0),
-            num_passive_(0),
+            num_passive_(0)
     {
         num_qdot_ = act_list.size();
         for(int i(0); i<num_qdot_; ++i){

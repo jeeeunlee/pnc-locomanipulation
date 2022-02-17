@@ -197,7 +197,7 @@ void pretty_print(Eigen::MatrixXd const& mm, std::ostream& os,
         nlornot = "";
     }
     if (!title.empty()) {
-        os << title << nlornot;
+        os << title <<"(cols: " <<mm.cols() <<", rows: "<<mm.rows()<<")"<< nlornot;
     }
     if ((mm.rows() <= 0) || (mm.cols() <= 0)) {
         os << prefix << " (empty)" << nlornot;

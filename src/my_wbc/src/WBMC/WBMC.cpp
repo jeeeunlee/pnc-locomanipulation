@@ -2,7 +2,6 @@
 #include <Eigen/SVD>
 
 #include <my_wbc/WBMC/WBMC.hpp>
-#include <my_utils/IO/IOUtilities.hpp>
 
 WBMC::WBMC(const std::vector<bool>& act_list)
     : WBC(act_list) {
@@ -46,8 +45,7 @@ void WBMC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     }
     if (extra_input) data_ = static_cast<WBMC_ExtraData*>(extra_input);
 
-    // Internal Constraint Check
-    Nci_ = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_);
+
 
     for (int i(0); i < num_act_joint_; ++i) {
         qddot_[act_list_[i]] = des_jacc_cmd[i];
@@ -150,63 +148,93 @@ void WBMC::_Build_Equality_Constraint() {
 }
 
 void WBMC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
-    ContactSpec* contact = contact_list[0];
-    contact->getContactJacobian(Jc_);
-    contact->getJcDotQdot(JcDotQdot_);
-    contact->getJcQdot(JcQdot_);    
-    contact->getRFConstraintMtx(Uf_);
-    contact->getRFConstraintVec(Fr_ieq_);
-
-
-    Eigen::VectorXd dFr_by_magnet ;
-    dFr_by_magnet = - Uf_*(data_->F_magnetic_.head(Uf_.cols()));    
-    Fr_ieq_ += dFr_by_magnet;
+    Jc_ = Eigen::MatrixXd::Zero(0,0);
+    JcDotQdot_ = Eigen::VectorXd::Zero(0);  
+    JcQdot_ = Eigen::VectorXd::Zero(0);  
+    Uf_ = Eigen::MatrixXd::Zero(0,0);
+    Fr_ieq_ = Eigen::VectorXd::Zero(0); 
 
     Eigen::MatrixXd Jc_i, Uf_i;
     Eigen::VectorXd Fr_ieq_i, JcDotQdot_i, JcQdot_i;
+    Eigen::VectorXd dFr_by_magnet;
 
-    dim_rf_ = Jc_.rows();
-    int num_rows_Uf = Uf_.rows();
-    int num_cols_Uf = Uf_.cols();
-    for (int i(1); i < contact_list.size(); ++i) {
-        contact = contact_list[i];
+    for (auto &contact: contact_list) {
         contact->getContactJacobian(Jc_i);
         contact->getJcDotQdot(JcDotQdot_i);
         contact->getJcQdot(JcQdot_i);
         contact->getRFConstraintMtx(Uf_i);
         contact->getRFConstraintVec(Fr_ieq_i);
 
-        dFr_by_magnet = - Uf_i*(data_->F_magnetic_.segment(num_cols_Uf, Uf_i.cols()));  
+        dFr_by_magnet = - Uf_i*(data_->F_magnetic_.segment(Uf_.cols(), Uf_i.cols()));  
         Fr_ieq_i += dFr_by_magnet;
 
-        Jc_.conservativeResize(dim_rf_ + Jc_i.rows(), num_qdot_);
-        Jc_.block(dim_rf_, 0, Jc_i.rows(), num_qdot_) = Jc_i;
+        Jc_ = my_utils::vStack(Jc_, Jc_i);
+        JcDotQdot_ = my_utils::vStack(JcDotQdot_, JcDotQdot_i);
+        JcQdot_ = my_utils::vStack(JcQdot_, JcQdot_i);
+        Uf_ = my_utils::dStack(Uf_, Uf_i);
+        Fr_ieq_ = my_utils::vStack(Fr_ieq_, Fr_ieq_i);
+    }
+    dim_rf_ = Jc_.rows();
+}
+
+// void WBMC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
+//     ContactSpec* contact = contact_list[0];
+//     contact->getContactJacobian(Jc_);
+//     contact->getJcDotQdot(JcDotQdot_);
+//     contact->getJcQdot(JcQdot_);    
+//     contact->getRFConstraintMtx(Uf_);
+//     contact->getRFConstraintVec(Fr_ieq_);
+
+
+//     Eigen::VectorXd dFr_by_magnet ;
+//     dFr_by_magnet = - Uf_*(data_->F_magnetic_.head(Uf_.cols()));    
+//     Fr_ieq_ += dFr_by_magnet;
+
+//     Eigen::MatrixXd Jc_i, Uf_i;
+//     Eigen::VectorXd Fr_ieq_i, JcDotQdot_i, JcQdot_i;
+
+//     dim_rf_ = Jc_.rows();
+//     int num_rows_Uf = Uf_.rows();
+//     int num_cols_Uf = Uf_.cols();
+//     for (int i(1); i < contact_list.size(); ++i) {
+//         contact = contact_list[i];
+//         contact->getContactJacobian(Jc_i);
+//         contact->getJcDotQdot(JcDotQdot_i);
+//         contact->getJcQdot(JcQdot_i);
+//         contact->getRFConstraintMtx(Uf_i);
+//         contact->getRFConstraintVec(Fr_ieq_i);
+
+//         dFr_by_magnet = - Uf_i*(data_->F_magnetic_.segment(num_cols_Uf, Uf_i.cols()));  
+//         Fr_ieq_i += dFr_by_magnet;
+
+//         Jc_.conservativeResize(dim_rf_ + Jc_i.rows(), num_qdot_);
+//         Jc_.block(dim_rf_, 0, Jc_i.rows(), num_qdot_) = Jc_i;
 
         
-        JcQdot_.conservativeResize(dim_rf_ + Jc_i.rows());
-        JcQdot_.tail(Jc_i.rows()) = JcQdot_i;
+//         JcQdot_.conservativeResize(dim_rf_ + Jc_i.rows());
+//         JcQdot_.tail(Jc_i.rows()) = JcQdot_i;
 
-        JcDotQdot_.conservativeResize(dim_rf_ + Jc_i.rows());
-        JcDotQdot_.tail(Jc_i.rows()) = JcDotQdot_i;
+//         JcDotQdot_.conservativeResize(dim_rf_ + Jc_i.rows());
+//         JcDotQdot_.tail(Jc_i.rows()) = JcDotQdot_i;
 
-        Uf_.conservativeResize(num_rows_Uf + Uf_i.rows(),
-                               dim_rf_ + Uf_i.cols());
-        (Uf_.topRightCorner(num_rows_Uf, Uf_i.cols())).setZero();
-        (Uf_.bottomLeftCorner(Uf_i.rows(), dim_rf_)).setZero();
-        Uf_.block(num_rows_Uf, dim_rf_, Uf_i.rows(), Uf_i.cols()) = Uf_i;
+//         Uf_.conservativeResize(num_rows_Uf + Uf_i.rows(),
+//                                dim_rf_ + Uf_i.cols());
+//         (Uf_.topRightCorner(num_rows_Uf, Uf_i.cols())).setZero();
+//         (Uf_.bottomLeftCorner(Uf_i.rows(), dim_rf_)).setZero();
+//         Uf_.block(num_rows_Uf, dim_rf_, Uf_i.rows(), Uf_i.cols()) = Uf_i;
 
-        Fr_ieq_.conservativeResize(num_rows_Uf + Uf_i.rows());
-        Fr_ieq_.tail(Uf_i.rows()) = Fr_ieq_i;
+//         Fr_ieq_.conservativeResize(num_rows_Uf + Uf_i.rows());
+//         Fr_ieq_.tail(Uf_i.rows()) = Fr_ieq_i;
 
-        dim_rf_ += Jc_i.rows();
-        num_rows_Uf += Uf_i.rows();
-        num_cols_Uf += Uf_i.cols();
-    }
-    // my_utils::pretty_print(Jc_, std::cout, "Jc");
-    // my_utils::pretty_print(Uf_, std::cout, "Uf");
-    // my_utils::pretty_print(JcDotQdot_, std::cout, "JcDotQdot");
-    // my_utils::pretty_print(Fr_ieq_, std::cout, "Fr_ieq");
-}
+//         dim_rf_ += Jc_i.rows();
+//         num_rows_Uf += Uf_i.rows();
+//         num_cols_Uf += Uf_i.cols();
+//     }
+//     // my_utils::pretty_print(Jc_, std::cout, "Jc");
+//     // my_utils::pretty_print(Uf_, std::cout, "Uf");
+//     // my_utils::pretty_print(JcDotQdot_, std::cout, "JcDotQdot");
+//     // my_utils::pretty_print(Fr_ieq_, std::cout, "Fr_ieq");
+// }
 
 void WBMC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
                                     const Eigen::VectorXd& beq,
@@ -277,6 +305,7 @@ void WBMC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
     // fout.open(THIS_COM "D.txt");
     // fout<<ci0<<std::endl;
     // fout.close();
+    // exit(0);
 }
 
 void WBMC::_GetSolution(Eigen::VectorXd& cmd) {

@@ -40,8 +40,6 @@ void WBLC::makeWBLC_Torque(const Eigen::VectorXd& des_jacc_cmd,
     }
     if (extra_input) data_ = static_cast<WBLC_ExtraData*>(extra_input);
 
-    // Internal Constraint Check
-    Nci_ = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_);
 
     for (int i(0); i < num_act_joint_; ++i) {
         qddot_[act_list_[i]] = des_jacc_cmd[i];
