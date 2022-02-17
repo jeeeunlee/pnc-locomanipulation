@@ -52,9 +52,10 @@ Eigen::MatrixXd vStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
 Eigen::VectorXd vStack(const Eigen::VectorXd& a, const Eigen::VectorXd& b) {
     if(a.size()==0) return b;
     if(b.size()==0) return a;
-    Eigen::VectorXd ab = Eigen::VectorXd::Zero(a.size()+b.size());
-    ab.head( a.size() ) = a; 
-    ab.tail( b.size() ) = b;
+    Eigen::VectorXd ab = Eigen::VectorXd::Zero(a.size()+b.size());    
+    // ab.head( a.size() ) = a; 
+    // ab.tail( b.size() ) = b;
+    ab << a, b;
     return ab;
 }
 

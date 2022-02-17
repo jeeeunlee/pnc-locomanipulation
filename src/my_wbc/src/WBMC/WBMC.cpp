@@ -4,8 +4,8 @@
 #include <my_wbc/WBMC/WBMC.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 
-WBMC::WBMC(const std::vector<bool>& act_list, const Eigen::MatrixXd* Jci)
-    : WBC(act_list, Jci) {
+WBMC::WBMC(const std::vector<bool>& act_list)
+    : WBC(act_list) {
     my_utils::pretty_constructor(3, "WBMC");
     Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
     Sf_.block(0, 0, 6, 6).setIdentity();

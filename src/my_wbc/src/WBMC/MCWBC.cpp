@@ -6,8 +6,8 @@
 
 // MC-WBC (Magnetic Contact - Whole Body Control)
 
-MCWBC::MCWBC(const std::vector<bool>& act_list, const Eigen::MatrixXd* Jci)
-    : WBC(act_list, Jci) {
+MCWBC::MCWBC(const std::vector<bool>& act_list)
+    : WBC(act_list) {
     my_utils::pretty_constructor(3, "MCWBC");
     Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
     Sf_.block(0, 0, 6, 6).setIdentity();
@@ -64,6 +64,7 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
 
     // Contact Jacobian & Uf & Fr_ieq
     _BuildContactMtxVect(contact_list);
+    
 
     // Dimension Setting
     dim_opt_ = num_qdot_ + 2 * dim_rf_;  // (delta_qddot, Fr, xddot_c)
@@ -110,6 +111,7 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     // }
 }
 
+
 void MCWBC::_Build_Inequality_Constraint() {
     Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
     dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
@@ -124,8 +126,7 @@ void MCWBC::_Build_Inequality_Constraint() {
         -Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
         tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_ 
-                    - Jc_.transpose() * (data_->F_magnetic_) 
-                    - (data_->J_residual_).transpose() * (data_->F_residual_) );
+                           - Jm_.transpos()*Fm_ );
     row_idx += num_act_joint_;
 
     Cieq_.block(row_idx, 0, num_act_joint_, num_qdot_) = -Sa_ * A_;
@@ -133,8 +134,7 @@ void MCWBC::_Build_Inequality_Constraint() {
         Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
         -tau_max_ + Sa_ * (cori_ + grav_ + A_ * qddot_
-                    - Jc_.transpose() * (data_->F_magnetic_) 
-                    - (data_->J_residual_).transpose() * (data_->F_residual_) );
+                            - Jm_.transpos()*Fm_ );
 
     // my_utils::pretty_print(Cieq_, std::cout, "C ieq");
     // my_utils::pretty_print(dieq_, std::cout, "d ieq");
@@ -147,9 +147,7 @@ void MCWBC::_Build_Equality_Constraint() {
     // passive joint
     Aeq_.block(0, 0, num_passive_, num_qdot_) = Sv_ * A_;
     Aeq_.block(0, num_qdot_, num_passive_, dim_rf_) = -Sv_ * Jc_.transpose();
-    beq_.head(num_passive_) = -Sv_ * ( A_ * qddot_ + cori_ + grav_ 
-                    - Jc_.transpose() * (data_->F_magnetic_)
-                    - (data_->J_residual_).transpose() * (data_->F_residual_) );
+    beq_.head(num_passive_) = -Sv_ * ( A_ * qddot_ + cori_ + grav_ - Jm_.transpos()*Fm_;
 
     // xddot
     Aeq_.block(num_passive_, 0, dim_rf_, num_qdot_) = Jc_;
@@ -179,7 +177,7 @@ void MCWBC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) 
         contact->getRFConstraintMtx(Uf_i);
         contact->getRFConstraintVec(Fr_ieq_i);
 
-        Jc_ = my_utils::vStack(Jc_, Jc_i)
+        Jc_ = my_utils::vStack(Jc_, Jc_i);
         JcDotQdot_ = my_utils::vStack(JcDotQdot_, JcDotQdot_i);
         JcQdot_ = my_utils::vStack(JcQdot_, JcQdot_i);
         Uf_ = my_utils::vStack(Uf_, Uf_i);
@@ -190,6 +188,16 @@ void MCWBC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) 
     // my_utils::pretty_print(JcDotQdot_, std::cout, "JcDotQdot");
     // my_utils::pretty_print(Fr_ieq_, std::cout, "Fr_ieq");
 }
+
+void _BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) {
+    Jm_ = Eigen::MatrixXd::Zero(0,0);
+    Fm_ = Eigen::VectorXd::Zero(0); 
+    for (auto &magnet : magnet_list) {
+        Jm_ = my_utils::vStack( Jm_, magnet->getJacobian() );
+        Fm_ = my_utils::vStack( Fm_, magnet->getMagneticForce() );
+    }
+}
+
 
 void MCWBC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
                                     const Eigen::VectorXd& beq,
@@ -271,8 +279,7 @@ void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
     for (int i = 0; i < dim_rf_; ++i) delta_xddot[i] = z[i + num_qdot_ + dim_rf_];
 
     Eigen::VectorXd tau = A_ * (qddot_ + delta_qddot) + cori_ + grav_ 
-                          - Jc_.transpose() * (data_->Fr_ + data_->F_magnetic_ )
-                          - (data_->J_residual_).transpose() * (data_->F_residual_);
+                          - Jc_.transpose() * data_->Fr_ - Jm_*Fm_;
 
     data_->qddot_ = qddot_ + delta_qddot;
     cmd = Sa_ * tau;

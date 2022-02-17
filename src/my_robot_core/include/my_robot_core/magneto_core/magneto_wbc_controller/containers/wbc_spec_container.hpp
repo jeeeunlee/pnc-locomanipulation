@@ -10,7 +10,7 @@
 #include <my_wbc/Contact/BasicContactSpec.hpp>
 #include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/Task.hpp>
-#include <my_robot_core/magneto_core/magneto_specs/MagnetSpec.hpp>
+#include <my_wbc/Magnet/MagnetSpec.hpp>
 #include <my_robot_core/magneto_core/magneto_specs/ContactWeight.hpp>
 
 #include <my_robot_core/magneto_core/magneto_definition.hpp>

@@ -3,8 +3,7 @@
 #include <Eigen/LU>
 #include <Eigen/SVD>
 
-WBDC::WBDC(const std::vector<bool> & act_list,
-        const Eigen::MatrixXd * Jci): WBC(act_list, Jci){
+WBDC::WBDC(const std::vector<bool> & act_list): WBC(act_list){
     my_utils::pretty_constructor(3, "WBDC");
     Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
     Sf_.block(0,0, 6, 6).setIdentity();
