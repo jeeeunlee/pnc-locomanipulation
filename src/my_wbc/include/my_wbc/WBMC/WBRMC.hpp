@@ -32,7 +32,7 @@ class WBRMC_ExtraData{
 
 class WBRMC: public WBC{
     public:
-        WBRMC(const std::vector<bool> & act_list, const Eigen::MatrixXd* Jci = NULL);
+        WBRMC(const std::vector<bool> & act_list);
         virtual ~WBRMC(){}
 
         virtual void updateSetting(const Eigen::MatrixXd & A,

@@ -4,6 +4,7 @@
 #include <Goldfarb/QuadProg++.hh>
 #include <my_wbc/WBC.hpp>
 #include <my_wbc/Contact/ContactSpec.hpp>
+#include <my_wbc/Magnet/MagnetSpec.hpp>
 
 // residual magnetic force acting on swing foot 
 // is considered in the dynamics equation
@@ -22,10 +23,6 @@ class MCWBC_ExtraData{
         Eigen::VectorXd W_qddot_;
         Eigen::VectorXd W_rf_;
         Eigen::VectorXd W_xddot_;
-
-        Eigen::VectorXd F_magnetic_;
-        Eigen::VectorXd F_residual_;
-        Eigen::MatrixXd J_residual_;
 
         MCWBC_ExtraData(){}
         ~MCWBC_ExtraData(){}
@@ -107,6 +104,10 @@ class MCWBC: public WBC{
         Eigen::MatrixXd Jc_;
         Eigen::VectorXd JcDotQdot_;
         Eigen::VectorXd JcQdot_;
+
+        void _BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list);
+        Eigen::MatrixXd Jm_;
+        Eigen::VectorXd Fm_;
 
         // Setup the followings:
         void _Build_Equality_Constraint();

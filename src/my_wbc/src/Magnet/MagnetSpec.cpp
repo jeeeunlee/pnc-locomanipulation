@@ -1,4 +1,5 @@
-#include <my_robot_core/magneto_core/magneto_specs/MagnetSpec.hpp>
+#include <my_wbc/Magnet/MagnetSpec.hpp>
+
 
 Eigen::VectorXd MagnetSpec::getMagneticForce() { 
   // differ from onoff

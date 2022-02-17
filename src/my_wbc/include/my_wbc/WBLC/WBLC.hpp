@@ -26,7 +26,7 @@ class WBLC_ExtraData{
 
 class WBLC: public WBC{
     public:
-        WBLC(const std::vector<bool> & act_list, const Eigen::MatrixXd* Jci = NULL);
+        WBLC(const std::vector<bool> & act_list);
         virtual ~WBLC(){}
 
         virtual void updateSetting(const Eigen::MatrixXd & A,
