@@ -10,11 +10,9 @@
 // a floating base.
 class WBC{
     public:
-        WBC(const std::vector<bool> & act_list, 
-                const Eigen::MatrixXd * Jc_internal = NULL):
+        WBC(const std::vector<bool> & act_list):
             num_act_joint_(0),
             num_passive_(0),
-            b_internal_constraint_(false)
     {
         num_qdot_ = act_list.size();
         for(int i(0); i<num_qdot_; ++i){
@@ -36,11 +34,6 @@ class WBC{
                 Sv_(k, i) = 1.;
                 ++k;
             }
-        }
-
-        if(Jc_internal){
-            Jci_ = *Jc_internal;
-            b_internal_constraint_ = true;
         }
 
     }
@@ -82,9 +75,6 @@ class WBC{
 
         bool b_updatesetting_;
 
-        bool b_internal_constraint_;
-        Eigen::MatrixXd Jci_; // internal constraint Jacobian
-        Eigen::MatrixXd Nci_;
 };
 
 #endif

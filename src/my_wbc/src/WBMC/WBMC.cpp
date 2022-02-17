@@ -49,11 +49,6 @@ void WBMC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     // Internal Constraint Check
     Nci_ = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_);
 
-    if (b_internal_constraint_) {
-        Eigen::MatrixXd JciBar;
-        _WeightedInverse(Jci_, Ainv_, JciBar);
-        Nci_ -= JciBar * Jci_;
-    }
     for (int i(0); i < num_act_joint_; ++i) {
         qddot_[act_list_[i]] = des_jacc_cmd[i];
     }
@@ -111,10 +106,12 @@ void WBMC::_Build_Inequality_Constraint() {
     dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
     int row_idx(0);
 
+    // friction cone
     Cieq_.block(row_idx, num_qdot_, Uf_.rows(), dim_rf_) = Uf_;
     dieq_.head(Uf_.rows()) = Fr_ieq_;
     row_idx += Uf_.rows();
 
+    // tau min
     Cieq_.block(row_idx, 0, num_act_joint_, num_qdot_) = Sa_ * A_;
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         -Sa_ * Jc_.transpose();
@@ -122,6 +119,7 @@ void WBMC::_Build_Inequality_Constraint() {
         tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_);
     row_idx += num_act_joint_;
 
+    // tau max
     Cieq_.block(row_idx, 0, num_act_joint_, num_qdot_) = -Sa_ * A_;
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         Sa_ * Jc_.transpose();

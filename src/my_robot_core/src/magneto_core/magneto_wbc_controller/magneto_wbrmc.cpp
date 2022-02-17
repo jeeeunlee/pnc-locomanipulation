@@ -22,8 +22,8 @@ MagnetoWBRMC::MagnetoWBRMC(
 
   // // Initialize WBC
   // kin_wbc_ = new KinWBC(act_list_);
-  wbrmc_ = new WBRMRC(act_list_);
-  wbrmc_param_ = new WBRMRC_ExtraData();
+  wbrmc_ = new MCWBC(act_list_);
+  wbrmc_param_ = new MCWBC_ExtraData();
 
   // tau_cmd_ = Eigen::VectorXd::Zero(Magneto::n_adof);
   // qddot_cmd_ = Eigen::VectorXd::Zero(Magneto::n_adof);

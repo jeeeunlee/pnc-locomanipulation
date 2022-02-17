@@ -218,7 +218,7 @@ void MagnetoWbcSpecContainer::update_magnet_forces() {
     // foot in contactlist : stack F_magnetic_         
     if(b_feet_contact_list_[i]) {
       F_magnetic_ = my_utils::vStack(F_magnetic_, 
-                                feet_magnets_[i]->getMagneticForce());
+                              feet_magnets_[i]->getMagneticForce());
     }
     // foot not in contactlist : stack F_residual_, J_residual_
     else {             
