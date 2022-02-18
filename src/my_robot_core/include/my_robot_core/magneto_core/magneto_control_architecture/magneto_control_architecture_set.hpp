@@ -24,11 +24,8 @@ class MagnetoUserStateCommand {
        user_cmd = SimMotionCommand();
    }
    void setCommand(int _state_id, const SimMotionCommand& _state_cmd) {
-       std::cout<<"setCommand"<<std::endl;
        state_id = _state_id;
-       std::cout<<"_state_id"<<std::endl;
        user_cmd = _state_cmd;
-       std::cout<<"_state_cmd"<<std::endl;
    }
    int state_id;
    SimMotionCommand user_cmd;

@@ -134,6 +134,7 @@ void MagnetoWbcSpecContainer::setMagneticForce(const Eigen::VectorXd& magnetic_f
   for (int foot_idx=0; foot_idx<Magneto::n_leg; ++foot_idx)
     setMagneticForce(foot_idx, magnetic_force[foot_idx], residual_ratio[foot_idx]);  
 }
+
 void MagnetoWbcSpecContainer::setMagneticForce(int foot_idx, double fm, double rr){
   feet_magnets_[foot_idx]->setMagneticForce(fm);
   feet_magnets_[foot_idx]->setResidualRatio(rr);
@@ -142,9 +143,8 @@ void MagnetoWbcSpecContainer::setMagneticForce(int foot_idx, double fm, double r
 
 
 void MagnetoWbcSpecContainer::weightParamInitialization(const YAML::Node& node) {
-  
-  try {
-    
+
+  try {    
     my_utils::readParameter(node, "w_qddot", w_qddot_);
     my_utils::readParameter(node, "w_xddot", w_xddot_);    
     my_utils::readParameter(node, "w_xddot_z_contact", w_xddot_z_contact_);
@@ -154,7 +154,6 @@ void MagnetoWbcSpecContainer::weightParamInitialization(const YAML::Node& node) 
     my_utils::readParameter(node, "w_rf_z_nocontact", w_rf_z_nocontact_);
     my_utils::readParameter(node, "max_rf_z", max_rf_z_contact_);
     my_utils::readParameter(node, "max_rf_z_nocontact", max_rf_z_nocontact_);
-
   } catch (std::runtime_error& e) {
     std::cout << "Error reading parameter [" << e.what() << "] at file: ["
               << __FILE__ << "]" << std::endl
@@ -184,8 +183,7 @@ void MagnetoWbcSpecContainer::weightParamInitialization(const YAML::Node& node) 
   for(int i(0); i<Magneto::n_leg; ++i){
     feet_weights_[i]->setWeightRF(w_rf_, w_rf_z_contact_);
     feet_weights_[i]->setWeightXddot(w_xddot_, w_xddot_z_contact_);
-  }    
-  
+  }     
   
 }
 

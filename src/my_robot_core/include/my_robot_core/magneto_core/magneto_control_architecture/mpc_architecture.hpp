@@ -1,5 +1,9 @@
 #pragma once
 
+// 0: WBMC, 1: MCWBC
+// #define WBCMODE 0 
+#define WBCMODE 1
+
 #include <vector>
 #include <mutex> 
 
@@ -50,8 +54,11 @@ class MagnetoMpcControlArchitecture : public ControlArchitecture {
   MagnetoReferenceGeneratorContainer* rg_container_;
 
   // Controller Object
-  // MagnetoWBMC* wbc_controller;
+  #if WBCMODE==0
+  MagnetoWBMC* wbc_controller;
+  #elif WBCMODE==1
   MagnetoMCWBC* wbc_controller;
+  #endif
 
   // Observers
   SlipObserver* slip_ob_;

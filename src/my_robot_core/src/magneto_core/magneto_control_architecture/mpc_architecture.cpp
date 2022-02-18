@@ -16,8 +16,11 @@ MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot
 
   _ReadParameters();
 
-  // wbc_controller = new MagnetoWBMC(ws_container_, robot_);
+  #if WBCMODE==0
+  wbc_controller = new MagnetoWBMC(ws_container_, robot_);
+  #elif WBCMODE==1
   wbc_controller = new MagnetoMCWBC(ws_container_, robot_);
+  #endif  
   
   slip_ob_ = new SlipObserver(ws_container_, robot_);
   slip_ob_data_ = new SlipObserverData();
@@ -85,7 +88,7 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   }
   // Update State Machine
   state_machines_[state_]->oneStep();
-  // slip_ob_->weightShaping();
+  slip_ob_->weightShaping();
 
   // Get Wholebody control commands
   if (state_ == MAGNETO_STATES::INITIALIZE) {
@@ -118,7 +121,6 @@ void MagnetoMpcControlArchitecture::addState(void* _user_state_command) {
 }
 
 ///////////////////////////////////////////////////////////////////////
-
 
 void MagnetoMpcControlArchitecture::getIVDCommand(void* _cmd) {
   Eigen::VectorXd tau_cmd = Eigen::VectorXd::Zero(Magneto::n_adof);
