@@ -114,4 +114,10 @@ class WBMC: public WBC{
         void _PrintDebug(double i) {
             //printf("[WBMC] %f \n", i);
         }
+
+        void _saveDebug();
+        Eigen::VectorXd delta_qddot_;
+        Eigen::VectorXd Fc_;
+        Eigen::VectorXd xc_ddot_;
+        Eigen::VectorXd tau_cmd_;
 };

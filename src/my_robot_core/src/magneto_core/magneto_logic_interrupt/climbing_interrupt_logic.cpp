@@ -46,11 +46,8 @@ void ClimbingInterruptLogic::processInterrupts() {
 
 void ClimbingInterruptLogic::addStateCommand(int _state_id, 
                               const SimMotionCommand& _smc){
-  std::cout<<" ClimbingInterruptLogic::addStateCommand " << std::endl;
   user_state_cmd_->setCommand(_state_id, _smc);
-  std::cout<<" ClimbingInterruptLogic::setCommand done" << std::endl;
   ctrl_arch_->addState(user_state_cmd_);
-  std::cout<<" ClimbingInterruptLogic::addState done" << std::endl;
 }
 
 

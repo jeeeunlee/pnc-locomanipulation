@@ -89,6 +89,7 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
 
 
     _GetSolution(cmd);
+    _saveDebug();
     // std::cout << "f: " << f << std::endl;
     // std::cout << "x: " << z << std::endl;
     // std::cout << "cmd: "<<cmd<<std::endl;
@@ -203,7 +204,7 @@ void MCWBC::_BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) {
     }
     // my_utils::pretty_print(Fm_, std::cout, "Fm_");
     // Fm_ = Fm_*0.0;
-    // std::cout<<"Fm = "<<Fm_.transpose() << std::endl;
+    std::cout<<"Fm = "<<Fm_.transpose() << std::endl;
     // Eigen::VectorXd tau_ext = Jm_.transpose() * Fm_;
     // std::cout<<"tau_ext = "<<tau_ext.transpose() << std::endl;
 }
@@ -280,20 +281,23 @@ void MCWBC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
 }
 
 void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
-    Eigen::VectorXd delta_qddot(num_qdot_);
-    for (int i(0); i < num_qdot_; ++i) delta_qddot[i] = z[i];
-    data_->Fr_ = Eigen::VectorXd(dim_rf_);
-    for (int i(0); i < dim_rf_; ++i) data_->Fr_[i] = z[i + num_qdot_];
-    Eigen::VectorXd delta_xddot(dim_rf_);
-    for (int i = 0; i < dim_rf_; ++i) delta_xddot[i] = z[i + num_qdot_ + dim_rf_];
+    delta_qddot_ = Eigen::VectorXd::Zero(num_qdot_);
+    Fc_ = Eigen::VectorXd(dim_rf_);
+    xc_ddot_ = Eigen::VectorXd::Zero(dim_rf_);
 
-    Eigen::VectorXd tau = A_ * (qddot_ + delta_qddot) + cori_ + grav_ 
-                          - Jc_.transpose() * data_->Fr_ - Jm_*Fm_;
+    for (int i(0); i < num_qdot_; ++i) delta_qddot_[i] = z[i];
+    for (int i(0); i < dim_rf_; ++i) Fc_[i] = z[i + num_qdot_];
+    for (int i = 0; i < dim_rf_; ++i) xc_ddot_[i] = z[i + num_qdot_ + dim_rf_];
 
-    data_->qddot_ = qddot_ + delta_qddot;
+    Eigen::VectorXd tau = A_ * (qddot_ + delta_qddot_) + cori_ + grav_ 
+                          - Jc_.transpose() * Fc_ - Jm_*Fm_;
+
+    data_->qddot_ = qddot_ + delta_qddot_;
+    data_->Fr_ = Fc_;
     cmd = Sa_ * tau;
+    tau_cmd_ = cmd;
 
-    Eigen::VectorXd fr = data_->Fr_.head(6);
+    // Eigen::VectorXd fr = data_->Fr_.head(6);
     //0112 my_utils::saveVector(fr, "Fr_MCWBC");
     
     // my_utils::pretty_print(qddot_, std::cout, "qddot_");
@@ -308,3 +312,46 @@ void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
     // my_utils::pretty_print(xdot_check, std::cout, "xdot check");
 }
 
+
+void MCWBC::_saveDebug(){
+    static int numcount = 0;   
+
+    std::ofstream fout;
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/W.txt");
+    Eigen::VectorXd Weights(dim_opt_);
+    Weights << data_->W_qddot_, data_->W_rf_, data_->W_xddot_;
+    fout<<Weights<<std::endl;
+    fout.close();
+
+    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/A.txt");
+    fout<<Aeq_<<std::endl;
+    fout.close();
+    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/B.txt");
+    fout<<beq_<<std::endl;
+    fout.close();
+
+    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/C.txt");
+    fout<<Cieq_<<std::endl;
+    fout.close();
+    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/D.txt");
+    fout<<dieq_<<std::endl;
+    fout.close();
+
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/z.txt");
+    fout<<z<<std::endl;
+    fout.close();
+
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/dqddot.txt");
+    fout<<delta_qddot_<<std::endl;
+    fout.close();
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/Fc.txt");
+    fout<<Fc_<<std::endl;
+    fout.close();
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/xddot.txt");
+    fout<<xc_ddot_<<std::endl;
+    fout.close();   
+    
+    if(numcount++ > 5)
+        exit(0);
+
+}
