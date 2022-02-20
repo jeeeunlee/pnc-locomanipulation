@@ -13,7 +13,7 @@ motion0:
   frame: 0
   # for only simulation
   mu: 0.3 # friction
-  fm: 30 # adhesive force
+  fm: 40 # adhesive force
 
 motion1:
   foot: 2

@@ -320,8 +320,9 @@ void MagnetoWbcSpecContainer::set_contact_weight_param(int trans_cop) {
 }
 
 
-void MagnetoWbcSpecContainer::reshape_weight_param(int slip_cop,
-                                                    double alpha) {
+void MagnetoWbcSpecContainer::reshape_weight_param( double alpha,
+                                                    int slip_cop,
+                                                    int swing_cop) {
   W_xddot_ = Eigen::VectorXd::Zero(0); 
   W_rf_ = Eigen::VectorXd::Zero(0);
   for(int i(0); i<Magneto::n_leg; ++i) {
@@ -330,7 +331,7 @@ void MagnetoWbcSpecContainer::reshape_weight_param(int slip_cop,
       if(feet_contacts_[i]->getLinkIdx()==slip_cop){
         feet_weights_[i]->reshapeWeightRF(alpha);  
         feet_weights_[i]->reshapeWeightXddot(alpha);         
-      }else{
+      }else if(feet_contacts_[i]->getLinkIdx()!=swing_cop){
         feet_weights_[i]->reshapeWeightRF(1/alpha);  // penalty other feet
         feet_weights_[i]->reshapeWeightXddot(1/alpha); 
       }

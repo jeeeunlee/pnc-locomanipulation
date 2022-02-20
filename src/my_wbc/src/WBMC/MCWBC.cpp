@@ -35,6 +35,8 @@ void MCWBC::setTorqueLimits(const Eigen::VectorXd &_tau_min,
                             const Eigen::VectorXd &_tau_max) {
     tau_min_ = _tau_min;
     tau_max_ = _tau_max;
+    std::cout<<"Torque Limits: "<<tau_min_.transpose()<<std::endl;
+    std::cout<<tau_max_.transpose()<<std::endl;
 }
 
 void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
@@ -89,31 +91,8 @@ void MCWBC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
 
 
     _GetSolution(cmd);
-    _saveDebug();
-    // std::cout << "f: " << f << std::endl;
-    // std::cout << "x: " << z << std::endl;
-    // std::cout << "cmd: "<<cmd<<std::endl;
-
-    // if(f > 1.e5){
-    //   std::cout << "f: " << f << std::endl;
-    //   std::cout << "x: " << z << std::endl;
-    // std::cout << "cmd: "<<cmd<<std::endl;
-
-    //   printf("G:\n");
-    //   std::cout<<G<<std::endl;
-    //   printf("g0:\n");
-    //   std::cout<<g0<<std::endl;
-
-    //   printf("CE:\n");
-    //   std::cout<<CE<<std::endl;
-    //   printf("ce0:\n");
-    //   std::cout<<ce0<<std::endl;
-
-    //   printf("CI:\n");
-    //   std::cout<<CI<<std::endl;
-    //   printf("ci0:\n");
-    //   std::cout<<ci0<<std::endl;
-    // }
+    // _saveDebug();
+    
 }
 
 
@@ -130,7 +109,7 @@ void MCWBC::_Build_Inequality_Constraint() {
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         -Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
-        tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_ 
+        tau_min_ - Sa_ * ( A_ * qddot_ + cori_ + grav_ 
                            - Jm_.transpose()*Fm_ );
     row_idx += num_act_joint_;
 
@@ -202,11 +181,6 @@ void MCWBC::_BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) {
         Jm_ = my_utils::vStack( Jm_, magnet->getJacobian() );
         Fm_ = my_utils::vStack( Fm_, - magnet->getMagneticForce() );
     }
-    // my_utils::pretty_print(Fm_, std::cout, "Fm_");
-    // Fm_ = Fm_*0.0;
-    std::cout<<"Fm = "<<Fm_.transpose() << std::endl;
-    // Eigen::VectorXd tau_ext = Jm_.transpose() * Fm_;
-    // std::cout<<"tau_ext = "<<tau_ext.transpose() << std::endl;
 }
 
 void MCWBC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
@@ -251,33 +225,6 @@ void MCWBC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
         }
         ci0[i] = -dieq[i];
     }
-
-    // printf("G:\n");
-    // std::cout << G << std::endl;
-    // printf("g0:\n");
-    // std::cout << g0 << std::endl;
-    // printf("CE:\n");
-    // std::cout << CE << std::endl;
-    // printf("ce0:\n");
-    // std::cout << ce0 << std::endl;
-    // printf("CI:\n");
-    // std::cout << CI << std::endl;
-    // printf("ci0:\n");
-    // std::cout << ci0 << std::endl;
-
-    // std::ofstream fout;
-    // fout.open(THIS_COM "A.txt");
-    // fout<<CE<<std::endl;
-    // fout.close();
-    // fout.open(THIS_COM "B.txt");
-    // fout<<ce0<<std::endl;
-    // fout.close();
-    // fout.open(THIS_COM "C.txt");
-    // fout<<CI<<std::endl;
-    // fout.close();
-    // fout.open(THIS_COM "D.txt");
-    // fout<<ci0<<std::endl;
-    // fout.close();
 }
 
 void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
@@ -289,31 +236,40 @@ void MCWBC::_GetSolution(Eigen::VectorXd& cmd) {
     for (int i(0); i < dim_rf_; ++i) Fc_[i] = z[i + num_qdot_];
     for (int i = 0; i < dim_rf_; ++i) xc_ddot_[i] = z[i + num_qdot_ + dim_rf_];
 
-    Eigen::VectorXd tau = A_ * (qddot_ + delta_qddot_) + cori_ + grav_ 
-                          - Jc_.transpose() * Fc_ - Jm_*Fm_;
+    tau_cmd_ = A_ * (qddot_ + delta_qddot_) + cori_ + grav_ 
+                          - Jc_.transpose() * Fc_ - Jm_.transpose()*Fm_;
 
     data_->qddot_ = qddot_ + delta_qddot_;
     data_->Fr_ = Fc_;
-    cmd = Sa_ * tau;
-    tau_cmd_ = cmd;
-
-    // Eigen::VectorXd fr = data_->Fr_.head(6);
-    //0112 my_utils::saveVector(fr, "Fr_MCWBC");
-    
-    // my_utils::pretty_print(qddot_, std::cout, "qddot_");
-    // my_utils::pretty_print(delta_qddot, std::cout, "delta_qddot");
-    // my_utils::pretty_print(data_->Fr_, std::cout, "Fr");
-    // my_utils::pretty_print(tau, std::cout, "total tau");
-    // Eigen::VectorXd x_check = Jc_ * (qddot_ + delta_qddot) + JcDotQdot_;
-    // my_utils::pretty_print(x_check, std::cout, "x check");
-    // my_utils::pretty_print(delta_xddot, std::cout, "delta xddot");
-
-    // Eigen::VectorXd xdot_check = JcQdot_ + (Jc_ * (qddot_ + delta_qddot) + JcDotQdot_)* 0.001;
-    // my_utils::pretty_print(xdot_check, std::cout, "xdot check");
+    cmd = Sa_ * tau_cmd_;
 }
 
 
 void MCWBC::_saveDebug(){
+    // std::cout << "f: " << f << std::endl;
+    // std::cout << "x: " << z << std::endl;
+    // std::cout << "cmd: "<<cmd<<std::endl;
+
+    // if(f > 1.e5){
+    //   std::cout << "f: " << f << std::endl;
+    //   std::cout << "x: " << z << std::endl;
+    // std::cout << "cmd: "<<cmd<<std::endl;
+
+    //   printf("G:\n");
+    //   std::cout<<G<<std::endl;
+    //   printf("g0:\n");
+    //   std::cout<<g0<<std::endl;
+
+    //   printf("CE:\n");
+    //   std::cout<<CE<<std::endl;
+    //   printf("ce0:\n");
+    //   std::cout<<ce0<<std::endl;
+
+    //   printf("CI:\n");
+    //   std::cout<<CI<<std::endl;
+    //   printf("ci0:\n");
+    //   std::cout<<ci0<<std::endl;
+    // }
     static int numcount = 0;   
 
     std::ofstream fout;
@@ -323,17 +279,17 @@ void MCWBC::_saveDebug(){
     fout<<Weights<<std::endl;
     fout.close();
 
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/A.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/A.txt");
     fout<<Aeq_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/B.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/B.txt");
     fout<<beq_<<std::endl;
     fout.close();
 
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/C.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/C.txt");
     fout<<Cieq_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/D.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/D.txt");
     fout<<dieq_<<std::endl;
     fout.close();
 
@@ -349,7 +305,10 @@ void MCWBC::_saveDebug(){
     fout.close();
     fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/xddot.txt");
     fout<<xc_ddot_<<std::endl;
-    fout.close();   
+    fout.close(); 
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/tau_cmd.txt");
+    fout<<tau_cmd_<<std::endl;
+    fout.close();      
     
     if(numcount++ > 5)
         exit(0);
