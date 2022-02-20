@@ -72,33 +72,7 @@ void WBMC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     }
 
     _GetSolution(cmd);
-
-    _saveDebug();
-
-    // std::cout << "f: " << f << std::endl;
-    // std::cout << "x: " << z << std::endl;
-    // std::cout << "cmd: "<<cmd<<std::endl;
-
-    // if(f > 1.e5){
-    //   std::cout << "f: " << f << std::endl;
-    //   std::cout << "x: " << z << std::endl;
-    // std::cout << "cmd: "<<cmd<<std::endl;
-
-    //   printf("G:\n");
-    //   std::cout<<G<<std::endl;
-    //   printf("g0:\n");
-    //   std::cout<<g0<<std::endl;
-
-    //   printf("CE:\n");
-    //   std::cout<<CE<<std::endl;
-    //   printf("ce0:\n");
-    //   std::cout<<ce0<<std::endl;
-
-    //   printf("CI:\n");
-    //   std::cout<<CI<<std::endl;
-    //   printf("ci0:\n");
-    //   std::cout<<ci0<<std::endl;
-    // }
+    // _saveDebug();
 }
 
 void WBMC::_Build_Inequality_Constraint() {
@@ -221,34 +195,6 @@ void WBMC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
         }
         ci0[i] = -dieq[i];
     }
-
-    // printf("G:\n");
-    // std::cout << G << std::endl;
-    // printf("g0:\n");
-    // std::cout << g0 << std::endl;
-    // printf("CE:\n");
-    // std::cout << CE << std::endl;
-    // printf("ce0:\n");
-    // std::cout << ce0 << std::endl;
-    // printf("CI:\n");
-    // std::cout << CI << std::endl;
-    // printf("ci0:\n");
-    // std::cout << ci0 << std::endl;
-
-    // std::ofstream fout;
-    // fout.open(THIS_COM "A.txt");
-    // fout<<CE<<std::endl;
-    // fout.close();
-    // fout.open(THIS_COM "B.txt");
-    // fout<<ce0<<std::endl;
-    // fout.close();
-    // fout.open(THIS_COM "C.txt");
-    // fout<<CI<<std::endl;
-    // fout.close();
-    // fout.open(THIS_COM "D.txt");
-    // fout<<ci0<<std::endl;
-    // fout.close();
-    // exit(0);
 }
 
 void WBMC::_GetSolution(Eigen::VectorXd& cmd) {
@@ -261,33 +207,40 @@ void WBMC::_GetSolution(Eigen::VectorXd& cmd) {
     for (int i = 0; i < dim_rf_; ++i)
         xc_ddot_[i] = z[i + num_qdot_ + dim_rf_];
 
-    Eigen::VectorXd tau = A_ * (qddot_ + delta_qddot_) + cori_ + grav_ -
+    tau_cmd_ = A_ * (qddot_ + delta_qddot_) + cori_ + grav_ -
                           Jc_.transpose() * (Fc_);
 
     data_->qddot_ = qddot_ + delta_qddot_;
     data_->Fr_ = Fc_;
-    cmd = Sa_ * tau;
-
-    tau_cmd_ = cmd;
-    
-
-    
-    //0112 my_utils::saveVector(data_->Fr_, "Fr_WBMC");
-    
-    // my_utils::pretty_print(qddot_, std::cout, "qddot_");
-    // my_utils::pretty_print(delta_qddot, std::cout, "delta_qddot");
-    // my_utils::pretty_print(data_->Fr_, std::cout, "Fr");
-    // my_utils::pretty_print(tau, std::cout, "total tau");
-    // Eigen::VectorXd x_check = Jc_ * (qddot_ + delta_qddot) + JcDotQdot_;
-    // my_utils::pretty_print(x_check, std::cout, "x check");
-    // my_utils::pretty_print(delta_xddot, std::cout, "delta xddot");
-
-    // Eigen::VectorXd xdot_check = JcQdot_ + (Jc_ * (qddot_ + delta_qddot) + JcDotQdot_)* 0.001;
-    // my_utils::pretty_print(xdot_check, std::cout, "xdot check");
+    cmd = Sa_ * tau_cmd_; 
 }
 
 
 void WBMC::_saveDebug(){
+    // std::cout << "f: " << f << std::endl;
+    // std::cout << "x: " << z << std::endl;
+    // std::cout << "cmd: "<<cmd<<std::endl;
+
+    // if(f > 1.e5){
+    //   std::cout << "f: " << f << std::endl;
+    //   std::cout << "x: " << z << std::endl;
+    // std::cout << "cmd: "<<cmd<<std::endl;
+
+    //   printf("G:\n");
+    //   std::cout<<G<<std::endl;
+    //   printf("g0:\n");
+    //   std::cout<<g0<<std::endl;
+
+    //   printf("CE:\n");
+    //   std::cout<<CE<<std::endl;
+    //   printf("ce0:\n");
+    //   std::cout<<ce0<<std::endl;
+
+    //   printf("CI:\n");
+    //   std::cout<<CI<<std::endl;
+    //   printf("ci0:\n");
+    //   std::cout<<ci0<<std::endl;
+    // }
     static int numcount = 0;   
 
     std::ofstream fout;
@@ -320,6 +273,9 @@ void WBMC::_saveDebug(){
     fout.open(THIS_COM "experiment_data/DEBUG/WBMC/xddot.txt");
     fout<<xc_ddot_<<std::endl;
     fout.close();
+    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/tau_cmd.txt");
+    fout<<tau_cmd_<<std::endl;
+    fout.close();      
 
     if(numcount++ > 5)
         exit(0);

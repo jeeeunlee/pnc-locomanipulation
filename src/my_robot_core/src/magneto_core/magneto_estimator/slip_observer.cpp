@@ -117,9 +117,7 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
 
     // data saving
     std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
-    std::string foot_acc_name = MagnetoFoot::Names[foot_idx] + "_acc";
     my_utils::saveVector(xcdot, foot_vel_name);    
-    my_utils::saveVector(xcddot, foot_acc_name);
 }
 
 void SlipObserver::checkForce() {
@@ -168,19 +166,17 @@ void SlipObserver::weightShaping() {
     double slip_level = 1.0;
     
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
-        if( !b_swing_phase_ && foot_idx!=swing_foot_link_idx_ ) { 
+        if( MagnetoFoot::LinkIdx[foot_idx]!=swing_foot_link_idx_ ) { //!b_swing_phase_ && 
             // detect slip
             slip_level = xcdot.tail(3).norm() / linear_velocity_threshold;
             if( slip_level > 1.0 ) {
-                // std::cout<<" foot [" << foot_idx << "] is sliding at : ";
-                // std::cout<< "vel: "<< xcdot.transpose() << std::endl;
-                // std::cout<< "slip_level (alpha) = "<< slip_level << std::endl;
-                // ws_container_->reshape_weight_param( slip_level,
-                //                         MagnetoFoot::LinkIdx[foot_idx],
-                //                         ws_container_->W_rf_ );
-                ws_container_->reshape_weight_param( 
-                    MagnetoFoot::LinkIdx[foot_idx], slip_level );
-            }
+                // std::cout<< " slip detected at foot[" << foot_idx << "], under swing foot[";
+                // std::cout<<swing_foot_link_idx_<<"], phase="<<sp_->curr_state<<std::endl;
+                
+                ws_container_->reshape_weight_param( slip_level,  
+                                MagnetoFoot::LinkIdx[foot_idx], 
+                                swing_foot_link_idx_ );
+            }            
         }
     }
 }

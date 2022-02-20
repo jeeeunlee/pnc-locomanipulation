@@ -1,8 +1,8 @@
 #pragma once
 
 // 0: WBMC, 1: MCWBC
-// #define WBCMODE 0 
-#define WBCMODE 1
+#define WBCMODE 0 
+// #define WBCMODE 1
 
 #include <vector>
 #include <mutex> 
