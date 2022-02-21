@@ -1,57 +1,41 @@
 #include <Eigen/LU>
 #include <Eigen/SVD>
 
-#include <my_wbc/WBMC/WBMC.hpp>
+#include <my_wbc/WBMC/MRWBCC.hpp>
 
-WBMC::WBMC(const std::vector<bool>& act_list)
-    : WBC(act_list) {
-    my_utils::pretty_constructor(3, "WBMC");
-    Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
-    Sf_.block(0, 0, 6, 6).setIdentity();
+// MRWBMC (Minimum Reaction - Whole Body Climbing Control)
+// force variable to be minimized: Fr=Fx+Fm (reaction force)
 
-    act_list_.clear();
-    for (int i(0); i < num_qdot_; ++i) {
-        if (act_list[i]) act_list_.push_back(i);
-    }
-    qddot_ = Eigen::VectorXd::Zero(num_qdot_);
-    // dynacore::pretty_print(Sv_, std::cout, "Sv");
+MRWBCC::MRWBCC(const std::vector<bool>& act_list)
+    : MFWBCC(act_list) {
+    my_utils::pretty_constructor(3, "MRWBCC");    
+    qddot_ref_ = Eigen::VectorXd::Zero(num_qdot_);
 }
 
-void WBMC::updateSetting(const Eigen::MatrixXd& A, const Eigen::MatrixXd& Ainv,
-                         const Eigen::VectorXd& cori,
-                         const Eigen::VectorXd& grav, void* extra_setting) {
-    A_ = A;
-    Ainv_ = Ainv;
-    cori_ = cori;
-    grav_ = grav;
-    b_updatesetting_ = true;
-
-    // dynacore::pretty_print(grav_, std::cout, "grav");
-    // dynacore::pretty_print(cori_, std::cout, "cori");
-    // dynacore::pretty_print(A_, std::cout, "A");
-}
-
-void WBMC::setTorqueLimits(const Eigen::VectorXd &_tau_min,
-                            const Eigen::VectorXd &_tau_max) {
-    tau_min_ = _tau_min;
-    tau_max_ = _tau_max;
-}
-
-void WBMC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
-                           const std::vector<ContactSpec*>& contact_list,
-                           Eigen::VectorXd& cmd, void* extra_input) {
+void MRWBCC::makeTorqueGivenRef(const Eigen::VectorXd& ref_cmd,
+                    const std::vector<ContactSpec*>& contact_list,
+                    const std::vector<MagnetSpec*> &magnet_list,
+                    Eigen::VectorXd& cmd, void* extra_input) {
     if (!b_updatesetting_) {
-        printf("[Warning] WBMC setting is not done\n");
+        printf("[Warning] MRWBCC setting is not done\n");
     }
-    if (extra_input) data_ = static_cast<WBMC_ExtraData*>(extra_input);
+    if (extra_input) data_ = static_cast<MCWBC_ExtraData*>(extra_input);
 
-
-
-    for (int i(0); i < num_act_joint_; ++i) {
-        qddot_[act_list_[i]] = des_jacc_cmd[i];
+    // assume ref_cmd is given by qddot_ref_
+    if(ref_cmd.size() == num_act_joint_){
+        for (int i(0); i < num_act_joint_; ++i)
+            qddot_ref_[act_list_[i]] = ref_cmd[i];
+    } else if(ref_cmd.size() == num_qdot_) {
+        for (int i(0); i < num_qdot_; ++i) 
+            qddot_ref_[i] = ref_cmd[i];         
+    } else {
+        printf("[Warning] qddot reference dimension incorrect \n");
     }
+    // Magnet Jacobian & force : Jm_, Fm_
+    _BuildMagnetMtxVect(magnet_list);
 
-    // Contact Jacobian & Uf & Fr_ieq
+    // Contact Jacobian & friction condition : 
+    // dim_rf_ & Uf_ & Fr_ieq  & Jc_, JcDotQdot, JcQdot_
     _BuildContactMtxVect(contact_list);
 
     // Dimension Setting
@@ -64,18 +48,72 @@ void WBMC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
     _OptimizationPreparation(Aeq_, beq_, Cieq_, dieq_); 
 
     double f = solve_quadprog(G, g0, CE, ce0, CI, ci0, z);
+    // std::cout<<" solve_quadprog done"<< std::endl;
 
     if(f == std::numeric_limits<double>::infinity())  {
         std::cout << "Infeasible Solution f: " << f << std::endl;
         std::cout << "x: " << z << std::endl;
         // exit(0.0);
     }
+    // else if(f > 1.e5){
+    //     std::cout << "f: " << f << std::endl;
+    //     std::cout << "x: " << z << std::endl;
+    //     std::cout << "cmd: "<<cmd<<std::endl; 
+    // }
 
     _GetSolution(cmd);
-    // _saveDebug();
+    // _saveDebug();  
 }
 
-void WBMC::_Build_Inequality_Constraint() {
+void MRWBCC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
+    Jc_ = Eigen::MatrixXd::Zero(0,0);
+    JcDotQdot_ = Eigen::VectorXd::Zero(0);  
+    JcQdot_ = Eigen::VectorXd::Zero(0);  
+    Uf_ = Eigen::MatrixXd::Zero(0,0);
+    Fr_ieq_ = Eigen::VectorXd::Zero(0); 
+    dim_rf_ = 0;
+
+    Eigen::MatrixXd Jc_i, Uf_i;
+    Eigen::VectorXd Fr_ieq_i, JcDotQdot_i, JcQdot_i, Fm_i;
+
+    for (auto &contact: contact_list) {
+        contact->getContactJacobian(Jc_i);
+        contact->getJcDotQdot(JcDotQdot_i);
+        contact->getJcQdot(JcQdot_i);
+        contact->getRFConstraintMtx(Uf_i);
+        contact->getRFConstraintVec(Fr_ieq_i);
+
+        // (Fr = Fc+Fm, where Uf*Fc >fieq)
+        // Uf(Fr-Fm)> fieq : Uf*Fr > fieq + Uf*Fm
+        Fm_i = - Magnet_map_[contact->getLinkIdx()]->getMagneticForce();
+        Fr_ieq_i += Uf_i* Fm_i;
+
+        Jc_ = my_utils::vStack(Jc_, Jc_i);
+        JcDotQdot_ = my_utils::vStack(JcDotQdot_, JcDotQdot_i);
+        JcQdot_ = my_utils::vStack(JcQdot_, JcQdot_i);
+        Uf_ = my_utils::dStack(Uf_, Uf_i);
+        Fr_ieq_ = my_utils::vStack(Fr_ieq_, Fr_ieq_i);
+        dim_rf_ += contact->getDim();
+                
+        // erase contact link
+        Magnet_map_.erase(contact->getLinkIdx());
+    }
+
+    // residual magnetic force
+    JrmFrm_ = Eigen::VectorXd::Zero(num_qdot_);
+    for(auto &magnet: Magnet_map_)
+        JrmFrm_ += magnet->getJmFm();
+
+}
+
+void MRWBCC::_BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) {
+    Magnet_map_.clear();
+    for (auto &magnet : magnet_list) {
+        Magnet_map_[magnet->getLinkIdx()] = magnet
+    }
+}
+
+void MRWBCC::_Build_Inequality_Constraint() {
     Cieq_ = Eigen::MatrixXd::Zero(dim_ieq_cstr_, dim_opt_);
     dieq_ = Eigen::VectorXd::Zero(dim_ieq_cstr_);
     int row_idx(0);
@@ -90,7 +128,7 @@ void WBMC::_Build_Inequality_Constraint() {
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         -Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
-        tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_);
+        tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_ref_ - JrmFrm_);
     row_idx += num_act_joint_;
 
     // tau max
@@ -98,62 +136,33 @@ void WBMC::_Build_Inequality_Constraint() {
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
-        -tau_max_ + Sa_ * (cori_ + grav_ + A_ * qddot_);
+        -tau_max_ + Sa_ * (cori_ + grav_ + A_ * qddot_ref_ - JrmFrm_);
 
     // my_utils::pretty_print(Cieq_, std::cout, "C ieq");
     // my_utils::pretty_print(dieq_, std::cout, "d ieq");
 }
 
-void WBMC::_Build_Equality_Constraint() {
+void MRWBCC::_Build_Equality_Constraint() {
     Aeq_ = Eigen::MatrixXd::Zero(dim_eq_cstr_, dim_opt_);
     beq_ = Eigen::VectorXd::Zero(dim_eq_cstr_);
 
     // passive joint
     Aeq_.block(0, 0, num_passive_, num_qdot_) = Sv_ * A_;
     Aeq_.block(0, num_qdot_, num_passive_, dim_rf_) = -Sv_ * Jc_.transpose();
-    beq_.head(num_passive_) = -Sv_ * ( A_ * qddot_ + cori_ + grav_ );
+    beq_.head(num_passive_) = -Sv_ * ( A_ * qddot_ref_ + cori_ + grav_  - JrmFrm_);
 
     // xddot
     Aeq_.block(num_passive_, 0, dim_rf_, num_qdot_) = Jc_;
     Aeq_.bottomRightCorner(dim_rf_, dim_rf_) =
         -Eigen::MatrixXd::Identity(dim_rf_, dim_rf_);
-    beq_.tail(dim_rf_) = -Jc_ * qddot_ - JcDotQdot_;
+    beq_.tail(dim_rf_) = -Jc_ * qddot_ref_ - JcDotQdot_;
 
     // my_utils::pretty_print(Aeq_, std::cout, "Aeq");
     // my_utils::pretty_print(beq_, std::cout, "beq");
 }
 
-void WBMC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
-    Jc_ = Eigen::MatrixXd::Zero(0,0);
-    JcDotQdot_ = Eigen::VectorXd::Zero(0);  
-    JcQdot_ = Eigen::VectorXd::Zero(0);  
-    Uf_ = Eigen::MatrixXd::Zero(0,0);
-    Fr_ieq_ = Eigen::VectorXd::Zero(0); 
 
-    Eigen::MatrixXd Jc_i, Uf_i;
-    Eigen::VectorXd Fr_ieq_i, JcDotQdot_i, JcQdot_i;
-    Eigen::VectorXd dFr_by_magnet;
-
-    for (auto &contact: contact_list) {
-        contact->getContactJacobian(Jc_i);
-        contact->getJcDotQdot(JcDotQdot_i);
-        contact->getJcQdot(JcQdot_i);
-        contact->getRFConstraintMtx(Uf_i);
-        contact->getRFConstraintVec(Fr_ieq_i);
-
-        dFr_by_magnet = - Uf_i*(data_->F_magnetic_.segment(Uf_.cols(), Uf_i.cols()));  
-        Fr_ieq_i += dFr_by_magnet;
-
-        Jc_ = my_utils::vStack(Jc_, Jc_i);
-        JcDotQdot_ = my_utils::vStack(JcDotQdot_, JcDotQdot_i);
-        JcQdot_ = my_utils::vStack(JcQdot_, JcQdot_i);
-        Uf_ = my_utils::dStack(Uf_, Uf_i);
-        Fr_ieq_ = my_utils::vStack(Fr_ieq_, Fr_ieq_i);
-    }
-    dim_rf_ = Jc_.rows();
-}
-
-void WBMC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
+void MRWBCC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
                                     const Eigen::VectorXd& beq,
                                     const Eigen::MatrixXd& Cieq,
                                     const Eigen::VectorXd& dieq) {
@@ -197,7 +206,7 @@ void WBMC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
     }
 }
 
-void WBMC::_GetSolution(Eigen::VectorXd& cmd) {
+void MRWBCC::_GetSolution(Eigen::VectorXd& cmd) {
     delta_qddot_ = Eigen::VectorXd::Zero(num_qdot_);
     Fc_ = Eigen::VectorXd(dim_rf_);
     xc_ddot_ = Eigen::VectorXd::Zero(dim_rf_);
@@ -207,16 +216,16 @@ void WBMC::_GetSolution(Eigen::VectorXd& cmd) {
     for (int i = 0; i < dim_rf_; ++i)
         xc_ddot_[i] = z[i + num_qdot_ + dim_rf_];
 
-    tau_cmd_ = A_ * (qddot_ + delta_qddot_) + cori_ + grav_ -
-                          Jc_.transpose() * (Fc_);
+    tau_cmd_ = A_ * (qddot_ref_ + delta_qddot_) + cori_ + grav_ 
+                - Jc_.transpose() * (Fc_) - JrmFrm_;
 
-    data_->qddot_ = qddot_ + delta_qddot_;
+    data_->qddot_ = qddot_ref_ + delta_qddot_;
     data_->Fr_ = Fc_;
     cmd = Sa_ * tau_cmd_; 
 }
 
 
-void WBMC::_saveDebug(){
+void MRWBCC::_saveDebug(){
     // std::cout << "f: " << f << std::endl;
     // std::cout << "x: " << z << std::endl;
     // std::cout << "cmd: "<<cmd<<std::endl;
@@ -244,36 +253,36 @@ void WBMC::_saveDebug(){
     static int numcount = 0;   
 
     std::ofstream fout;
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/W.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/W.txt");
     Eigen::VectorXd Weights(dim_opt_);
     Weights << data_->W_qddot_, data_->W_rf_, data_->W_xddot_;
     fout<<Weights<<std::endl;
     fout.close();
     
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/A.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/A.txt");
     fout<<Aeq_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/B.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/B.txt");
     fout<<beq_<<std::endl;
     fout.close();
 
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/C.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/C.txt");
     fout<<Cieq_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/D.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/D.txt");
     fout<<dieq_<<std::endl;
     fout.close();
 
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/dqddot.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/dqddot.txt");
     fout<<delta_qddot_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/Fc.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/Fc.txt");
     fout<<Fc_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/WBMC/xddot.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/xddot.txt");
     fout<<xc_ddot_<<std::endl;
     fout.close();
-    fout.open(THIS_COM "experiment_data/DEBUG/MCWBC/tau_cmd.txt");
+    fout.open(THIS_COM "experiment_data/DEBUG/MRWBCC/tau_cmd.txt");
     fout<<tau_cmd_<<std::endl;
     fout.close();      
 

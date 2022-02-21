@@ -1,7 +1,7 @@
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_mcwbc.hpp>
 
-MagnetoMCWBC::MagnetoMCWBC(
-    MagnetoWbcSpecContainer* _ws_container, RobotSystem* _robot){
+MagnetoMCWBC::MagnetoMCWBC( MagnetoWbcSpecContainer* _ws_container, 
+                            RobotSystem* _robot, int _controller_type ){
   my_utils::pretty_constructor(2, "Magnetic Contact Whole Body Controller");
   // Initialize Flag
   b_first_visit_ = true;
@@ -13,17 +13,23 @@ MagnetoMCWBC::MagnetoMCWBC(
   // Initialize State Provider
   sp_ = MagnetoStateProvider::getStateProvider(robot_);
 
-  // Initialize Actuator selection list
-  
+  // Initialize Actuator selection list  
   act_list_.resize(Magneto::n_dof, true);
   for (int i(0); i < Magneto::n_vdof; ++i) 
       act_list_[Magneto::idx_vdof[i]] = false;
 
-  // Initialize WBC
-  kin_wbc_ = new KinWBC(act_list_);
-  mcwbc_ = new MCWBC(act_list_);
+  // Initialize WBC 
+  if(_controller_type == MCWBC_TYPES::MFWBCC)
+    mcwbc_ = new MFWBCC(act_list_);
+  else if(_controller_type == MCWBC_TYPES::MRWBCC)
+    mcwbc_ = new MRWBCC(act_list_);
+  else{
+    std::cout<<"error @ MagnetoMCWBC : invalid controller_type"<<_controller_type<<std::endl;
+    exit(0);
+  }
   mcwbc_param_ = new MCWBC_ExtraData();
-
+  kin_wbc_ = new KinWBC(act_list_);
+  
   tau_cmd_ = Eigen::VectorXd::Zero(Magneto::n_adof);
   qddot_cmd_ = Eigen::VectorXd::Zero(Magneto::n_adof);
 
@@ -35,6 +41,7 @@ MagnetoMCWBC::MagnetoMCWBC(
 
 MagnetoMCWBC::~MagnetoMCWBC() {
   delete mcwbc_;
+  delete mcwbc_param_;
 }
 
 void MagnetoMCWBC::_PreProcessing_Command() {
@@ -81,12 +88,12 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
   
   kin_wbc_->FindConfiguration(sp_->q, task_list_, contact_list_, 
                                 jpos_des_, jvel_des_, jacc_des_); 
-  my_utils::saveVector(jpos_des_, "jpos_des");
-  my_utils::saveVector(jvel_des_, "jvel_des");
+  // my_utils::saveVector(jpos_des_, "jpos_des");
+  // my_utils::saveVector(jvel_des_, "jvel_des");
   kin_wbc_->FindFullConfiguration(sp_->q, task_list_, contact_list_, 
                                     jpos_des_, jvel_des_, jacc_des_); 
-  my_utils::saveVector(jpos_des_, "jpos_des_full");
-  my_utils::saveVector(jvel_des_, "jvel_des_full");
+  // my_utils::saveVector(jpos_des_, "jpos_des_full");
+  // my_utils::saveVector(jvel_des_, "jvel_des_full");
                 
   Eigen::VectorXd jacc_des_cmd = jacc_des_;
   // for(int i(0); i<Magneto::n_dof; ++i) {
@@ -99,8 +106,6 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
           Kp_[i]*(jpos_des_[Magneto::idx_adof[i]] - sp_->q[Magneto::idx_adof[i]])
           + Kd_[i]*(jvel_des_[Magneto::idx_adof[i]] - sp_->qdot[Magneto::idx_adof[i]]);
   }
-
-
                                 
   // wbmc
   mcwbc_->updateSetting(A_, Ainv_, coriolis_, grav_);

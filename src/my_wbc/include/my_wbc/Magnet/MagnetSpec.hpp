@@ -30,6 +30,7 @@ class MagnetSpec {
 
     Eigen::VectorXd getMagneticForce();    
     Eigen::MatrixXd getJacobian();
+    Eigen::VectorXd getJmFm();
 
   protected:
     ContactSpec* contact_;
@@ -43,5 +44,6 @@ class MagnetSpec {
     double computeFm(double f0);
 
     Eigen::MatrixXd J_;
+    Eigen::VectorXd JmFm_;
     
 };

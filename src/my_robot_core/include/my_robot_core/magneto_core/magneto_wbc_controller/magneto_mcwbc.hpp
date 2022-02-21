@@ -7,12 +7,22 @@
 
 #include <my_wbc/JointIntegrator.hpp>
 #include <my_wbc/WBLC/KinWBC.hpp>
-#include <my_wbc/WBMC/MCWBC.hpp>
+#include <my_wbc/WBMC/MFWBCC.hpp>
+#include <my_wbc/WBMC/MRWBCC.hpp>
+
+
+
+namespace MCWBC_TYPES {
+constexpr int MRWBCC = 0;
+constexpr int MFWBCC = 1;
+}; // namespace MCWBC_TYPES
+
 
 class MagnetoMCWBC {
  public:
   MagnetoMCWBC(MagnetoWbcSpecContainer* _ws_container,
-                            RobotSystem* _robot);
+                            RobotSystem* _robot,
+                            int _controller_type);
   virtual ~MagnetoMCWBC();
 
   virtual void getCommand(void* _cmd);

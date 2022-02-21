@@ -1,16 +1,16 @@
-#pragma once
+#ifndef MAGNETIC_CONTACT_WHOLE_BODY_CONTROLLER
+#define MAGNETIC_CONTACT_WHOLE_BODY_CONTROLLER
 
 #include <my_utils/IO/IOUtilities.hpp>
+#include <my_utils/Math/MathUtilities.hpp>
+#include <my_utils/Math/pseudo_inverse.hpp>
 #include <Goldfarb/QuadProg++.hh>
-#include <my_wbc/WBC.hpp>
+
+#include <my_wbc/Task/Task.hpp>
 #include <my_wbc/Contact/ContactSpec.hpp>
 #include <my_wbc/Magnet/MagnetSpec.hpp>
 
-// residual magnetic force acting on swing foot 
-// is considered in the dynamics equation
-
 // MC-WBC (Magnetic Contact - Whole Body Control)
-// force variable to be minimized: Fx=Fc-Fm (friction cone force)
 
 class MCWBC_ExtraData{
     public:
@@ -18,116 +18,103 @@ class MCWBC_ExtraData{
         Eigen::VectorXd opt_result_;
         Eigen::VectorXd qddot_;
         Eigen::VectorXd Fr_;
-
         // Input
         Eigen::VectorXd W_qddot_;
         Eigen::VectorXd W_rf_;
         Eigen::VectorXd W_xddot_;
-
         MCWBC_ExtraData(){}
         ~MCWBC_ExtraData(){}
 };
 
-class MCWBC: public WBC{
+class MFWBCC{
     public:
-        MCWBC(const std::vector<bool> & act_list);
-        virtual ~MCWBC(){}
+        MFWBCC(const std::vector<bool> & act_list) {
+            num_qdot_ = act_list.size();
+            act_list_.clear(); // act jnt idx container
+            for(int i(0); i<num_qdot_; ++i){
+                if(act_list[i]) act_list_.push_back(i);
+            }
+            num_act_joint_ = act_list_.size();
+            num_passive_ = num_qdot_ - num_act_joint_;
 
-        virtual void updateSetting(const Eigen::MatrixXd & A,
-                const Eigen::MatrixXd & Ainv,
-                const Eigen::VectorXd & cori,
-                const Eigen::VectorXd & grav,
-                void* extra_setting = NULL);
+            // Set virtual & actuated selection matrix
+            Sa_ = Eigen::MatrixXd::Zero(num_act_joint_, num_qdot_);
+            Sv_ = Eigen::MatrixXd::Zero(num_passive_, num_qdot_);            
+            int j(0), k(0);            
+            for(int i(0); i <num_qdot_; ++i){
+                if(act_list[i]){
+                    Sa_(j, i) = 1.;
+                    ++j;
+                }
+                else{
+                    Sv_(k, i) = 1.;
+                    ++k;
+                }
+            }
+        }
 
-        void makeTorqueGivenRef(const Eigen::VectorXd & des_jacc_cmd,
-                const std::vector<ContactSpec*> & contact_list,
-                const std::vector<MagnetSpec*> &magnet_list,
-                Eigen::VectorXd & cmd,
-                void* extra_input = NULL);
-
-        virtual void makeTorque(
-                const std::vector<Task*> & task_list,
-                const std::vector<ContactSpec*> & contact_list,
-                Eigen::VectorXd & cmd,
-                void* extra_input = NULL) {};
+        virtual ~MFWBCC() {}
 
         void setTorqueLimits(const Eigen::VectorXd &_tau_min,
-                const Eigen::VectorXd &_tau_max);
+                const Eigen::VectorXd &_tau_max) {
+            tau_min_ = _tau_min;
+            tau_max_ = _tau_max;
+        }
+        virtual void updateSetting(const Eigen::MatrixXd & A,
+                                const Eigen::MatrixXd & Ainv,
+                                const Eigen::VectorXd & cori,
+                                const Eigen::VectorXd & grav,
+                                void* extra_setting = NULL) {
+            A_ = A;
+            Ainv_ = Ainv;
+            cori_ = cori;
+            grav_ = grav;
+            b_updatesetting_ = true;
+        }
+        virtual void makeTorqueGivenRef(const Eigen::VectorXd & ref_cmd,
+                const std::vector<ContactSpec*> & contact_list,
+                const std::vector<MagnetSpec*> & magnet_list,
+                Eigen::VectorXd & cmd,
+                void* extra_input = NULL) = 0;
 
+    protected:
+        // full rank fat matrix only
+        void _WeightedInverse(const Eigen::MatrixXd & J,
+                const Eigen::MatrixXd & Winv,
+                Eigen::MatrixXd & Jinv){
+            Eigen::MatrixXd lambda(J* Winv * J.transpose());
+            Eigen::MatrixXd lambda_inv;
+            my_utils::pseudoInverse(lambda, 0.0001, lambda_inv);
+            Jinv = Winv * J.transpose() * lambda_inv;
+        }
 
+    protected:
+        std::vector<int> act_list_; // Actuated joint idx
+        int num_qdot_;
+        int num_act_joint_;
+        int num_passive_;
 
-    private:
-        std::vector<int> act_list_;
-
-        void _OptimizationPreparation(
-                const Eigen::MatrixXd & Aeq,
-                const Eigen::VectorXd & beq,
-                const Eigen::MatrixXd & Cieq,
-                const Eigen::VectorXd & dieq);
-
-
-        void _GetSolution(Eigen::VectorXd & cmd);
-        void _OptimizationPreparation();
-
-        int dim_opt_;
-        int dim_eq_cstr_; // equality constraints
-        int dim_ieq_cstr_; // inequality constraints
-        int dim_first_task_; // first task dimension
-        MCWBC_ExtraData* data_;
-
+        Eigen::MatrixXd Sa_; // Actuated joint
+        Eigen::MatrixXd Sv_; // Virtual joint
         Eigen::VectorXd tau_min_;
         Eigen::VectorXd tau_max_;
 
+        Eigen::MatrixXd A_;
+        Eigen::MatrixXd Ainv_;
+        Eigen::VectorXd cori_;
+        Eigen::VectorXd grav_;
 
-        GolDIdnani::GVect<double> z;
-        // Cost
-        GolDIdnani::GMatr<double> G;
-        GolDIdnani::GVect<double> g0;
+        bool b_updatesetting_;
+        MCWBC_ExtraData* data_;
 
-        // Equality
-        GolDIdnani::GMatr<double> CE;
-        GolDIdnani::GVect<double> ce0;
+        // function in makeTorqueGivenRef 
+        // Setup the followings: 
+        virtual void _BuildContactMtxVect(const std::vector<ContactSpec*> & contact_list) = 0;
+        virtual void _BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) = 0;
+        virtual void _Build_Equality_Constraint() = 0;
+        virtual void _Build_Inequality_Constraint() = 0;
+        virtual void _GetSolution(Eigen::VectorXd & cmd) = 0;
 
-        // Inequality
-        GolDIdnani::GMatr<double> CI;
-        GolDIdnani::GVect<double> ci0;
-
-        int dim_rf_;
-        int dim_relaxed_task_;
-        int dim_cam_;
-        int dim_rf_cstr_;
-
-        // BuildContactMtxVect builds the followings:
-        void _BuildContactMtxVect(const std::vector<ContactSpec*> & contact_list);
-        Eigen::MatrixXd Uf_;
-        Eigen::VectorXd Fr_ieq_;
-        Eigen::MatrixXd Jc_;
-        Eigen::VectorXd JcDotQdot_;
-        Eigen::VectorXd JcQdot_;
-
-        void _BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list);
-        Eigen::MatrixXd Jm_;
-        Eigen::VectorXd Fm_;
-
-        // Setup the followings:
-        void _Build_Equality_Constraint();
-        Eigen::MatrixXd Aeq_;
-        Eigen::VectorXd beq_;
-
-        void _Build_Inequality_Constraint();
-        Eigen::MatrixXd Cieq_;
-        Eigen::VectorXd dieq_;
-
-        Eigen::VectorXd qddot_;
-
-        Eigen::MatrixXd Sf_; //floating base
-        void _PrintDebug(double i) {
-            //printf("[MCWBC] %f \n", i);
-        }
-
-        void _saveDebug();
-        Eigen::VectorXd delta_qddot_;
-        Eigen::VectorXd Fc_;
-        Eigen::VectorXd xc_ddot_;
-        Eigen::VectorXd tau_cmd_;
 };
+
+#endif
