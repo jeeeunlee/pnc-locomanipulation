@@ -1,7 +1,12 @@
 #pragma once
 
+#include <my_utils/Math/MathUtilities.hpp>
+#include <Goldfarb/QuadProg++.hh>
 
-#include <my_wbc/WBMC/MFWBCC.hpp>
+#include <my_wbc/Task/Task.hpp>
+#include <my_wbc/Contact/ContactSpec.hpp>
+#include <my_wbc/Magnet/MagnetSpec.hpp>
+#include <my_wbc/WBMC/MCWBC.hpp>
 
 // MFWBMC (Minimum Friction - Whole Body Climbing Control)
 // force variable to be minimized: Fx=Fc-Fm (friction cone force)
@@ -9,7 +14,7 @@
 // residual magnetic force acting on swing foot 
 // is considered in the dynamics equation
 
-class MFWBCC: public MFWBCC{
+class MFWBCC: public MCWBC{
     public:
         MFWBCC(const std::vector<bool> & act_list);
         virtual ~MFWBCC() {}
@@ -59,12 +64,12 @@ class MFWBCC: public MFWBCC{
         GolDIdnani::GMatr<double> CI; // Inequality
         GolDIdnani::GVect<double> ci0;
 
-        virtual void _GetSolution(Eigen::VectorXd & cmd) = 0;
+        virtual void _GetSolution(Eigen::VectorXd & cmd);
         Eigen::VectorXd delta_qddot_;
         Eigen::VectorXd Fc_;
         Eigen::VectorXd xc_ddot_;
         Eigen::VectorXd tau_cmd_; 
 
     private:
-        void _SaveDebug();
+        void _saveDebug();
 };

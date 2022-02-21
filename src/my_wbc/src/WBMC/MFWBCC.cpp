@@ -2,13 +2,12 @@
 #include <Eigen/SVD>
 
 #include <my_wbc/WBMC/MFWBCC.hpp>
-#include <my_utils/IO/IOUtilities.hpp>
 
-// MC-WBC (Magnetic Contact - Whole Body Control)
+// MFWBCC (Minimum Friction - Whole Body Climbing Control)
 
 MFWBCC::MFWBCC(const std::vector<bool>& act_list)
-    : MFWBCC(act_list) {
-    my_utils::pretty_constructor(3, "MFWBCC");    
+    : MCWBC(act_list) {
+    my_utils::pretty_constructor(3, "MFWBCC - Minimum Friction - Whole Body Climbing Control");    
     qddot_ref_ = Eigen::VectorXd::Zero(num_qdot_);
 }
 

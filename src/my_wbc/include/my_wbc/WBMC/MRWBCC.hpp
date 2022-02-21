@@ -1,9 +1,13 @@
 #pragma once
 
-#include <my_utils/IO/IOUtilities.hpp>
-#include "Goldfarb/QuadProg++.hh"
-#include <my_wbc/WBC.hpp>
+#include <my_utils/Math/MathUtilities.hpp>
+#include <Goldfarb/QuadProg++.hh>
+
+#include <my_wbc/Task/Task.hpp>
 #include <my_wbc/Contact/ContactSpec.hpp>
+#include <my_wbc/Magnet/MagnetSpec.hpp>
+
+#include <my_wbc/WBMC/MCWBC.hpp>
 
 // MRWBMC (Minimum Reaction - Whole Body Climbing Control)
 // force variable to be minimized: Fr=Fx+Fm (friction cone force)
@@ -11,7 +15,7 @@
 // residual magnetic force acting on swing foot 
 // is considered in the dynamics equation
 
-class MRWBCC: public MFWBCC{
+class MRWBCC: public MCWBC{
     public:
         MRWBCC(const std::vector<bool> & act_list);
         virtual ~MRWBCC(){}
@@ -41,9 +45,7 @@ class MRWBCC: public MFWBCC{
         Eigen::MatrixXd Jc_;
         Eigen::VectorXd JcDotQdot_;
         Eigen::VectorXd JcQdot_;
-        Eigen::MatrixXd Jrm_; // only stack one not in contact
-        Eigen::VectorXd Frm_; // only stack one not in contact
-        Eigen::VectorXd JrmFrm_;
+        Eigen::VectorXd JrmFrm_; // only stack Jm*Fm not in contact
 
 
         virtual void _Build_Equality_Constraint();
@@ -63,7 +65,7 @@ class MRWBCC: public MFWBCC{
         GolDIdnani::GMatr<double> CI; // Inequality
         GolDIdnani::GVect<double> ci0;
 
-        virtual void _GetSolution(Eigen::VectorXd & cmd) = 0;
+        virtual void _GetSolution(Eigen::VectorXd & cmd);
         Eigen::VectorXd delta_qddot_;
         Eigen::VectorXd Fc_;
         Eigen::VectorXd xc_ddot_;

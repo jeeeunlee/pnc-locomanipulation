@@ -13,6 +13,11 @@ SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
   // Get State Provider
   sp_ = MagnetoStateProvider::getStateProvider(robot_);
 
+  // lpf2_container_
+  for(int i(0); i<Magneto::n_leg; ++i){
+    lpf2_container_[i] = new LowPassFilter2();    
+  }
+
   // set parameters  
   initParams();
   initContact();
@@ -21,15 +26,34 @@ SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
   b_swing_phase_ = false;
 }
 
-SlipObserver::~SlipObserver() {}
+SlipObserver::~SlipObserver() { 
+    for( auto &lpf2 : lpf2_container_)
+        delete lpf2;
+}
 
-void SlipObserver::initialization(const YAML::Node& node){
+void SlipObserver::initialization(const YAML::Node& node) {
+    try { 
+        my_utils::readParameter(node,"slip_velocity_threshold", lin_vel_thres_);  
+        my_utils::readParameter(node,"weight_shaping", weight_shaping_activated_); 
+        my_utils::readParameter(node,"lpf_vel_cutoff", lpf_vel_cutoff_);
+    } catch (std::runtime_error& e) {
+        std::cout << "Error reading parameter [" << e.what() << "] at file: ["
+                << __FILE__ << "]" << std::endl
+                << std::endl;
+        exit(0);
+    }  
 
+    for(int i(0); i<Magneto::n_leg; ++i){
+        lpf2_container_[i]->initialize(
+            ws_container_->feet_contacts_[i]->getDim(), lpf_vel_cutoff_); 
+    }
 }
 
 void SlipObserver::initParams(){
     Sa_ = Eigen::MatrixXd::Zero(Magneto::n_adof, Magneto::n_dof);
     for(int i=0; i< Magneto::n_adof; ++i){ Sa_(i, Magneto::idx_adof[i]) = 1.; }
+    weight_shaping_activated_=0;
+    lin_vel_thres_=0.02;
 }
 
 void SlipObserver::initContact(){
@@ -42,7 +66,7 @@ void SlipObserver::initContact(){
         dim_grf_map_[foot_idx] = dim_grf;
         foot_vel_map_[foot_idx] = Eigen::VectorXd::Zero(dim_grf); 
         foot_acc_map_[foot_idx] = Eigen::VectorXd::Zero(dim_grf);         
-        grf_des_map_[foot_idx] = Eigen::VectorXd::Zero(dim_grf);        
+        grf_des_map_[foot_idx] = Eigen::VectorXd::Zero(dim_grf);
     }   
 }
 
@@ -103,21 +127,18 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
 
     Eigen::VectorXd xcdot = Jc*qdot_;
     Eigen::VectorXd xcddot = Jc*qddot_ + JcDotQdot;
-    
-    // double linear_velocity_threshold = 0.05;
-    // if( foot_idx==swing_foot_link_idx_ && 
-    //     xcdot.tail(3).norm() > linear_velocity_threshold){
-    //     std::cout<<" foot [" << foot_idx << "] is moving at : ";
-    //     std::cout<< "vel: "<< xcdot.transpose() << std::endl;
-    //     std::cout<< "acc: "<< xcddot.transpose() << std::endl;
-    // }
 
-    foot_vel_map_[foot_idx] = xcdot;
+    Eigen::VectorXd xcdot_filtered = lpf2_container_[foot_idx]->update(xcdot);
+    
+    foot_vel_map_[foot_idx] = xcdot_filtered; // xcdot;
     foot_acc_map_[foot_idx] = xcddot;
 
     // data saving
     std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
     my_utils::saveVector(xcdot, foot_vel_name);    
+
+    foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel_filtered";
+    my_utils::saveVector(xcdot_filtered, foot_vel_name);    
 }
 
 void SlipObserver::checkForce() {
@@ -156,19 +177,19 @@ void SlipObserver::checkForce() {
 void SlipObserver::weightShaping() {
     // reshape the weight w.r.t grf ("ws_container_->W_rf_")
     // climbing_param.yaml
-    // w_rf = 1.0, w_rf_z = 0.01 / w_rf_z_nocontact = 0.5
+    // w_rf = 1.0, w_rf_z = 0.001 / w_rf_z_nocontact = 0.05
     // 
     // if there exists a foot in slippery, we would want to 
     // increase the normal force & decrease the tangential force
     // should decrease w_rf_z, increase w_rf
     
-    double linear_velocity_threshold = 0.02;
-    double slip_level = 1.0;
-    
+    if(weight_shaping_activated_==0) return;
+
+    double slip_level = 1.0;    
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
         if( MagnetoFoot::LinkIdx[foot_idx]!=swing_foot_link_idx_ ) { //!b_swing_phase_ && 
             // detect slip
-            slip_level = xcdot.tail(3).norm() / linear_velocity_threshold;
+            slip_level = xcdot.tail(3).norm() / lin_vel_thres_;
             if( slip_level > 1.0 ) {
                 // std::cout<< " slip detected at foot[" << foot_idx << "], under swing foot[";
                 // std::cout<<swing_foot_link_idx_<<"], phase="<<sp_->curr_state<<std::endl;

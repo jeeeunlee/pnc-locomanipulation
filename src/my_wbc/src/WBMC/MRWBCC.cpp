@@ -7,8 +7,8 @@
 // force variable to be minimized: Fr=Fx+Fm (reaction force)
 
 MRWBCC::MRWBCC(const std::vector<bool>& act_list)
-    : MFWBCC(act_list) {
-    my_utils::pretty_constructor(3, "MRWBCC");    
+    : MCWBC(act_list) {
+    my_utils::pretty_constructor(3, "MRWBCC - Min Reaction Whole Body Climbing Control");    
     qddot_ref_ = Eigen::VectorXd::Zero(num_qdot_);
 }
 
@@ -45,7 +45,7 @@ void MRWBCC::makeTorqueGivenRef(const Eigen::VectorXd& ref_cmd,
 
     _Build_Equality_Constraint(); 
     _Build_Inequality_Constraint(); 
-    _OptimizationPreparation(Aeq_, beq_, Cieq_, dieq_); 
+    _OptimizationPreparation(); // A,B,C,D -> G, g0, CE, ce0, CI, ci0
 
     double f = solve_quadprog(G, g0, CE, ce0, CI, ci0, z);
     // std::cout<<" solve_quadprog done"<< std::endl;
@@ -62,7 +62,7 @@ void MRWBCC::makeTorqueGivenRef(const Eigen::VectorXd& ref_cmd,
     // }
 
     _GetSolution(cmd);
-    // _saveDebug();  
+    // _SaveDebug();  
 }
 
 void MRWBCC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list) {
@@ -101,7 +101,7 @@ void MRWBCC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list)
 
     // residual magnetic force
     JrmFrm_ = Eigen::VectorXd::Zero(num_qdot_);
-    for(auto &magnet: Magnet_map_)
+    for(auto &[link, magnet]: Magnet_map_)
         JrmFrm_ += magnet->getJmFm();
 
 }
@@ -109,7 +109,7 @@ void MRWBCC::_BuildContactMtxVect(const std::vector<ContactSpec*>& contact_list)
 void MRWBCC::_BuildMagnetMtxVect(const std::vector<MagnetSpec*> &magnet_list) {
     Magnet_map_.clear();
     for (auto &magnet : magnet_list) {
-        Magnet_map_[magnet->getLinkIdx()] = magnet
+        Magnet_map_[magnet->getLinkIdx()] = magnet;
     }
 }
 
@@ -162,10 +162,7 @@ void MRWBCC::_Build_Equality_Constraint() {
 }
 
 
-void MRWBCC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
-                                    const Eigen::VectorXd& beq,
-                                    const Eigen::MatrixXd& Cieq,
-                                    const Eigen::VectorXd& dieq) {
+void MRWBCC::_OptimizationPreparation() {
 
     G.resize(dim_opt_, dim_opt_);
     g0.resize(dim_opt_);
@@ -194,15 +191,15 @@ void MRWBCC::_OptimizationPreparation(const Eigen::MatrixXd& Aeq,
     }
     for (int i(0); i < dim_eq_cstr_; ++i) {
         for (int j(0); j < dim_opt_; ++j) {
-            CE[j][i] = Aeq(i, j);
+            CE[j][i] = Aeq_(i, j);
         }
-        ce0[i] = -beq[i];
+        ce0[i] = -beq_[i];
     }
     for (int i(0); i < dim_ieq_cstr_; ++i) {
         for (int j(0); j < dim_opt_; ++j) {
-            CI[j][i] = Cieq(i, j);
+            CI[j][i] = Cieq_(i, j);
         }
-        ci0[i] = -dieq[i];
+        ci0[i] = -dieq_[i];
     }
 }
 
@@ -225,7 +222,7 @@ void MRWBCC::_GetSolution(Eigen::VectorXd& cmd) {
 }
 
 
-void MRWBCC::_saveDebug(){
+void MRWBCC::_SaveDebug(){
     // std::cout << "f: " << f << std::endl;
     // std::cout << "x: " << z << std::endl;
     // std::cout << "cmd: "<<cmd<<std::endl;
