@@ -182,6 +182,8 @@ void MagnetoMpcControlArchitecture::_InitializeParameters() {
   state_machines_[MAGNETO_STATES::SWING_END_TRANS]
                   ->initialization(cfg_["transition_params"]);
 
+  slip_ob_->initialization(cfg_["slip_observer_params"]);
+
 }
 
 void MagnetoMpcControlArchitecture::saveData() {

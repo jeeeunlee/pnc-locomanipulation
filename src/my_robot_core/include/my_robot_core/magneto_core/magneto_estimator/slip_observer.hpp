@@ -2,6 +2,7 @@
 
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 #include <my_robot_core/state_estimator.hpp>
+#include <my_utils/Math/low_pass_filter.h>
 
 class MagnetoWbcSpecContainer;
 class MagnetoReferenceGeneratorContainer;
@@ -34,6 +35,10 @@ class SlipObserver : public StateEstimator {
     void initContact();
     void initParams();
     void updateContact();
+  
+  public:
+    int weight_shaping_activated_;
+    double lin_vel_thres_;
     
 
   protected:
@@ -62,5 +67,8 @@ class SlipObserver : public StateEstimator {
     Eigen::VectorXd q_;
     Eigen::VectorXd qdot_;
     Eigen::VectorXd qddot_;  
+
+    std::array<LowPassFilter2*, Magneto::n_leg> lpf2_container_;
+    double lpf_vel_cutoff_;
     
 };

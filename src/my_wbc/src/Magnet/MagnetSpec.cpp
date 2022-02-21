@@ -24,7 +24,7 @@ Eigen::VectorXd MagnetSpec::getJmFm() {
   contact_->updateContactSpec();
   contact_->getContactJacobian(J_);
   JmFm_ = J_.transpose() * (-getMagneticForce());
-  return JmFm;
+  return JmFm_;
 }
 
 double MagnetSpec::computeFm(double f0){

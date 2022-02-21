@@ -8,7 +8,7 @@
 #include <my_robot_core/magneto_core/magneto_command_api.hpp>
 
 #include <my_robot_core/magneto_core/magneto_wbc_controller/state_machines/state_machine_set.hpp>
-#include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbmc.hpp>
+// #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_wbmc.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/magneto_mcwbc.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/magneto_core/magneto_wbc_controller/containers/reference_generator_container.hpp>

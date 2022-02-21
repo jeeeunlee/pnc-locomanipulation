@@ -2,13 +2,9 @@
 #define MAGNETIC_CONTACT_WHOLE_BODY_CONTROLLER
 
 #include <my_utils/IO/IOUtilities.hpp>
-#include <my_utils/Math/MathUtilities.hpp>
 #include <my_utils/Math/pseudo_inverse.hpp>
-#include <Goldfarb/QuadProg++.hh>
 
-#include <my_wbc/Task/Task.hpp>
-#include <my_wbc/Contact/ContactSpec.hpp>
-#include <my_wbc/Magnet/MagnetSpec.hpp>
+
 
 // MC-WBC (Magnetic Contact - Whole Body Control)
 
@@ -26,9 +22,11 @@ class MCWBC_ExtraData{
         ~MCWBC_ExtraData(){}
 };
 
-class MFWBCC{
+class ContactSpec;
+class MagnetSpec;
+class MCWBC{
     public:
-        MFWBCC(const std::vector<bool> & act_list) {
+        MCWBC(const std::vector<bool> & act_list) {
             num_qdot_ = act_list.size();
             act_list_.clear(); // act jnt idx container
             for(int i(0); i<num_qdot_; ++i){
@@ -53,7 +51,7 @@ class MFWBCC{
             }
         }
 
-        virtual ~MFWBCC() {}
+        virtual ~MCWBC() {}
 
         void setTorqueLimits(const Eigen::VectorXd &_tau_min,
                 const Eigen::VectorXd &_tau_max) {

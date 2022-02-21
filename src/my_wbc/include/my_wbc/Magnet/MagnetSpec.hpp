@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <my_wbc/Contact/ContactSpec.hpp>
-// #include <my_robot_system/RobotSystem.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 
 class MagnetSpec {
@@ -23,7 +22,7 @@ class MagnetSpec {
 
     int getLinkIdx() {return contact_->getLinkIdx();}
     void setContactDistance(double cd) { contact_distance_ = cd; }
-    void setResidualRatio(double rr) { residual_ratio_ = rr; }
+    void setResidualRatio(double rr) { residual_ratio_ = rr * 0.01; } // percentage
     void setMagneticForce(double fm) { fm_ = fm; }
     void setMagnetOnoff(bool _onoff) { onoff_ = _onoff; }
     bool getOnOff() {return onoff_;}    
