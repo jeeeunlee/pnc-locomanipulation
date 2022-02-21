@@ -16,11 +16,8 @@ MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot
 
   _ReadParameters();
 
-  #if WBCMODE==0
-  wbc_controller = new MagnetoWBMC(ws_container_, robot_);
-  #elif WBCMODE==1
-  wbc_controller = new MagnetoMCWBC(ws_container_, robot_);
-  #endif  
+  wbc_controller = new MagnetoMCWBC(ws_container_, robot_, controller_type_);
+
   
   slip_ob_ = new SlipObserver(ws_container_, robot_);
   slip_ob_data_ = new SlipObserverData();

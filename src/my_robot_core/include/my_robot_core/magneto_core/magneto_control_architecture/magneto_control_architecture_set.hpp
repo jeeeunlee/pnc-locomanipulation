@@ -1,13 +1,6 @@
 #include <my_robot_core/magneto_core/magneto_control_architecture/mpc_architecture.hpp>
 #include <my_robot_core/magneto_core/magneto_control_architecture/wbmc_architecture.hpp>
 
-
-
-namespace CONTROLLER_TYPES {
-constexpr int WBMC = 0;
-constexpr int WBRMC = 1;
-}; // namespace CONTROLLER_TYPES
-
 namespace MAGNETO_STATES {
 constexpr int INITIALIZE = 0;
 constexpr int BALANCE = 1; // DEFAULT

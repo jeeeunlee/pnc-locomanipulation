@@ -7,7 +7,7 @@
 
 #include <my_wbc/JointIntegrator.hpp>
 #include <my_wbc/WBLC/KinWBC.hpp>
-#include <my_wbc/WBMC/WBMC.hpp>
+#include <my_wbc/WBMC/MRWBCC.hpp>
 
 class MagnetoWBMC {
  public:
@@ -70,7 +70,7 @@ class MagnetoWBMC {
   Eigen::VectorXd tau_max_;
 
  private:
-  WBMC* wbmc_;
+  MRWBCC* wbmc_;
   WBMC_ExtraData* wbmc_param_;
 
 };

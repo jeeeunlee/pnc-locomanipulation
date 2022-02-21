@@ -14,8 +14,7 @@ MagnetoWbmcControlArchitecture::MagnetoWbmcControlArchitecture(RobotSystem* _rob
 
   _ReadParameters();  
 
-  wbc_controller = new MagnetoWBMC(ws_container_, robot_);
-  // wbc_controller = new MagnetoMCWBC(ws_container_, robot_);
+  wbc_controller = new MagnetoMCWBC(ws_container_, robot_, controller_type_);
 
   states_sequence_ = new StateSequence<SimMotionCommand>();
 

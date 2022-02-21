@@ -19,6 +19,14 @@ Eigen::MatrixXd MagnetSpec::getJacobian() {
   return J_;
 }
 
+Eigen::VectorXd MagnetSpec::getJmFm() {
+  // return JmFm
+  contact_->updateContactSpec();
+  contact_->getContactJacobian(J_);
+  JmFm_ = J_.transpose() * (-getMagneticForce());
+  return JmFm;
+}
+
 double MagnetSpec::computeFm(double f0){
   // contact_distance_ <- setContactDistance
   // 0.02 : contact distance criteria
