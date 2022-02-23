@@ -325,6 +325,8 @@ void MagnetoWbcSpecContainer::reshape_weight_param( double alpha,
                                                     int swing_cop) {
   W_xddot_ = Eigen::VectorXd::Zero(0); 
   W_rf_ = Eigen::VectorXd::Zero(0);
+  alpha = alpha*alpha*alpha;
+  alpha = std::min(alpha, 100.);
   for(int i(0); i<Magneto::n_leg; ++i) {
     if(b_feet_contact_list_[i]) {
       // if trans
