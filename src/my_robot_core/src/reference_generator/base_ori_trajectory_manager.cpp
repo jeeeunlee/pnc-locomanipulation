@@ -41,7 +41,7 @@ void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time,
                             MagnetoBodyNode::base_link).linear() );
   base_quat_des_ = _base_quat_des;
   quat_hermite_curve_.initialize(base_quat_ini_, zero_vel_,
-                                 base_quat_des_, zero_vel_);
+                                 base_quat_des_, zero_vel_, traj_duration_);
 }
 
 void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time, 
@@ -55,11 +55,11 @@ void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time,
 
 // Computes the swing base_ori trajectory
 void BaseOriTrajectoryManager::updateBaseOriTrajectory(const double& current_time) {
-  double s = (current_time - traj_start_time_) / traj_duration_;
+  double t = (current_time - traj_start_time_) ;
 
-  quat_hermite_curve_.evaluate(s, base_quat_des_);
-  quat_hermite_curve_.getAngularVelocity(s, base_ori_vel_des_);
-  quat_hermite_curve_.getAngularAcceleration(s, base_ori_acc_des_);
+  quat_hermite_curve_.evaluate(t, base_quat_des_);
+  quat_hermite_curve_.getAngularVelocity(t, base_ori_vel_des_);
+  quat_hermite_curve_.getAngularAcceleration(t, base_ori_acc_des_);
   convertQuatDesToOriDes(base_quat_des_, base_ori_pos_des_);
   
 }

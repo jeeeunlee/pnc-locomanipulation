@@ -52,8 +52,4 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
   // Hermite Curve containers
   HermiteCurveVec pos_traj;
 
-
- protected:
-  void setPosCurve(const Eigen::VectorXd& com_pos_ini, 
-                    const Eigen::VectorXd& com_pos_des);
 };

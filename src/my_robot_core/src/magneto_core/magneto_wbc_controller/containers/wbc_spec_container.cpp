@@ -325,8 +325,8 @@ void MagnetoWbcSpecContainer::reshape_weight_param( double alpha,
                                                     int swing_cop) {
   W_xddot_ = Eigen::VectorXd::Zero(0); 
   W_rf_ = Eigen::VectorXd::Zero(0);
-  alpha = alpha*alpha*alpha;
-  alpha = std::min(alpha, 100.);
+  alpha = alpha*alpha;
+  alpha = std::min(alpha, 400.);
   for(int i(0); i<Magneto::n_leg; ++i) {
     if(b_feet_contact_list_[i]) {
       // if trans
@@ -365,9 +365,9 @@ Task* MagnetoWbcSpecContainer::get_foot_ori_task(int moving_cop) {
   else return feet_ori_tasks_[foot_idx]; 
 }
 
-int MagnetoWbcSpecContainer::footLink2FootIdx(int moving_cop){
-  for( int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx){
+int MagnetoWbcSpecContainer::footLink2FootIdx(int moving_cop) {
+  for( int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx) {
     if(MagnetoFoot::LinkIdx[foot_idx] == moving_cop)
-      return foot_idx;  }
+      return foot_idx; }
   return -1;
-} 
+}
