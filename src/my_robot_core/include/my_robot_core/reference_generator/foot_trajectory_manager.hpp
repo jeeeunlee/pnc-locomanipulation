@@ -40,8 +40,7 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
 
   // Initialize the swing foot trajectory
   void setFootPosTrajectory(const double& _start_time,
-                            MotionCommand* _motion_cmd,
-                            const double& swing_x_ratio=0.5);
+                            MotionCommand* _motion_cmd);
 
   // Computes the swing foot trajectory
   void updateFootPosTrajectory(const double& current_time);
@@ -55,7 +54,6 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
 
  private:
   double swing_height_; // swing height where the middle point will be located
-  double swing_xhratio_; // the x ratio where the middle point will be located
   MotionCommand* mp_curr_;
   Eigen::VectorXd zero_vel_;
 
@@ -70,6 +68,5 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
                               Eigen::VectorXd& ori_out);
   void setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 
                         const Eigen::VectorXd& foot_pos_des,
-                        const double& swing_height,
-                        const double& swing_x_ratio);
+                        const double& swing_height);
 };

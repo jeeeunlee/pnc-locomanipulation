@@ -11,11 +11,11 @@ class HermiteCurve{
 public:
 	HermiteCurve();
 	HermiteCurve(const double & start_pos, const double & start_vel, 
-				 const double & end_pos, const double & end_vel);
+				 const double & end_pos, const double & end_vel, const double & duration);
 	~HermiteCurve();
-	double evaluate(const double & s_in);
-	double evaluateFirstDerivative(const double & s_in);
-	double evaluateSecondDerivative(const double & s_in);
+	double evaluate(const double & t_in);
+	double evaluateFirstDerivative(const double & t_in);
+	double evaluateSecondDerivative(const double & t_in);
 
 private:
 	double p1;
@@ -23,10 +23,12 @@ private:
 	double p2;
 	double v2;
 
+	double t_dur;
+
 	double s_;
 
 	// by default clamps within 0 and 1.
-	double clamp(const double & s_in, double lo = 0.0, double hi = 1.0);
+	double clamp(const double & t_in, double lo = 0.0, double hi = 1.0);
 
 };
 

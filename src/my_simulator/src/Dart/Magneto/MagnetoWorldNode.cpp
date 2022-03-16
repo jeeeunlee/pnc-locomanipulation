@@ -110,6 +110,29 @@ void MagnetoWorldNode::customPreStep() {
     ((MagnetoInterface*)interface_)->getCommand(sensor_data_, command_);
     
 
+    trq_cmd_.setZero();
+    for(int i=0; i< Magneto::n_adof; ++i) {
+        trq_cmd_[Magneto::idx_adof[i]] 
+                        = command_->jtrq[i] + 
+                          kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
+                          kp_ * (command_->q[i] - sensor_data_->q[i]);
+    }
+    // spring in gimbal    
+    // double ks = 1.0;// N/rad
+    // for(int i=6; i< Magneto::n_vdof; ++i) {
+    //     trq_cmd_[Magneto::idx_vdof[i]] = ks * ( 0.0 - sensor_data_->virtual_q[i]);
+    // }
+
+    EnforceTorqueLimit();
+    updateContactEnvSetup();
+    setFrictionCoeff();
+    ApplyMagneticForce();
+    robot_->setForces(trq_cmd_);
+
+    // --------------------------------------------------------------
+    //          Plot
+    // --------------------------------------------------------------
+
     if (b_plot_result_) {
         if (((MagnetoInterface*)interface_)->IsPlannerUpdated()) {
             PlotResult_();
@@ -118,28 +141,6 @@ void MagnetoWorldNode::customPreStep() {
             PlotFootStepResult_();
         }
     }
-    // --------------------------------------------------------------
-
-    trq_cmd_.setZero();
-    // spring in gimbal
-    
-    // double ks = 1.0;// N/rad
-    // for(int i=6; i< Magneto::n_vdof; ++i) {
-    //     trq_cmd_[Magneto::idx_vdof[i]] = ks * ( 0.0 - sensor_data_->virtual_q[i]);
-    // }
-
-    for(int i=0; i< Magneto::n_adof; ++i) {
-        trq_cmd_[Magneto::idx_adof[i]] 
-                        = command_->jtrq[i] + 
-                          kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
-                          kp_ * (command_->q[i] - sensor_data_->q[i]);
-    }
-
-    EnforceTorqueLimit();
-    updateContactEnvSetup();
-    setFrictionCoeff();
-    ApplyMagneticForce();
-    robot_->setForces(trq_cmd_);
 
     saveData();
     count_++;
@@ -319,6 +320,28 @@ void MagnetoWorldNode::PlotFootStepResult_() {
     foot_frame->setShape(foot_shape);
     foot_frame->getVisualAspect(true)->setColor(foot_step_color);
     world_->addSimpleFrame(foot_frame);
+
+    // for mpc test
+
+    std::cout<<"================================"<<std::endl;
+    Eigen::Vector3d base_pos = robot_->getCOM();
+    my_utils::pretty_print(base_pos, std::cout, "P_com");  
+
+    std::string varname;
+    Eigen::Isometry3d foot_iso;
+    Eigen::VectorXd foot_pos_;
+    Eigen::MatrixXd foot_rot_;
+    for(int i(0); i<Magneto::n_leg; ++i){
+        varname = MagnetoFoot::Names[i]+"config";
+        foot_iso = robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->getWorldTransform();
+        foot_pos_ = foot_iso.translation();
+        foot_rot_ = foot_iso.linear();
+        my_utils::pretty_print(foot_pos_, std::cout, varname);
+        my_utils::pretty_print(foot_rot_, std::cout, varname);
+    }
+    std::cout<<"================================"<<std::endl;
+    
+
 }
 
 void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {

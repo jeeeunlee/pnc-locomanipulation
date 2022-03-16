@@ -138,8 +138,8 @@ bool Swing::endOfState() {
   if ( state_machine_time_ > ctrl_duration_) {
     return true;
   } else if (state_machine_time_ > 0.5*ctrl_duration_ 
-            && rg_container_->foot_trajectory_manager_->getTrajHeight() < 0.01 ){
-    std::cout<<"@@@@@@@@@@@@ SWING CONTACT END @@@@@@@@@@@@@ t=" << state_machine_time_ << std::endl;
+            && rg_container_->foot_trajectory_manager_->getTrajHeight() < 1e-5 ){
+    std::cout<<"@@@@@@@@@@@@ SWING CONTACT END @ t=" << state_machine_time_ << std::endl;
     return true;
   }
   return false;

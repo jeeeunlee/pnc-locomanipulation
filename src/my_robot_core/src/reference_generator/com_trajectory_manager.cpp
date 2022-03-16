@@ -56,7 +56,9 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
   my_utils::pretty_print(com_pos_ini_, std::cout, "com_pos_ini_");
   my_utils::pretty_print(com_pos_des_, std::cout, "com_pos_des_");
 
-  setPosCurve(com_pos_ini_, com_pos_des_);
+  pos_traj.initialize(com_pos_ini_, zero_vel_, 
+                      com_pos_des_, zero_vel_, traj_duration_);
+
 }
 
 void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
@@ -73,27 +75,25 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
   my_utils::pretty_print(com_pos_ini_, std::cout, "com_pos_ini_");
   my_utils::pretty_print(com_pos_des_, std::cout, "com_pos_des_");
 
-  setPosCurve(com_pos_ini_, com_pos_des_);
+  pos_traj.initialize(com_pos_ini_, zero_vel_, 
+                      com_pos_des_, zero_vel_, traj_duration_);
+
 }
 
 
 // Computes the swing com trajectory
 void CoMTrajectoryManager::updateCoMTrajectory(double current_time) {
-  double s = (current_time - traj_start_time_) / traj_duration_;
+  double t = (current_time - traj_start_time_) ;
   // Get com position and its derivatives
   // std::cout<<"s = " << s << std::endl;
-  com_pos_des_ = pos_traj.evaluate(s);
-  com_vel_des_ = pos_traj.evaluateFirstDerivative(s);
-  com_acc_des_ = pos_traj.evaluateSecondDerivative(s);
+  com_pos_des_ = pos_traj.evaluate(t);
+  com_vel_des_ = pos_traj.evaluateFirstDerivative(t);
+  com_acc_des_ = pos_traj.evaluateSecondDerivative(t);
+
+  // my_utils::saveVector(com_pos_des_, "com_pos_des_");
+  // my_utils::saveVector(com_vel_des_, "com_vel_des_");
+  // my_utils::saveVector(com_acc_des_, "com_acc_des_");
 
 }
 
-void CoMTrajectoryManager::setPosCurve(const Eigen::VectorXd& com_pos_ini, 
-                      const Eigen::VectorXd& com_pos_des) {  
-
-  // Construct Position trajectories
-  // Eigen::VectorXd com_vel_mid = (com_pos_des -com_pos_ini)/traj_duration_;
-  pos_traj.initialize(com_pos_ini, zero_vel_, 
-                      com_pos_des, zero_vel_);
-}
 
