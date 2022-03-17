@@ -95,7 +95,7 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   }
 
   // Save Data
-  saveData();
+  // saveData();
 
   // Check for State Transitions
   if (state_machines_[state_]->endOfState()) {

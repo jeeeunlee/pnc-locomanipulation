@@ -15,7 +15,7 @@ HermiteCurve::HermiteCurve(const double & start_pos, const double & start_vel,
                            p1(start_pos), v1(start_vel), p2(end_pos), v2(end_vel), t_dur(duration){
   s_ = 0;
   if(t_dur < 1e-3){
-    std::cout<<"given t_dur lower than minimum -> set to min: " << 0.001 <<std::endl;
+    std::cout<<"given t_dur lower than minimum -> set to min: 0.001" << std::endl;
     t_dur = 1e-3;
   }
   // std::cout << "[Hermite Curve] constructed with values" << std::endl;

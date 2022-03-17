@@ -30,6 +30,7 @@ class MagnetoReferenceGeneratorContainer {
 
   // Planner
   MagnetoGoalPlanner* goal_planner_;
+  MagnetoCoMPlanner* com_sequence_planner_;
   // MagnetoTrajectoryManager* trajectory_planner_;
 
 };

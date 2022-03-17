@@ -18,6 +18,7 @@ MagnetoReferenceGeneratorContainer::MagnetoReferenceGeneratorContainer(
   W_rf_manager_ = new SmoothTransitionManager(&ws_container_->w_rf_z_trans_);
 
   goal_planner_ = new MagnetoGoalPlanner(robot_);
+  com_sequence_planner_ = new MagnetoCoMPlanner(robot_);
 }
 
 MagnetoReferenceGeneratorContainer::~MagnetoReferenceGeneratorContainer(){
@@ -31,4 +32,5 @@ MagnetoReferenceGeneratorContainer::~MagnetoReferenceGeneratorContainer(){
     delete W_rf_manager_;
 
     delete goal_planner_;
+    delete com_sequence_planner_;
 }

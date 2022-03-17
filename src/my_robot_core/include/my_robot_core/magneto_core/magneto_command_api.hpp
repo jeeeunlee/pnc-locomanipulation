@@ -63,6 +63,51 @@ struct MOTION_DATA {
     }
 };
 
+class ComMotionCommand :  public UserCommand{
+  public:
+    ComMotionCommand() {
+      pa.setZero();
+      pb.setZero();
+      va.setZero();
+      vb.setZero();
+      motion_period = 0.0;
+      is_acc_constant = false;
+    };
+    ComMotionCommand(const Eigen::Vector3d& _pa,
+                    const Eigen::Vector3d& _va,
+                    const Eigen::Vector3d& _pb,
+                    const Eigen::Vector3d& _vb
+                    double _T) {
+      pa = _pa;
+      pb = _pb;
+      va = _va;
+      vb = _vb;
+      motion_period = _T;
+      is_acc_constant = false;
+    }
+    ComMotionCommand(const Eigen::Vector3d& _pa,
+                    const Eigen::Vector3d& _va,
+                    const Eigen::Vector3d& _acc,
+                    double _T) {
+      pa = _pa;
+      va = _va;
+      acc = _acc;
+      motion_period = _T;
+      is_acc_constant = true;
+    }
+
+    ~ComMotionCommand();
+  private:
+    Eigen::Vector3d pa;
+    Eigen::Vector3d pb;
+    Eigen::Vector3d va;
+    Eigen::Vector3d vb;
+    Eigen::Vector3d acc;
+    double motion_period;
+    bool is_acc_constant;
+
+};
+
 // specific component
 class MotionCommand : public UserCommand {
   public:

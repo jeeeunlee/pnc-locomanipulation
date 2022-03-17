@@ -159,4 +159,7 @@ void Transition::initialization(const YAML::Node& node) {
               << std::endl;
     exit(0);
   }  
+
+  rg_container_->com_sequence_planner_->setTransitionDuration(trans_duration_);
+  
 }

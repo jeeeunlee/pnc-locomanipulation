@@ -3,15 +3,17 @@
 #include <cmath>
 
 namespace my_utils {
-double smoothing(double ini, double fin, double rat) {
-  double ret(0.);
-  if (rat < 0) {
-    return ini;
-  } else if (rat > 1) {
-    return fin;
-  } else {
-    return ini + (fin - ini) * rat;
-  }
+
+Eigen::MatrixXd skew(const Eigen::VectorXd& w){
+    // [[ 0, -3,  2],
+    // [ 3,  0, -1],
+    // [-2,  1,  0]]
+    Eigen::MatrixXd Wx = Eigen::MatrixXd::Zero(3,3);
+    Wx <<   0.0,   -w(2),  w(1),
+           w(2),     0.0, -w(0),
+          -w(1), p_wb(w),  0.0;
+    return Wx;
+
 }
 
 Eigen::MatrixXd hStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
@@ -79,6 +81,58 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row_) {
     return ret;
 }
 
+void hStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
+ if (a.rows() != b.rows()) {
+        std::cout << "[hStack] Matrix Size is Wrong" << std::endl;
+        exit(0);
+    }
+    int acol = a.cols();
+    a.conservativeResize(a.rows(), a.cols() + b.cols());
+    a.block(0, acols ,b.rows(), b.cols()) = b;
+}
+
+void vStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
+    if(a.size()==0) a = b;
+    if(b.size()==0) return;
+    if (a.cols() != b.cols()) {
+        std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
+        exit(0);
+    }
+    int asize = a.size();
+    a.conservativeResize(a.size() + b.size());
+    a.segment(asize, b.size()) = b;
+}
+
+void vStackConserve(Eigen::VectorXd& a, const Eigen::VectorXd& b){
+    if (a.rows()==0 || a.cols()==0)
+        a= b;
+    if (b.rows()==0 || b.cols()==0)
+        return;
+    if (a.cols() != b.cols()) {
+        std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
+        exit(0);
+    }
+    int arow = a.rows();
+    a.conservativeResize(a.rows() + b.rows(), a.cols());
+    a.block(arow, 0 ,b.rows(), b.cols()) = b;
+}
+
+void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
+    // diagonally stack a,b -> [a 0; 0 b]
+    if (a.rows()==0 || a.cols()==0)
+        a = b;
+    if (b.rows()==0 || b.cols()==0)
+        return;
+    int arow = a.rows();
+    int acol = a.cols();
+    a.conservativeResize(a.rows() + b.rows(), a.cols() + b.cols());
+    (a.topRightCorner(arow, b.cols())).setZero();
+    (a.bottomLeftCorner(b.rows(), acol)).setZero();
+    a.block(arow, acol, b.rows(), b.cols()) = b;
+}
+
+
+
 double smooth_changing(double ini, double end, double moving_duration,
                        double curr_time) {
   double ret;
@@ -108,6 +162,17 @@ double smooth_changing_acc(double ini, double end, double moving_duration,
     ret = 0.0;
   }
   return ret;
+}
+
+double smoothing(double ini, double fin, double rat) {
+  double ret(0.);
+  if (rat < 0) {
+    return ini;
+  } else if (rat > 1) {
+    return fin;
+  } else {
+    return ini + (fin - ini) * rat;
+  }
 }
 
 void getSinusoidTrajectory(double initTime_, const Eigen::VectorXd& midPoint_,

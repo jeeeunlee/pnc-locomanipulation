@@ -21,6 +21,7 @@ class MagnetoStateEstimator {
 
     Eigen::VectorXd curr_config_;
     Eigen::VectorXd curr_qdot_;
+    Eigen::VectorXd prev_tau_cmd_;
 
     void _JointUpdate(MagnetoSensorData* data);
     void _ConfigurationAndModelUpdate();
