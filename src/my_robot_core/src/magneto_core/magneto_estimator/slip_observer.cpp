@@ -134,11 +134,11 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
     foot_acc_map_[foot_idx] = xcddot;
 
     // data saving
-    std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
-    my_utils::saveVector(xcdot, foot_vel_name);    
+    // std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
+    // my_utils::saveVector(xcdot, foot_vel_name);    
 
-    foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel_filtered";
-    my_utils::saveVector(xcdot_filtered, foot_vel_name);    
+    // foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel_filtered";
+    // my_utils::saveVector(xcdot_filtered, foot_vel_name);    
 }
 
 void SlipObserver::checkForce() {
@@ -162,16 +162,16 @@ void SlipObserver::checkForce() {
     }
 
     // DATA SAVING
-    std::string filename;
-    Eigen::VectorXd grf_act_des;
-    for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
-        filename = MagnetoFoot::Names[foot_idx] + "_grf_act_des";
-        dim_grf = dim_grf_map_[foot_idx];
-        grf_act_des = Eigen::VectorXd::Zero(2*dim_grf);
-        grf_act_des.head(dim_grf) = grf_act_map_[foot_idx];
-        grf_act_des.tail(dim_grf) = grf_des_map_[foot_idx];
-        my_utils::saveVector(grf_act_des, filename);
-    }
+    // std::string filename;
+    // Eigen::VectorXd grf_act_des;
+    // for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
+    //     filename = MagnetoFoot::Names[foot_idx] + "_grf_act_des";
+    //     dim_grf = dim_grf_map_[foot_idx];
+    //     grf_act_des = Eigen::VectorXd::Zero(2*dim_grf);
+    //     grf_act_des.head(dim_grf) = grf_act_map_[foot_idx];
+    //     grf_act_des.tail(dim_grf) = grf_des_map_[foot_idx];
+    //     my_utils::saveVector(grf_act_des, filename);
+    // }
 }
 
 void SlipObserver::weightShaping() {

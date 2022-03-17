@@ -45,6 +45,8 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
 
 
  private:
+  double swing_height_;
+  MotionCommand* mp_curr_;
   Eigen::VectorXd zero_vel_;
 
   // Hermite Curve containers

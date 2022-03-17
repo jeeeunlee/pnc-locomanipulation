@@ -23,24 +23,18 @@ MagnetoGoalPlanner::MagnetoGoalPlanner(RobotSystem* robot) {
     _InitCostFunction();
 
     // set Constraint
-    std::vector<int> foot_idx_list;
-    foot_idx_list.push_back(MagnetoBodyNode::AL_foot_link);
-    foot_idx_list.push_back(MagnetoBodyNode::BL_foot_link);
-    foot_idx_list.push_back(MagnetoBodyNode::AR_foot_link);
-    foot_idx_list.push_back(MagnetoBodyNode::BR_foot_link);
-    _InitConstraints(foot_idx_list);
+    _InitConstraints();
 }
 
 MagnetoGoalPlanner::~MagnetoGoalPlanner() {
   _DeleteConstraints();
 }
 
-void MagnetoGoalPlanner::_InitConstraints(
-                          const std::vector<int> _link_idx_list) {
+void MagnetoGoalPlanner::_InitConstraints() {
   _DeleteConstraints();
-  for(auto &link_idx : _link_idx_list)
+  for(int i(0); i<Magneto::n_leg; ++i)
     constraint_list.push_back(
-        new Constraint(robot_planner_, link_idx));
+        new Constraint(robot_planner_, MagnetoFoot::LinkIdx[i]));
 }
 
 void MagnetoGoalPlanner::_DeleteConstraints() {
@@ -49,7 +43,8 @@ void MagnetoGoalPlanner::_DeleteConstraints() {
   constraint_list.clear();
 }
 
-void MagnetoGoalPlanner::_setDesiredFootPosition(MotionCommand _motion_command) {
+void MagnetoGoalPlanner::_setDesiredFootPosition(const POSE_DATA &foot_pose_data,
+                                                int moving_foot_idx) {
   // contact class / Task class >> Foot Class ?
   
   // initialize joint values
@@ -58,16 +53,11 @@ void MagnetoGoalPlanner::_setDesiredFootPosition(MotionCommand _motion_command) 
   delq_ = Eigen::VectorXd::Zero(q_.size());
   _UpdateConfiguration(q_);
   _InitCostFunction();
-
-  // assume one foot is moving
-  int moving_foot_idx;
-  MOTION_DATA motion_data;
-  _motion_command.get_foot_motion(motion_data, moving_foot_idx);
-
+  
   POSE_DATA zero_pose = POSE_DATA();
   for(auto &constraint : constraint_list){
     if(constraint->getLinkIdx() == moving_foot_idx) 
-      constraint->setDesired(motion_data.pose);
+      constraint->setDesired(foot_pose_data);
     else
       constraint->setDesired(zero_pose);    
   }
@@ -77,9 +67,19 @@ void MagnetoGoalPlanner::getGoalConfiguration(Eigen::VectorXd& _q_goal){
   _q_goal = q_goal_;
 }
 
+void MagnetoGoalPlanner::getGoalComPosition(Eigen::Vector3d& _pc_goal){
+  _pc_goal = pc_goal_;
+}
+
+
 void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
 
-  _setDesiredFootPosition(_motion_command);
+  // assume one foot is moving
+  MOTION_DATA motion_data;
+  int moving_foot_idx; 
+
+  _motion_command.get_foot_motion(motion_data, moving_foot_idx);
+  _setDesiredFootPosition(motion_data.pose, moving_foot_idx);
 
   double tol = 1e-5;
   double err = 1e5;
@@ -100,17 +100,7 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
   }
 
   q_goal_ = q_;
-
-  // add com goal
-  MOTION_DATA com_motion_data;
-  com_motion_data.swing_height = 0.0;
-  com_motion_data.motion_period = 
-            _motion_command.get_foot_motion_period();
-  com_motion_data.pose.pos = robot_planner_->getCoMPosition()
-                          - robot_->getCoMPosition();
-  com_motion_data.pose.is_baseframe = false;
-  
-  _motion_command.set_com_motion(com_motion_data);
+  pc_goal_ = robot_planner_->getCoMPosition();
 }
 
 void MagnetoGoalPlanner::_UpdateDelQ() {

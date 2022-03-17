@@ -16,6 +16,7 @@ class MagnetoGoalPlanner {
      
       void computeGoal(MotionCommand &_motion_command);
       void getGoalConfiguration(Eigen::VectorXd& _q_goal);
+      void getGoalComPosition(Eigen::Vector3d& _pc_goal);
 
    protected:
       RobotSystem* robot_;
@@ -25,10 +26,11 @@ class MagnetoGoalPlanner {
 
    private:      
       void _InitCostFunction();
-      void _InitConstraints(const std::vector<int> _link_idx_list);
+      void _InitConstraints();
       void _DeleteConstraints();
 
-      void _setDesiredFootPosition(MotionCommand _motion_command);
+      void _setDesiredFootPosition(const POSE_DATA &foot_pose_data,
+                                    int moving_foot_idx);
       void _UpdateConfiguration(const Eigen::VectorXd& q);
       void _UpdateConstraints();
       void _BuildConstraints();
@@ -55,4 +57,6 @@ class MagnetoGoalPlanner {
       Eigen::VectorXd dotq_;
       Eigen::VectorXd delq_;
       Eigen::VectorXd q_goal_;
+
+      Eigen::Vector3d pc_goal_;
 };

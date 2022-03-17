@@ -16,8 +16,7 @@ CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
 
 CoMTrajectoryManager::~CoMTrajectoryManager() {}
 
-void CoMTrajectoryManager::updateTask(const double&  current_time, 
-                                      Task* _com_pos_task) {
+void CoMTrajectoryManager::updateTask(const double&  current_time, Task* _com_pos_task) {
   updateCoMTrajectory(current_time);
   _com_pos_task->updateTask(com_pos_des_, 
                             com_vel_des_, 
@@ -30,29 +29,42 @@ void CoMTrajectoryManager::updateTask(const double&  current_time,
 
 // Initialize the swing com trajectory
 void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
-                                    ComMotionCommand* _motion_cmd) {
-
-  my_utils::pretty_print(_motion_cmd.pa, std::cout, "com_pos_ini_");
-  my_utils::pretty_print(_motion_cmd.va, std::cout, "com_vel_ini_");
+                              MotionCommand* _motion_cmd) {
   
-  traj_start_time_ = _start_time;  
-  traj_duration_ = _motion_cmd.motion_period;
-  traj_end_time_ = traj_start_time_ + traj_duration_;
-  if(_motion_cmd.is_acc_constant){
-    Eigen::Vector3d pb, vb;
-    vb = _motion_cmd.va + _motion_cmd.acc*traj_duration_;
-    pb = _motion_cmd.pa 
-          + _motion_cmd.va*traj_duration_ 
-          + 0.5*_motion_cmd.acc*traj_duration_*traj_duration_;
-    pos_traj.initialize(_motion_cmd.pa, _motion_cmd.va, 
-                      pb, vb, traj_duration_);
-  } else{
-    pos_traj.initialize(_motion_cmd.pa, _motion_cmd.va, 
-                        _motion_cmd.pb, _motion_cmd.vb, 
-                        traj_duration_);
-    my_utils::pretty_print(_motion_cmd.pb, std::cout, "com_pos_des_");
-    my_utils::pretty_print(_motion_cmd.vb, std::cout, "com_vel_des_");
+  MOTION_DATA motion_cmd_data = MOTION_DATA();
+  Eigen::VectorXd pos_dev_b;
+  if(_motion_cmd->get_com_motion(motion_cmd_data)){
+      // if com motion command is given
+      traj_duration_ = motion_cmd_data.motion_period;
+      pos_dev_b = motion_cmd_data.pose.pos;
+  } else if(_motion_cmd->get_foot_motion(motion_cmd_data)) {
+    // heuristic computation
+    traj_duration_ = motion_cmd_data.motion_period;
+    pos_dev_b = 0.25 * motion_cmd_data.pose.pos;
+  } else {
+    // no motion given
+    traj_duration_ = motion_cmd_data.motion_period; // zero
+    pos_dev_b = motion_cmd_data.pose.pos; // zero
   }
+  
+  traj_duration_ = traj_duration_ > 0 ? traj_duration_ : 0.01;
+  traj_start_time_ = _start_time;  
+  traj_end_time_ = traj_start_time_ + traj_duration_;
+  // initialize pos_ini_ with current position
+  com_pos_ini_ = robot_ ->getCoMPosition(); 
+  if(motion_cmd_data.pose.is_baseframe) {
+    Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();    
+    com_pos_des_ = com_pos_ini_ + R_wb*pos_dev_b;     
+  }
+  else // absolute coordinate
+    com_pos_des_ = com_pos_ini_ + pos_dev_b;
+  
+  my_utils::pretty_print(com_pos_ini_, std::cout, "com_pos_ini_");
+  my_utils::pretty_print(com_pos_des_, std::cout, "com_pos_des_");
+
+  pos_traj.initialize(com_pos_ini_, zero_vel_, 
+                      com_pos_des_, zero_vel_, traj_duration_);
+
 }
 
 void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
@@ -66,10 +78,14 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
   com_pos_ini_ = robot_ ->getCoMPosition();  
   com_pos_des_ = com_pos_ini_;
   
+  my_utils::pretty_print(com_pos_ini_, std::cout, "com_pos_ini_");
+  my_utils::pretty_print(com_pos_des_, std::cout, "com_pos_des_");
+
   pos_traj.initialize(com_pos_ini_, zero_vel_, 
                       com_pos_des_, zero_vel_, traj_duration_);
 
 }
+
 
 // Computes the swing com trajectory
 void CoMTrajectoryManager::updateCoMTrajectory(double current_time) {
@@ -80,9 +96,9 @@ void CoMTrajectoryManager::updateCoMTrajectory(double current_time) {
   com_vel_des_ = pos_traj.evaluateFirstDerivative(t);
   com_acc_des_ = pos_traj.evaluateSecondDerivative(t);
 
-  my_utils::saveVector(com_pos_des_, "com_pos_des_");
-  my_utils::saveVector(com_vel_des_, "com_vel_des_");
-  my_utils::saveVector(com_acc_des_, "com_acc_des_");
+  // my_utils::saveVector(com_pos_des_, "com_pos_des_");
+  // my_utils::saveVector(com_vel_des_, "com_vel_des_");
+  // my_utils::saveVector(com_acc_des_, "com_acc_des_");
 
 }
 

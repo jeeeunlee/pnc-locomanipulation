@@ -28,9 +28,17 @@ void FullSupport::firstVisit() {
   // ---------------------------------------
   //      Planning
   // ---------------------------------------
+  // robot goal configuration
   Eigen::VectorXd q_goal; 
+  Eigen::Vector3d pc_goal;
   rg_container_->goal_planner_->computeGoal(mc_curr_);  
   rg_container_->goal_planner_->getGoalConfiguration(q_goal);
+  rg_container_->goal_planner_->getGoalComPosition(pc_goal);
+
+  // CoM planner
+  ComMotionCommand mc_com;
+  rg_container_->com_sequence_planner_->computeSequence(pc_goal);
+  rg_container_->com_sequence_planner_->getFullSupportComCmd(&mc_com);
 
   // ---------------------------------------
   //      CONTACT LIST
@@ -44,12 +52,12 @@ void FullSupport::firstVisit() {
   mc_curr_.printMotionInfo();
   // --set com traj
   rg_container_->com_trajectory_manager_
-            ->setCoMTrajectory(ctrl_start_time_, &mc_curr_);
+               ->setCoMTrajectory(ctrl_start_time_, mc_com);
   ctrl_duration_ = rg_container_->com_trajectory_manager_->getTrajDuration();
   ctrl_end_time_ = rg_container_->com_trajectory_manager_->getTrajEndTime();
   // -- set base ori traj
   rg_container_->base_ori_trajectory_manager_
-            ->setBaseOriTrajectory(ctrl_start_time_, ctrl_duration_);
+               ->setBaseOriTrajectory(ctrl_start_time_, ctrl_duration_);
 
   // -- set joint traj
   rg_container_->joint_trajectory_manager_
