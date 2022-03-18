@@ -45,8 +45,13 @@ void Swing::firstVisit() {
 
 
   // --set com traj
+  // rg_container_->com_trajectory_manager_
+  //           ->setCoMTrajectory(ctrl_start_time_, ctrl_duration_);
+  ComMotionCommand mc_com = rg_container_->
+            com_sequence_planner_->getSwingCoMCmd();
+  
   rg_container_->com_trajectory_manager_
-            ->setCoMTrajectory(ctrl_start_time_, ctrl_duration_);
+               ->setCoMTrajectory(ctrl_start_time_, mc_com);
 
   // -- set base ori traj
   rg_container_->base_ori_trajectory_manager_

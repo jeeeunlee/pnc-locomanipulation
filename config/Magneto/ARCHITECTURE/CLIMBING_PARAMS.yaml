@@ -29,7 +29,7 @@ magnetism_params:
     residual_ratio: [5., 5., 5., 5.] #5 #[%]
 
 transition_params:
-    transition_duration: 0.1
+    transition_duration: 0.05
 
 qp_weights_params:
     # max_rf_z: 150

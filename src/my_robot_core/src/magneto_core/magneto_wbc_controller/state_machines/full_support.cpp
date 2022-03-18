@@ -36,10 +36,28 @@ void FullSupport::firstVisit() {
   rg_container_->goal_planner_->getGoalComPosition(pc_goal);
 
   // CoM planner
+  MOTION_DATA md;
   ComMotionCommand mc_com;
-  rg_container_->com_sequence_planner_->computeSequence(pc_goal);
-  rg_container_->com_sequence_planner_->getFullSupportComCmd(&mc_com);
-
+  if(mc_curr_.get_foot_motion(md))
+  {
+    rg_container_->com_sequence_planner_->computeSequence(pc_goal,
+                                          mc_curr_,
+                                          ws_container_->feet_contacts_,
+                                          ws_container_->feet_magnets_);
+    mc_com = rg_container_->
+              com_sequence_planner_->getFullSupportCoMCmd();
+  }else if(mc_curr_.get_com_motion(md)){
+    Eigen::Vector3d zero_vel;
+    zero_vel.setZero();
+    Eigen::Vector3d pa = robot_ ->getCoMPosition(); 
+    mc_com = ComMotionCommand( pa, zero_vel, pc_goal, zero_vel, md.motion_period );
+  }else{
+    Eigen::Vector3d zero_vel;
+    zero_vel.setZero();
+    Eigen::Vector3d pa = robot_ ->getCoMPosition(); 
+    mc_com = ComMotionCommand( pa, zero_vel, zero_vel, 0.1 );
+  }
+  
   // ---------------------------------------
   //      CONTACT LIST
   // --------------------------------------- 
@@ -90,15 +108,15 @@ void FullSupport::firstVisit() {
 }
 
 void FullSupport::_taskUpdate() {
-  rg_container_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
+  // rg_container_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
   rg_container_->com_trajectory_manager_->updateTask(sp_->curr_time,
                                       ws_container_->com_task_);
 
-  rg_container_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
+  // rg_container_->base_ori_trajectory_manager_->updateBaseOriTrajectory(sp_->curr_time);
   rg_container_->base_ori_trajectory_manager_->updateTask(sp_->curr_time,
                                       ws_container_->base_ori_task_);
   
-  rg_container_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
+  // rg_container_->joint_trajectory_manager_->updateJointTrajectory(sp_->curr_time);
   rg_container_->joint_trajectory_manager_->updateTask(sp_->curr_time,
                                       ws_container_->joint_task_);
 }

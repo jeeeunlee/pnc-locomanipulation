@@ -39,9 +39,20 @@ void Transition::firstVisit() {
   moving_foot_idx_ = mc_curr_.get_moving_foot();
 
   // --set com traj
+  // rg_container_->com_trajectory_manager_
+  //           ->setCoMTrajectory(ctrl_start_time_, 
+  //                             ctrl_duration_);
+  ComMotionCommand mc_com;
+  if(b_contact_start_){
+    mc_com = rg_container_->
+            com_sequence_planner_->getSwingEndCoMCmd();
+  }else{
+    mc_com = rg_container_->
+            com_sequence_planner_->getSwingStartCoMCmd();
+  }
   rg_container_->com_trajectory_manager_
-            ->setCoMTrajectory(ctrl_start_time_, 
-                              ctrl_duration_);
+               ->setCoMTrajectory(ctrl_start_time_, mc_com);
+
   // -- set base ori traj
   rg_container_->base_ori_trajectory_manager_
             ->setBaseOriTrajectory(ctrl_start_time_,

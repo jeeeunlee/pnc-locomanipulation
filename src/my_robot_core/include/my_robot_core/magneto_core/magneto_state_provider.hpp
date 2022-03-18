@@ -66,12 +66,12 @@ class MagnetoStateProvider {
 
     /*-------------- data manager ---------------*/
 
-    Eigen::VectorXd com_pos;
-    Eigen::VectorXd com_vel;
+    Eigen::Vector3d com_pos;
+    Eigen::Vector3d com_vel;
     Eigen::VectorXd mom;
 
-    Eigen::VectorXd com_pos_des;
-    Eigen::VectorXd com_vel_des;
+    Eigen::Vector3d com_pos_des;
+    Eigen::Vector3d com_vel_des;
     Eigen::VectorXd mom_des;
 
     Eigen::VectorXd arf_pos;

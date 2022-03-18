@@ -76,7 +76,7 @@ class ComMotionCommand :  public UserCommand{
     ComMotionCommand(const Eigen::Vector3d& _pa,
                     const Eigen::Vector3d& _va,
                     const Eigen::Vector3d& _pb,
-                    const Eigen::Vector3d& _vb
+                    const Eigen::Vector3d& _vb,
                     double _T) {
       pa = _pa;
       pb = _pb;
@@ -96,8 +96,9 @@ class ComMotionCommand :  public UserCommand{
       is_acc_constant = true;
     }
 
-    ~ComMotionCommand();
-  private:
+    ~ComMotionCommand() {};
+
+  public:
     Eigen::Vector3d pa;
     Eigen::Vector3d pb;
     Eigen::Vector3d va;
