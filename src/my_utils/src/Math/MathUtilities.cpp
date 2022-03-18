@@ -4,19 +4,22 @@
 
 namespace my_utils {
 
-Eigen::MatrixXd skew(const Eigen::VectorXd& w){
+Eigen::MatrixXd skew(const Eigen::Vector3d& w){
     // [[ 0, -3,  2],
     // [ 3,  0, -1],
     // [-2,  1,  0]]
     Eigen::MatrixXd Wx = Eigen::MatrixXd::Zero(3,3);
     Wx <<   0.0,   -w(2),  w(1),
            w(2),     0.0, -w(0),
-          -w(1), p_wb(w),  0.0;
+          -w(1),    w(0),  0.0;
     return Wx;
-
 }
 
 Eigen::MatrixXd hStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
+    if (a.rows()==0 || a.cols()==0)
+        return b;
+    if (b.rows()==0 || b.cols()==0)
+        return a;
     if (a.rows() != b.rows()) {
         std::cout << "[hStack] Matrix Size is Wrong" << std::endl;
         exit(0);
@@ -28,8 +31,12 @@ Eigen::MatrixXd hStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b) {
 }
 
 Eigen::MatrixXd hStack(const Eigen::VectorXd& a, const Eigen::VectorXd& b) {
+    if (a.size()==0)
+        return b;
+    if (b.size()==0)
+        return a;
     if (a.size() != b.size()) {
-        std::cout << "[vStack] Vector Size is Wrong" << std::endl;
+        std::cout << "[hStack] Vector Size is Wrong" << std::endl;
         exit(0);
     }
     Eigen::MatrixXd ab = Eigen::MatrixXd::Zero(a.size(), 2);
@@ -81,55 +88,55 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row_) {
     return ret;
 }
 
-void hStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
- if (a.rows() != b.rows()) {
-        std::cout << "[hStack] Matrix Size is Wrong" << std::endl;
-        exit(0);
-    }
-    int acol = a.cols();
-    a.conservativeResize(a.rows(), a.cols() + b.cols());
-    a.block(0, acols ,b.rows(), b.cols()) = b;
-}
+// void hStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
+//  if (a.rows() != b.rows()) {
+//         std::cout << "[hStack] Matrix Size is Wrong" << std::endl;
+//         exit(0);
+//     }
+//     int acol = a.cols();
+//     a.conservativeResize(a.rows(), a.cols() + b.cols());
+//     a.block(0, acol ,b.rows(), b.cols()) = b;
+// }
 
-void vStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
-    if(a.size()==0) a = b;
-    if(b.size()==0) return;
-    if (a.cols() != b.cols()) {
-        std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
-        exit(0);
-    }
-    int asize = a.size();
-    a.conservativeResize(a.size() + b.size());
-    a.segment(asize, b.size()) = b;
-}
+// void vStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
+//     if(a.size()==0) a = b;
+//     if(b.size()==0) return;
+//     if (a.cols() != b.cols()) {
+//         std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
+//         exit(0);
+//     }
+//     int asize = a.size();
+//     a.conservativeResize(a.size() + b.size());
+//     a.segment(asize, b.size()) = b;
+// }
 
-void vStackConserve(Eigen::VectorXd& a, const Eigen::VectorXd& b){
-    if (a.rows()==0 || a.cols()==0)
-        a= b;
-    if (b.rows()==0 || b.cols()==0)
-        return;
-    if (a.cols() != b.cols()) {
-        std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
-        exit(0);
-    }
-    int arow = a.rows();
-    a.conservativeResize(a.rows() + b.rows(), a.cols());
-    a.block(arow, 0 ,b.rows(), b.cols()) = b;
-}
+// void vStackConserve(Eigen::VectorXd& a, const Eigen::VectorXd& b){
+//     if (a.rows()==0 || a.cols()==0)
+//         a= b;
+//     if (b.rows()==0 || b.cols()==0)
+//         return;
+//     if (a.cols() != b.cols()) {
+//         std::cout << "[vStack] Matrix Size is Wrong" << std::endl;
+//         exit(0);
+//     }
+//     int arow = a.rows();
+//     a.conservativeResize(a.rows() + b.rows(), a.cols());
+//     a.block(arow, 0 ,b.rows(), b.cols()) = b;
+// }
 
-void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
-    // diagonally stack a,b -> [a 0; 0 b]
-    if (a.rows()==0 || a.cols()==0)
-        a = b;
-    if (b.rows()==0 || b.cols()==0)
-        return;
-    int arow = a.rows();
-    int acol = a.cols();
-    a.conservativeResize(a.rows() + b.rows(), a.cols() + b.cols());
-    (a.topRightCorner(arow, b.cols())).setZero();
-    (a.bottomLeftCorner(b.rows(), acol)).setZero();
-    a.block(arow, acol, b.rows(), b.cols()) = b;
-}
+// void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b){
+//     // diagonally stack a,b -> [a 0; 0 b]
+//     if (a.rows()==0 || a.cols()==0)
+//         a = b;
+//     if (b.rows()==0 || b.cols()==0)
+//         return;
+//     int arow = a.rows();
+//     int acol = a.cols();
+//     a.conservativeResize(a.rows() + b.rows(), a.cols() + b.cols());
+//     (a.topRightCorner(arow, b.cols())).setZero();
+//     (a.bottomLeftCorner(b.rows(), acol)).setZero();
+//     a.block(arow, acol, b.rows(), b.cols()) = b;
+// }
 
 
 

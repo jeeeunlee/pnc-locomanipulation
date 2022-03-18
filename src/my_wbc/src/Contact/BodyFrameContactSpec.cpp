@@ -46,34 +46,46 @@ bool BodyFramePointContactSpec::_UpdateJcQdot() {
 }
 
 bool BodyFramePointContactSpec::_UpdateUf() {
-
-    Uf_ = Eigen::MatrixXd::Zero(6, dim_contact_);
-    // Linear
-    Uf_(0, 2) = 1.;  // Fz >= 0
-
-    Uf_(1, 0) = 1.0;
-    Uf_(1, 2) = mu_;
-    Uf_(2, 0) = -1.0;
-    Uf_(2, 2) = mu_;
-
-    Uf_(3, 1) = 1.0;
-    Uf_(3, 2) = mu_;
-    Uf_(4, 1) = -1.0;
-    Uf_(4, 2) = mu_;
-
-    // Upper bound of vertical directional reaction force
-    Uf_(5, 2) = -1.0;  // -Fz >= -max_Fz_
-
+    _setU(mu_, Uf_);
     return true;
 }
 
 bool BodyFramePointContactSpec::_UpdateInequalityVector() {
-    ieq_vec_ = Eigen::VectorXd::Zero(6);
-    ieq_vec_[5] = -max_Fz_;
+    _setIeqVec(max_Fz_, ieq_vec_);
     return true;
 }
 
+void BodyFramePointContactSpec::_setU( double mu,
+                               Eigen::MatrixXd& U) {
+    U = Eigen::MatrixXd::Zero(6, dim_contact_);
+    // Linear
+    U(0, 2) = 1.;  // Fz >= 0
+    // x
+    U(1, 0) = 1.0;
+    U(1, 2) = mu;
+    U(2, 0) = -1.0;
+    U(2, 2) = mu;
+    // y
+    U(3, 1) = 1.0;
+    U(3, 2) = mu;
+    U(4, 1) = -1.0;
+    U(4, 2) = mu;
+    // Upper bound of vertical directional reaction force
+    U(5, 2) = -1.0;  // -Fz >= -max_Fz_
+}
 
+void BodyFramePointContactSpec::_setIeqVec(double max_Fz, 
+                                Eigen::VectorXd& ieq_vec) {
+    ieq_vec = Eigen::VectorXd::Zero(6);
+    ieq_vec[5] = -max_Fz;
+}
+
+void BodyFramePointContactSpec::getRFConstraintMtx(Eigen::MatrixXd& Uf) { 
+    _setU(mu_, Uf);
+}
+void BodyFramePointContactSpec::getRFConstraintVec(Eigen::VectorXd& ieq_vec) { 
+    _setIeqVec(max_Fz_, ieq_vec);
+}
 
 BodyFrameSurfaceContactSpec::BodyFrameSurfaceContactSpec(RobotSystem* robot,
                         int _link_idx, double _x, double _y, double _mu)
@@ -112,8 +124,7 @@ bool BodyFrameSurfaceContactSpec::_UpdateUf() {
 }
 
 bool BodyFrameSurfaceContactSpec::_UpdateInequalityVector() {
-    ieq_vec_ = Eigen::VectorXd::Zero(16 + 2);
-    ieq_vec_[17] = -max_Fz_;
+    _setIeqVec(max_Fz_, ieq_vec_);
     return true;
 }
 
@@ -201,4 +212,17 @@ void BodyFrameSurfaceContactSpec::_setU(double x, double y, double mu,
     U(16, 5) = (x + y) * mu;
     // ////////////////////////////////////////////////////
     U(17, 5) = -1.;
+}
+
+void BodyFrameSurfaceContactSpec::_setIeqVec(
+                double max_Fz, Eigen::VectorXd& ieq_vec){
+    ieq_vec = Eigen::VectorXd::Zero(16 + 2);
+    ieq_vec[17] = -max_Fz;
+}
+
+void BodyFrameSurfaceContactSpec::getRFConstraintMtx(Eigen::MatrixXd& Uf) { 
+    _setU(x_, y_, mu_, Uf);
+}
+void BodyFrameSurfaceContactSpec::getRFConstraintVec(Eigen::VectorXd& ieq_vec) { 
+    _setIeqVec(max_Fz_, ieq_vec);
 }

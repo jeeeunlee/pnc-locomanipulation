@@ -24,6 +24,8 @@ MagnetoStateProvider::MagnetoStateProvider(RobotSystem* _robot) {
     qdot = Eigen::VectorXd::Zero(Magneto::n_dof);
     tau_cmd_prev = Eigen::VectorXd::Zero(Magneto::n_dof);
 
+    
+
     b_arfoot_contact = 0;
     b_brfoot_contact = 0;
     b_alfoot_contact = 0;
@@ -37,12 +39,12 @@ MagnetoStateProvider::MagnetoStateProvider(RobotSystem* _robot) {
     check_com_planner_updated = 0;
     check_foot_planner_updated = 0;
 
-    com_pos = Eigen::VectorXd::Zero(3);
-    com_vel = Eigen::VectorXd::Zero(3);
+    com_pos.setZero();
+    com_vel.setZero();
     mom = Eigen::VectorXd::Zero(6);
 
-    com_pos_des = Eigen::VectorXd::Zero(3);
-    com_vel_des = Eigen::VectorXd::Zero(3);
+    com_pos_des.setZero();
+    com_vel_des.setZero();
     mom_des = Eigen::VectorXd::Zero(6);
 
     arf_pos = Eigen::VectorXd::Zero(3);

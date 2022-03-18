@@ -10,7 +10,7 @@ namespace my_utils {
 // =============================================================================
 // Matrix Utils
 // =============================================================================
-Eigen::MatrixXd skew(const Eigen::VectorXd& w);
+Eigen::MatrixXd skew(const Eigen::Vector3d& w);
 Eigen::MatrixXd hStack(const Eigen::MatrixXd& a_, const Eigen::MatrixXd& b_);
 Eigen::MatrixXd vStack(const Eigen::MatrixXd& a_, const Eigen::MatrixXd& b_);
 Eigen::MatrixXd hStack(const Eigen::VectorXd& a_, const Eigen::VectorXd& b_);
@@ -18,11 +18,11 @@ Eigen::VectorXd vStack(const Eigen::VectorXd& a_, const Eigen::VectorXd& b_);
 Eigen::MatrixXd dStack(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
 Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row);
 
-void hStackConserve(Eigen::MatrixXd& a_, const Eigen::MatrixXd& b_);
+// void hStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
 // void hStackConserve(Eigen::VectorXd& a_, const Eigen::VectorXd& b_);
-void vStackConserve(Eigen::MatrixXd& a_, const Eigen::MatrixXd& b_);
-void vStackConserve(Eigen::VectorXd& a_, const Eigen::VectorXd& b_);
-void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
+// void vStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
+// void vStackConserve(Eigen::VectorXd& a, const Eigen::VectorXd& b);
+// void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
 
 
 // =============================================================================

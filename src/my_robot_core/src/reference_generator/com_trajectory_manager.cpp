@@ -1,4 +1,5 @@
 #include <my_robot_core/reference_generator/com_trajectory_manager.hpp>
+#include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 
 CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {
@@ -23,14 +24,14 @@ void CoMTrajectoryManager::updateTask(const double&  current_time,
                             com_vel_des_, 
                             com_acc_des_); 
 
-  sp_->com_pos_des_ = com_pos_des_;
-  sp_->com_vel_des_ = com_vel_des_;
-  sp_->com_acc_des_ = com_acc_des_;
+  sp_->com_pos_des = com_pos_des_;
+  sp_->com_vel_des = com_vel_des_;
+  // sp_->com_acc_des = com_acc_des_;
 }
 
 // Initialize the swing com trajectory
 void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
-                                    ComMotionCommand* _motion_cmd) {
+                                    const ComMotionCommand& _motion_cmd) {
 
   my_utils::pretty_print(_motion_cmd.pa, std::cout, "com_pos_ini_");
   my_utils::pretty_print(_motion_cmd.va, std::cout, "com_vel_ini_");
@@ -73,7 +74,7 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
 
 // Computes the swing com trajectory
 void CoMTrajectoryManager::updateCoMTrajectory(double current_time) {
-  double t = (current_time - traj_start_time_) ;
+  double t = (current_time - traj_start_time_ + MagnetoAux::servo_rate) ;
   // Get com position and its derivatives
   // std::cout<<"s = " << s << std::endl;
   com_pos_des_ = pos_traj.evaluate(t);

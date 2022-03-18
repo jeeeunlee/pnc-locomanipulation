@@ -10,6 +10,8 @@
 // interpolators
 #include <my_utils/Math/hermite_curve_vec.hpp>
 
+class MagnetoStateProvider;
+
 // Object to manage common trajectory primitives
 class CoMTrajectoryManager : public TrajectoryManagerBase {
  public:
@@ -28,7 +30,7 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
 
   // Initialize the swing com trajectory
   void setCoMTrajectory(double  _start_time,
-                        MotionCommand* _motion_cmd);
+                        const ComMotionCommand& _motion_cmd);
 
   // Initialize the swing com trajectory
   void setCoMTrajectory(double _start_time,
