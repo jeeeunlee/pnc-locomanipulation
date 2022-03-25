@@ -45,10 +45,10 @@ class MagnetoCoMPlanner{
                                         Eigen::MatrixXd& DD,
                                         Eigen::VectorXd& dd);
         Eigen::MatrixXd _computeSwingDDa(double t,
-                                        const Eigen::VectorXd& invA1,
-                                        const Eigen::VectorXd& invA2);
+                                        const Eigen::MatrixXd& invA1,
+                                        const Eigen::MatrixXd& invA2);
         Eigen::MatrixXd _computeSwingDDb(double t,
-                                        const Eigen::VectorXd& invA1);
+                                        const Eigen::MatrixXd& invA1);
         void _solveQuadProg();
 
     private:

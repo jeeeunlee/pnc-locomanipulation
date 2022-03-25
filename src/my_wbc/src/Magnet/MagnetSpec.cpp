@@ -13,6 +13,11 @@ Eigen::VectorXd MagnetSpec::getMagneticForce() {
   return Fm;
 }
 
+Eigen::VectorXd MagnetSpec::getMagneticForce3d(){
+  Eigen::VectorXd Fm = getMagneticForce();
+  return Fm.tail(3);
+}
+
 Eigen::MatrixXd MagnetSpec::getJacobian() {
   contact_->updateContactSpec();
   contact_->getContactJacobian(J_);

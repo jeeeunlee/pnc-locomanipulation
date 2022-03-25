@@ -1,4 +1,4 @@
-num_motion: 4
+num_motion: 4 #4
 type_motion: 0 # 0:climbing, 1:walking, 2:balancing
 
 # foot : AL-0, AR-1, BL-2, BR-3
