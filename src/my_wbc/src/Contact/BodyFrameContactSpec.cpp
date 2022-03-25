@@ -57,18 +57,18 @@ bool BodyFramePointContactSpec::_UpdateInequalityVector() {
 
 void BodyFramePointContactSpec::_setU( double mu,
                                Eigen::MatrixXd& U) {
-    U = Eigen::MatrixXd::Zero(6, dim_contact_);
+    U = Eigen::MatrixXd::Zero(6, 3);
     // Linear
     U(0, 2) = 1.;  // Fz >= 0
     // x
-    U(1, 0) = 1.0;
     U(1, 2) = mu;
-    U(2, 0) = -1.0;
-    U(2, 2) = mu;
+    U(2, 2) = mu;    
+    U(1, 0) = 1.;
+    U(2, 0) = -1.;    
     // y
-    U(3, 1) = 1.0;
+    U(3, 1) = 1.;
     U(3, 2) = mu;
-    U(4, 1) = -1.0;
+    U(4, 1) = -1.;
     U(4, 2) = mu;
     // Upper bound of vertical directional reaction force
     U(5, 2) = -1.0;  // -Fz >= -max_Fz_

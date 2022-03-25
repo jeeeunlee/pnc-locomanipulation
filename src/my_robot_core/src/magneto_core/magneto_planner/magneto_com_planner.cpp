@@ -141,12 +141,11 @@ void MagnetoCoMPlanner::_buildFm(
     Fmf_ = Eigen::VectorXd::Zero(0);
     Fmc_ = Eigen::VectorXd::Zero(0);
     for(auto &mag : f_mag) {
-        Fmf_= my_utils::vStack(Fmf_, -mag->getMagneticForce());
+        Fmf_= my_utils::vStack(Fmf_, -mag->getMagneticForce3d());
         if(mag->getLinkIdx() !=  swing_foot_idx_){
-            Fmc_ = my_utils::vStack(Fmc_, -mag->getMagneticForce());
+            Fmc_ = my_utils::vStack(Fmc_, -mag->getMagneticForce3d());
         }
-    }
-    
+    }    
 }
 
 void MagnetoCoMPlanner::_buildFrictionCone(
@@ -165,13 +164,14 @@ void MagnetoCoMPlanner::_buildFrictionCone(
         // exclude maximum fz
         Di = Di.topRows(5);
         di = di.head(5);
+        Di(1, 0) = 1.;
         Df_ = my_utils::dStack(Df_, Di);
         df_ = my_utils::vStack(df_, di);
         if(contact->getLinkIdx() != swing_foot_idx_){
             Dc_ = my_utils::dStack(Dc_, Di);
             dc_ = my_utils::vStack(dc_, di);
         }
-    }    
+    }
 }
 
 void MagnetoCoMPlanner::_buildWeightMatrices(
@@ -267,7 +267,7 @@ void MagnetoCoMPlanner::_getSwingConditionGivenRatio(double ratio,
     Eigen::MatrixXd AWAinv;
     my_utils::pseudoInverse(AWA, 0.0001, AWAinv);
 
-    Eigen::MatrixXd invA = invWf_*Ac_.transpose()*AWAinv;
+    Eigen::MatrixXd invA = invWc_*Ac_.transpose()*AWAinv;
     Eigen::VectorXd ddc = - Dc_*invA*Cc_ + dc_;
 
     Eigen::MatrixXd invA1 = invA.leftCols<3>();
@@ -275,17 +275,17 @@ void MagnetoCoMPlanner::_getSwingConditionGivenRatio(double ratio,
 
     Eigen::MatrixXd DDa, DDb;
     // @ t=0    
-    DDa = _computeSwingDDa(0, invA1, invA1);
-    DDb = _computeSwingDDb(0, invA1);
+    DDa = _computeSwingDDa(0., invA1, invA2);
+    DDb = _computeSwingDDb(0., invA1);
     // @ t=T2
-    DDa = my_utils::vStack(DDa, _computeSwingDDa(T2_, invA1, invA1));
+    DDa = my_utils::vStack(DDa, _computeSwingDDa(T2_, invA1, invA2));
     DDb = my_utils::vStack(DDb, _computeSwingDDb(T2_, invA1));
     dd = my_utils::vStack(ddc, ddc);
 
     // @ t=tstar (local maxima)
     double t_star = T2_ + T3_/2./ratio;
     if(t_star > 0. && t_star < T2_){
-        DDa = my_utils::vStack(DDa, _computeSwingDDa(t_star, invA1, invA1));
+        DDa = my_utils::vStack(DDa, _computeSwingDDa(t_star, invA1, invA2));
         DDb = my_utils::vStack(DDb, _computeSwingDDb(t_star, invA1));
         dd = my_utils::vStack(dd, ddc);
     }
@@ -294,14 +294,14 @@ void MagnetoCoMPlanner::_getSwingConditionGivenRatio(double ratio,
 }
 
 Eigen::MatrixXd MagnetoCoMPlanner::_computeSwingDDa(double t,
-                                            const Eigen::VectorXd& invA1,
-                                            const Eigen::VectorXd& invA2){
-    // Da =  D*( 0.5*m*(T2-t)^2*invA1*skew(g) + m*invA2 );    
+                                            const Eigen::MatrixXd& invA1,
+                                            const Eigen::MatrixXd& invA2){
+    // Da =  D*( 0.5*m*(T2-t)^2*invA1*skew(g) + m*invA2 );
     return Dc_*( 0.5*mass_*(T2_-t)*(T2_-t)*invA1*my_utils::skew(grav_) + mass_*invA2);
 }
 
 Eigen::MatrixXd MagnetoCoMPlanner::_computeSwingDDb(double t,
-                                            const Eigen::VectorXd& invA1){
+                                            const Eigen::MatrixXd& invA1){
     // Db = D*( 0.5*m*T3*(T3+2*T2-t)*invA1*skew(g) );
     return Dc_*( 0.5*mass_*T3_*(T3_+2*T2_-t)*invA1*my_utils::skew(grav_) );
 }
@@ -323,14 +323,12 @@ void MagnetoCoMPlanner::_solveQuadProg(){
     std::cout<<"ratio = " <<ratio<<std::endl;
     _getSwingConditionGivenRatio(ratio, DDs, dds);
 
-    my_utils::pretty_print(DDf,std::cout,"DDf");
-    my_utils::pretty_print(ddf,std::cout,"ddf");
-    my_utils::pretty_print(DDs,std::cout,"DDs");
-    my_utils::pretty_print(dds,std::cout,"dds");
-
     // Phase 2 & 3
     DD = my_utils::vStack(DDf, DDs);
     dd = my_utils::vStack(ddf, dds);
+
+    my_utils::pretty_print(DDs,std::cout,"DD");
+    my_utils::pretty_print(dds,std::cout,"dd");
 
     // solve quad prob for x = beta*dir
     // min 0.5*x'*x

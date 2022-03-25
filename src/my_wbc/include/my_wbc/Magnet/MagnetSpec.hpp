@@ -27,6 +27,7 @@ class MagnetSpec {
     void setMagnetOnoff(bool _onoff) { onoff_ = _onoff; }
     bool getOnOff() {return onoff_;}    
 
+    Eigen::VectorXd getMagneticForce3d();
     Eigen::VectorXd getMagneticForce();    
     Eigen::MatrixXd getJacobian();
     Eigen::VectorXd getJmFm();
