@@ -12,6 +12,7 @@
 #include <my_utils/IO/IOUtilities.hpp>
 #include <my_utils/Math/MathUtilities.hpp>
 #include "my_utils/Math/pseudo_inverse.hpp"
+#include <time.h>
 
 MagnetoCoMPlanner::MagnetoCoMPlanner(RobotSystem* robot) {
     my_utils::pretty_constructor(2, "Magneto CoM Hermite Spline Parameter Planner");
@@ -29,27 +30,28 @@ MagnetoCoMPlanner::MagnetoCoMPlanner(RobotSystem* robot) {
 
 
     initialized = false;
-    Tt_ = 0.0; 
+    Tt_given_ = 0.0;
 }
 
 void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
                                         MotionCommand &_motion_command,
                                         const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
                                         const std::array<MagnetSpec*, Magneto::n_leg>& f_mag){
+    clock_t start = clock();
+    
     p_init_ = robot_->getCoMPosition();  
     p_goal_ = pcom_goal;
-    
-    // motion period
-    Ts_ = _motion_command.get_foot_motion_period();
-    Tf_ = Ts_;
-    // Tt_ set in advance
-    std::cout<<"Tf_="<<Tf_<<", Ts_="<<Ts_<<", Tt_="<<Tt_<<std::endl;
+
+    my_utils::pretty_print(p_init_, std::cout, "p_init_");
+    my_utils::pretty_print(p_goal_, std::cout, "p_goal_");
 
     // next foot configuration
-    MOTION_DATA md;  
-    if( _motion_command.get_foot_motion(md, swing_foot_idx_) ) {        
-        swing_foot_dpos_ = md.pose.pos;
-        if(md.pose.is_baseframe){
+    swing_foot_idx_ = -1;
+    SWING_DATA md;  
+    if( _motion_command.get_foot_motion(md) ) {   
+        swing_foot_idx_ = md.foot_idx;     
+        swing_foot_dpos_ = md.dpose.pos;        
+        if(md.dpose.is_baseframe){
             Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
             swing_foot_dpos_ = Rwb*swing_foot_dpos_;
         }
@@ -63,23 +65,29 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
     _buildPfRf();
     _buildCentroidalSystemMatrices();
 
-    // solve problem
-    T1_=Tf_; // phase 1 : full contact
-    T2_=Tt_+Ts_; // phase 2 : 3 contact (trans + swing)
-    T3_=Tt_; // phase 3 : full contact (trans)
+    // motion period 
+    _setPeriods( _motion_command.get_motion_periods() );
     std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
+
+    // solve problem
     _solveQuadProg(); // get dir_com_swing_, alpha, beta
 
-    dir_com_swing_.setZero();
-    dir_com_swing_<<-1.0927, 0.0108, 0.8831;
-    alpha_ = 1.0538;
-    beta_ = -1.4050;
-    dir_com_swing_ = dir_com_swing_/beta_;
+    // dir_com_swing_.setZero();
+    // dir_com_swing_<<-1.0927, 0.0108, 0.8831;
+    // alpha_ = 1.0538;
+    // beta_ = -1.4050;
+    // dir_com_swing_ = dir_com_swing_/beta_;
 
     p_swing_init_ = p_goal_ + ( 0.5*beta_*T3_*T3_ + beta_*T2_*T3_ 
                                 + 0.5*alpha_*T2_*T2_ )*dir_com_swing_;
     v_swing_init_ = (-beta_*T3_ -alpha_*T2_)*dir_com_swing_;
-    acc_swing_ = alpha_*dir_com_swing_;    
+    acc_swing_ = alpha_*dir_com_swing_;
+    
+    clock_t end = clock();
+    double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    std::cout<<"=============================================="<<std::endl;
+    std::cout<<" computation time =  "<< cpu_time_used<<std::endl;
+    std::cout<<"=============================================="<<std::endl;
 }
 
 ComMotionCommand MagnetoCoMPlanner::getFullSupportCoMCmd() {
@@ -94,7 +102,7 @@ ComMotionCommand MagnetoCoMPlanner::getSwingStartCoMCmd() {
     Eigen::Vector3d pa = sp_->com_pos_des;
     Eigen::Vector3d va = sp_->com_vel_des;
 
-    return ComMotionCommand( pa, va, acc_swing_, Tt_ );
+    return ComMotionCommand( pa, va, acc_swing_, Tt1_ );
 }
 
 ComMotionCommand MagnetoCoMPlanner::getSwingCoMCmd() {
@@ -111,9 +119,30 @@ ComMotionCommand MagnetoCoMPlanner::getSwingEndCoMCmd() {
 
     Eigen::Vector3d p_mid = 0.5*(pa + p_goal_);
     
-    return ComMotionCommand( pa, va, p_mid, zero_vel_, Tt_ );
+    return ComMotionCommand( pa, va, p_mid, zero_vel_, Tt2_ );
 }
 
+void MagnetoCoMPlanner::_setPeriods(const Eigen::VectorXd& periods){
+    if(periods.size()==1) {        
+        Tf_ = periods(0); Tt1_ = Tt_given_; Ts_ = periods(0); Tt2_ = Tt_given_;
+    }
+    else if(periods.size()==2){
+        Tf_ = periods(0); Tt1_ = Tt_given_; Ts_ = periods(1); Tt2_ = Tt_given_;
+    }
+    else if(periods.size()==3){
+        Tf_ = periods(0); Tt1_ = periods(1); Ts_ = periods(2); Tt2_ = periods(1); 
+    }
+    else if(periods.size()==4){
+        Tf_ = periods(0); Tt1_ = periods(1); Ts_ = periods(2); Tt2_ = periods(3); 
+    }
+    else{
+        Tf_ = 0.1; Tt1_ = 0.1; Ts_ = 0.1; Tt2_ = 0.1;
+    }
+
+    T1_ = Tf_;
+    T2_ = Tt1_ + Ts_;
+    T3_ = Tt2_;
+}
 
 void MagnetoCoMPlanner::_buildCentroidalSystemMatrices(){
     int dim_f = Rc_.cols();
@@ -320,15 +349,14 @@ void MagnetoCoMPlanner::_solveQuadProg(){
     double c = -0.5*T3_*T3_;
     double b = T3_*(T2_+T3_);
     double ratio = (-b - std::sqrt(b*b-4*a*c)) / 2/a;
-    std::cout<<"ratio = " <<ratio<<std::endl;
+    // std::cout<<"ratio = " <<ratio<<std::endl;
     _getSwingConditionGivenRatio(ratio, DDs, dds);
 
     // Phase 2 & 3
     DD = my_utils::vStack(DDf, DDs);
     dd = my_utils::vStack(ddf, dds);
-
-    my_utils::pretty_print(DDs,std::cout,"DD");
-    my_utils::pretty_print(dds,std::cout,"dd");
+    // my_utils::pretty_print(DDs,std::cout,"DD");
+    // my_utils::pretty_print(dds,std::cout,"dd");
 
     // solve quad prob for x = beta*dir
     // min 0.5*x'*x

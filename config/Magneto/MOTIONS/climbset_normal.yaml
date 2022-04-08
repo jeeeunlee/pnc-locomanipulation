@@ -9,41 +9,41 @@ motion0:
   pos: [-0.1,0,0]
   ori: [1,0,0,0]
   swing_height: 0.05
-  duration: 0.35
+  durations: [0.5, 0.1, 0.3, 0.3]
   frame: 0
   # for only simulation
-  mu: 0.3 # friction
-  fm: 40 # adhesive force
+  mu: 0.7 # friction
+  fm: 150 # adhesive force
 
 motion1:
   foot: 2
   pos: [-0.1,0,0]
   ori: [1,0,0,0]
   swing_height: 0.05
-  duration: 0.35
+  durations: [0.5, 0.1, 0.3, 0.3]
   frame: 0
   # for only simulation
-  mu: 0.5 # friction
-  fm: 70 # adhesive force
+  mu: 0.7 # friction
+  fm: 150 # adhesive force
 
 motion2:
   foot: 3
   pos: [-0.1,0,0]
   ori: [1,0,0,0]
   swing_height: 0.05
-  duration: 0.35
+  durations: [0.5, 0.1, 0.3, 0.3]
   frame: 0
   # for only simulation
-  mu: 0.5 # friction
-  fm: 70 # adhesive force
+  mu: 0.7 # friction
+  fm: 150 # adhesive force
 
 motion3:
   foot: 0
   pos: [-0.1,0,0]
   ori: [1,0,0,0]
   swing_height: 0.05
-  duration: 0.35
+  durations: [0.5, 0.1, 0.3, 0.3]
   frame: 0
   # for only simulation
-  mu: 0.5 # friction
-  fm: 70 # adhesive force
+  mu: 0.7 # friction
+  fm: 150 # adhesive force

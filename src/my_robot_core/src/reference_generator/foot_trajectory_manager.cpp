@@ -48,20 +48,23 @@ void FootPosTrajectoryManager::updateTask(const double& current_time,
 // Initialize the swing foot trajectory
 void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
                                             MotionCommand* _motion_cmd) {
-  MOTION_DATA motion_cmd_data;
+  SWING_DATA motion_cmd_data;
   Eigen::VectorXd pos_dev_b;
-  if(_motion_cmd->get_foot_motion(motion_cmd_data, link_idx_)) {
+  link_idx_ = -1;
+  if(_motion_cmd->get_foot_motion(motion_cmd_data)) {
       // if com motion command is given
-      traj_duration_ = motion_cmd_data.motion_period;
-      pos_dev_b = motion_cmd_data.pose.pos;
+      link_idx_ = motion_cmd_data.foot_idx;
+      traj_duration_ = _motion_cmd->get_swing_period();
+      pos_dev_b = motion_cmd_data.dpose.pos;
       swing_height_ = motion_cmd_data.swing_height;
+      is_base_frame_ = motion_cmd_data.dpose.is_baseframe;
   } else {
     // heuristic computation
     std::cout<< "NOOOOO!! no foot motion cmd?" << std::endl;
     traj_duration_ = 1.0;
     pos_dev_b = Eigen::VectorXd::Zero(3);
     swing_height_ = 0.5;
-    motion_cmd_data.pose.is_baseframe=true;
+    is_base_frame_=true;
   }
   traj_duration_ = traj_duration_ > 0 ? traj_duration_ : 0.01;
   traj_start_time_ = _start_time;
@@ -74,18 +77,18 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
   foot_pos_ini_ = robot_->getBodyNodeIsometry(link_idx_).translation();
   foot_rot_ini_ = robot_->getBodyNodeIsometry(link_idx_).linear();
 
-  if(motion_cmd_data.pose.is_baseframe) {
+  if(is_base_frame_) {
     // TODOJE : ? getBodyNodeIsometry(MagnetoBodyNode::base_link)
     Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear(); 
     // Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
     foot_pos_des_ = foot_pos_ini_ + R_wb*pos_dev_b; 
-    
-    my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b");
-    my_utils::pretty_print(foot_pos_ini_,std::cout,"foot_pos_ini_");
-    my_utils::pretty_print(foot_pos_des_,std::cout,"foot_pos_des_");
   }
   else // absolute coordinate
     foot_pos_des_ = foot_pos_ini_ + pos_dev_b;
+
+  my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b");
+  my_utils::pretty_print(foot_pos_ini_,std::cout,"foot_pos_ini_");
+  my_utils::pretty_print(foot_pos_des_,std::cout,"foot_pos_des_");
   
   setSwingPosCurve(foot_pos_ini_,foot_pos_des_,swing_height_);
 

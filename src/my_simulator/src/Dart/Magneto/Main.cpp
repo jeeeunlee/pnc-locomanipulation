@@ -131,9 +131,9 @@ void _setTransparency(dart::dynamics::SkeletonPtr robot) {
     }
 }
 
-void _setInitialConfiguration(dart::dynamics::SkeletonPtr robot, const Eigen::VectorXd& q_v = Eigen::VectorXd::Zero(6)) {
-
-    int _base_joint = robot->getDof("_base_joint")->getIndexInSkeleton();
+void _setInitialConfiguration(dart::dynamics::SkeletonPtr robot, 
+                            const Eigen::VectorXd& q_v = Eigen::VectorXd::Zero(6),
+                            Eigen::VectorXd q_leg_init = Eigen::VectorXd::Zero(6)) {
 
     int AL_coxa_joint = robot->getDof("AL_coxa_joint")->getIndexInSkeleton();
     int AL_femur_joint = robot->getDof("AL_femur_joint")->getIndexInSkeleton();
@@ -165,48 +165,41 @@ void _setInitialConfiguration(dart::dynamics::SkeletonPtr robot, const Eigen::Ve
     
 
     Eigen::VectorXd q = robot->getPositions();
-    // q[4] = 0.0;//1.0; // 0.300;
-    // q[2] = 0.1;//0.155; // 0.1; initial z position
-
-    // q[4] = 1.0;
-    // q[2] = 0.155;// initial z position
-
-    // q[4] = 1.0;
-    // q[2] = 0.2;// initial z position
-
     q.segment(0,6) = q_v.head(6);
-    q[2] = q[2]-0.085;
 
-    double femur_joint_init = 1./10.*M_PI_2; // -1./10.*M_PI_2;
-    double tibia_joint_init = -11./10.*M_PI_2; // -9./10.*M_PI_2;
+    if( q_leg_init.norm() < 1e-5 ){
+        // q2 +  q3 + pi/2 = 0
+        q_leg_init(1) =  1./10.*M_PI_2; // -1./10.*M_PI_2;
+        q_leg_init(2) = -11./10.*M_PI_2; // -9./10.*M_PI_2;
+    }
 
-    q[AL_coxa_joint] = 0.0;
-    q[AL_femur_joint] = femur_joint_init;
-    q[AL_tibia_joint] = tibia_joint_init;
-    q[AL_foot_joint_1] = 0.0;
-    q[AL_foot_joint_2] = 0.0;
-    q[AL_foot_joint_3] = 0.0;
+    q[AL_coxa_joint] = q_leg_init(0);
+    q[AL_femur_joint] = q_leg_init(1);
+    q[AL_tibia_joint] = q_leg_init(2);
+    q[AL_foot_joint_1] = q_leg_init(3);
+    q[AL_foot_joint_2] = -q_leg_init(4);
+    q[AL_foot_joint_3] = q_leg_init(5);
 
-    q[AR_coxa_joint] = 0.0;
-    q[AR_femur_joint] = femur_joint_init;
-    q[AR_tibia_joint] = tibia_joint_init;
-    q[AR_foot_joint_1] = 0.0;
-    q[AR_foot_joint_2] = 0.0;
-    q[AR_foot_joint_3] = 0.0;
+    q[AR_coxa_joint] = q_leg_init(0);
+    q[AR_femur_joint] = q_leg_init(1);
+    q[AR_tibia_joint] = q_leg_init(2);
+    q[AR_foot_joint_1] = q_leg_init(3);
+    q[AR_foot_joint_2] = q_leg_init(4);
+    q[AR_foot_joint_3] = q_leg_init(5);
 
-    q[BL_coxa_joint] = 0.0;
-    q[BL_femur_joint] = femur_joint_init;
-    q[BL_tibia_joint] = tibia_joint_init;
-    q[BL_foot_joint_1] = 0.0;
-    q[BL_foot_joint_2] = 0.0;
-    q[BL_foot_joint_3] = 0.0;
+    q[BL_coxa_joint] = q_leg_init(0);
+    q[BL_femur_joint] = q_leg_init(1);
+    q[BL_tibia_joint] = q_leg_init(2);
+    q[BL_foot_joint_1] = q_leg_init(3);
+    q[BL_foot_joint_2] = q_leg_init(4);
+    q[BL_foot_joint_3] = q_leg_init(5);
 
-    q[BR_coxa_joint] = 0.0;
-    q[BR_femur_joint] = femur_joint_init;
-    q[BR_tibia_joint] = tibia_joint_init;
-    q[BR_foot_joint_1] = 0.0;
-    q[BR_foot_joint_2] = 0.0;
-    q[BR_foot_joint_3] = 0.0;
+    q[BR_coxa_joint] = q_leg_init(0);
+    q[BR_femur_joint] = q_leg_init(1);
+    q[BR_tibia_joint] = q_leg_init(2);
+    q[BR_foot_joint_1] = q_leg_init(3);
+    q[BR_foot_joint_2] = -q_leg_init(4);
+    q[BR_foot_joint_3] = q_leg_init(5);
 
     robot->setPositions(q);
 
@@ -234,6 +227,7 @@ int main(int argc, char** argv) {
     std::string ground_file;
     std::string robot_file;
     Eigen::VectorXd q_floating_base_init = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd q_leg_init = Eigen::VectorXd::Zero(6);
     double q_temp;
     double coef_fric;
     //std::ostringstream ground_file;
@@ -248,8 +242,8 @@ int main(int argc, char** argv) {
         my_utils::readParameter(simulation_cfg, "ground", ground_file);
         my_utils::readParameter(simulation_cfg, "robot", robot_file);
 
-        my_utils::readParameter(simulation_cfg, "initial_pose", q_floating_base_init);                         
-
+        my_utils::readParameter(simulation_cfg, "initial_pose", q_floating_base_init);   
+        my_utils::readParameter(simulation_cfg, "initial_leg_config", q_leg_init);          
     } catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
                   << __FILE__ << "]" << std::endl
@@ -288,7 +282,7 @@ int main(int argc, char** argv) {
     // Initial configuration
     // =========================================================================
     
-    _setInitialConfiguration(robot, q_floating_base_init);
+    _setInitialConfiguration(robot, q_floating_base_init, q_leg_init);
     // TODO
     // =========================================================================
     // Enabel Joit Limits

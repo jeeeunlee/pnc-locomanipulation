@@ -75,11 +75,16 @@ void MagnetoGoalPlanner::getGoalComPosition(Eigen::Vector3d& _pc_goal){
 void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
 
   // assume one foot is moving
-  MOTION_DATA motion_data;
-  int moving_foot_idx; 
+  SWING_DATA motion_data; 
 
-  _motion_command.get_foot_motion(motion_data, moving_foot_idx);
-  _setDesiredFootPosition(motion_data.pose, moving_foot_idx);
+  _motion_command.get_foot_motion(motion_data);
+  _setDesiredFootPosition(motion_data.dpose, motion_data.foot_idx);
+
+  Eigen::Vector3d p_com_curr = robot_planner_->getCoMPosition();;
+  std::cout<<"****************************************"<<std::endl;
+  std::cout<<  q_.transpose() <<std::endl;
+  std::cout<<  p_com_curr.transpose() <<std::endl;
+  
 
   double tol = 1e-5;
   double err = 1e5;
@@ -101,6 +106,11 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
 
   q_goal_ = q_;
   pc_goal_ = robot_planner_->getCoMPosition();
+
+  std::cout<<"****************************************"<<std::endl;
+  std::cout<<  q_.transpose() <<std::endl;
+  std::cout<<  pc_goal_.transpose() <<std::endl;
+  std::cout<<"****************************************"<<std::endl;
 }
 
 void MagnetoGoalPlanner::_UpdateDelQ() {
@@ -204,15 +214,30 @@ void MagnetoGoalPlanner::_UpdateConfiguration(
 }
 
 void MagnetoGoalPlanner::_InitCostFunction() {
-  // J(q) = (q2+q3+pi/2)^2 + a*(q3+pi/2)^2
-  double alpha = 1.;
+  double theta = 0.0;
+  for(int ii(0); ii<num_joint_dof_; ++ii) {
+    if( _checkJoint(ii,MagnetoJointType::FEMUR) ) {
+      theta += q_(ii);
+    }
+    if( _checkJoint(ii, MagnetoJointType::TIBIA) ) {
+      theta += q_(ii);
+    }
+  }
+  theta = theta*0.25;
+  // J(q) = alpha_1*(q2+q3-theta)^2 + alpha_2*(q3+pi/2)^2 + alpha_3*(q1-q1_curr)^2
+  // J(q) = q*A*q + b*q
+  // J(q) = alpha_1*(q2^2) + 2*alpha_1*(q2*q3) + (alpha_1 + alpha_2)(q3^2)
+  //        + alpha_1*(-2*theta)*(q2) + 2*(alpha_1*(-theta) + alpha_2*pi/2)*q_3
+  double alpha_1 = 0.5;
+  double alpha_2 = 1.;
+  double alpha_3 = 1.;
   // FEMUR:2, TIBIA:3
   num_joint_dof_ = robot_->getNumDofs();
   A_ = Eigen::MatrixXd::Zero(num_joint_dof_,num_joint_dof_);
   b_ = Eigen::VectorXd::Zero(num_joint_dof_);
 
   // base ori
-  double beta = 0.1;
+  double beta = 0.5;
   q_ = robot_->getQ();
   A_(MagnetoDoF::baseRotZ, MagnetoDoF::baseRotZ) = beta;
   A_(MagnetoDoF::baseRotY, MagnetoDoF::baseRotY) = beta;
@@ -225,33 +250,21 @@ void MagnetoGoalPlanner::_InitCostFunction() {
   for(int ii(0); ii<num_joint_dof_; ++ii) {
     // active
     if(_checkJoint(ii,MagnetoJointType::COXA)) {
-      A_(ii,ii) = beta;
-      b_(ii) =  -2.0*beta*q_(ii);
+      A_(ii,ii) = alpha_3;
+      b_(ii) =  -2.0*alpha_3*q_(ii);
     }
     else if(_checkJoint(ii, MagnetoJointType::FEMUR)) {
-      b_(ii) = M_PI;
-      A_(ii,ii) = 1.;
-      A_(ii,ii+1) = 1.;
-      // for(int jj(0); jj<num_joint_dof_; ++jj) {
-      //   if(_checkJoint(jj, MagnetoJointType::FEMUR))
-      //     A_(ii,jj) = 1.;
-      //   if(_checkJoint(jj, MagnetoJointType::TIBIA))
-      //     A_(ii,jj) = 1.;
-      // }
+      b_(ii) = alpha_1*(-2*theta);
+      A_(ii,ii) = alpha_1;
+      A_(ii,ii+1) = alpha_1;
     } else if(_checkJoint(ii, MagnetoJointType::TIBIA)) {
-      b_(ii) = (1.+alpha)*M_PI;
-      A_(ii,ii) = 1.+ alpha;
-      A_(ii,ii-1) = 1.;
-      // for(int jj(0); jj<num_joint_dof_; ++jj) {
-      //   if(_checkJoint(jj, MagnetoJointType::TIBIA))
-      //     A_(ii,jj) = 1. + alpha;
-      //   if(_checkJoint(jj, MagnetoJointType::FEMUR))
-      //     A_(ii,jj) = 1.;
-      // }
+      b_(ii) = (alpha_1*(-2*theta)+alpha_2*M_PI);
+      A_(ii,ii) = alpha_1+ alpha_2;
+      A_(ii,ii-1) = alpha_1;
     }
 
     // passive
-    double gamma = 0.5;
+    double gamma = 0.0;
     if(_checkJoint(ii, MagnetoJointType::FOOT1) ||
         _checkJoint(ii, MagnetoJointType::FOOT2) ||
         _checkJoint(ii, MagnetoJointType::FOOT3) ) {
