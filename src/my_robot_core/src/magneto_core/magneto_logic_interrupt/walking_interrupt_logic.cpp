@@ -43,9 +43,8 @@ void WalkingInterruptLogic::processInterrupts() {
         std::cout << "---------     com up      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           POSE_DATA pose_up(0,0,0.01, 1,0,0,0);
-          MOTION_DATA motion_com_up(pose_up, 0.5);
           addStateCommand(MAGNETO_STATES::BALANCE, 
-                            MotionCommand(motion_com_up) );
+                            MotionCommand(pose_up, 0.5) );
         }
       break;
       case 'x':
@@ -54,9 +53,8 @@ void WalkingInterruptLogic::processInterrupts() {
         std::cout << "---------     com down      ---------" << std::endl;
         if (ctrl_arch_->getState() == MAGNETO_STATES::BALANCE) {
           POSE_DATA pose_dn(0,0,-0.01, 1,0,0,0);
-          MOTION_DATA motion_com_dn(pose_dn, 0.5);
           addStateCommand(MAGNETO_STATES::BALANCE, 
-                          MotionCommand(motion_com_dn) );
+                          MotionCommand(pose_dn, 0.5) );
         }
       break;
       default:
@@ -74,20 +72,20 @@ void WalkingInterruptLogic::addStateCommand(int _state_id, const MotionCommand& 
 
 void WalkingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
   // add motion_command_script_list_
-    int link_idx;
-    MOTION_DATA md_temp;
+  Eigen::VectorXd pos_temp, ori_temp;
+  bool is_baseframe;
+  my_utils::readParameter(motion_cfg, "pos",pos_temp);
+  my_utils::readParameter(motion_cfg, "ori", ori_temp);
+  my_utils::readParameter(motion_cfg, "b_relative", is_baseframe);
 
-    Eigen::VectorXd pos_temp;
-    Eigen::VectorXd ori_temp;
-    bool is_baseframe;
-    my_utils::readParameter(motion_cfg, "foot", link_idx);
-    my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
-    my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
-    my_utils::readParameter(motion_cfg, "pos",pos_temp);
-    my_utils::readParameter(motion_cfg, "ori", ori_temp);
-    my_utils::readParameter(motion_cfg, "b_relative", is_baseframe);
-    md_temp.pose = POSE_DATA(pos_temp, ori_temp, is_baseframe);
-    MotionCommand mc_temp = MotionCommand(link_idx, md_temp);
+  SWING_DATA swing_motion;
+  swing_motion.dpose = POSE_DATA(pos_temp, ori_temp, is_baseframe);
+  my_utils::readParameter(motion_cfg, "foot", swing_motion.foot_idx);    
+  my_utils::readParameter(motion_cfg, "swing_height", swing_motion.swing_height);
 
-    script_user_cmd_deque_.push_back(mc_temp);
+  Eigen::VectorXd motion_periods;
+  my_utils::readParameter(motion_cfg, "durations", motion_periods);
+
+  script_user_cmd_deque_.push_back(
+    MotionCommand(swing_motion, motion_periods));
 }

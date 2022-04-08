@@ -53,6 +53,7 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     double torque_limit_;
 
     int run_mode_;
+    int magnetic_frame_type_;
 
     Eigen::VectorXd coef_fric_;
     Eigen::VectorXd magnetic_force_; // 147. #[N] 
@@ -61,6 +62,7 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     std::map<int, double> coef_fric_map_;
     std::map<int, double> magnetic_force_map_;
     std::map<int, double> residual_magnetism_map_;
+    std::map<int, Eigen::Vector3d> surface_normal_;
     
 
 
@@ -85,4 +87,5 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
 
     //
     void setFrictionCoeff();
+    void setMagneticParameter();
 };

@@ -234,7 +234,10 @@ void pretty_print(Eigen::Vector3d const& vv, std::ostream& os,
 void pretty_print(Eigen::Quaternion<double> const& qq, std::ostream& os,
                   std::string const& title, std::string const& prefix,
                   bool nonl) {
-    pretty_print(qq.coeffs(), os, title, prefix, true, nonl);
+    Eigen::VectorXd wxyz = Eigen::VectorXd::Zero(4);
+    wxyz << qq.w(), qq.x(), qq.y(), qq.z();
+    pretty_print(wxyz, os, title, prefix, true, nonl);
+    // pretty_print(qq.coeffs(), os, title, prefix, true, nonl);
 }
 
 std::string pretty_string(Eigen::VectorXd const& vv) {

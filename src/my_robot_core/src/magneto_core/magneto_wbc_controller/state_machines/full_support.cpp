@@ -29,33 +29,44 @@ void FullSupport::firstVisit() {
   //      Planning
   // ---------------------------------------
   // robot goal configuration
-  Eigen::VectorXd q_goal; 
+  Eigen::VectorXd q_goal =  robot_->getQ();
   Eigen::Vector3d pc_goal;
-  rg_container_->goal_planner_->computeGoal(mc_curr_);  
-  rg_container_->goal_planner_->getGoalConfiguration(q_goal);
-  rg_container_->goal_planner_->getGoalComPosition(pc_goal);
+  // rg_container_->goal_planner_->computeGoal(mc_curr_);  
+  // rg_container_->goal_planner_->getGoalConfiguration(q_goal);
+  // rg_container_->goal_planner_->getGoalComPosition(pc_goal);
+  
+  SWING_DATA mdtmp;  
+  Eigen::Vector3d com_dpos;
+  if( mc_curr_.get_foot_motion(mdtmp) ) {        
+      com_dpos = mdtmp.dpose.pos;
+      if(mdtmp.dpose.is_baseframe){
+          Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
+          com_dpos = Rwb*com_dpos;
+      }
+  }
+  else com_dpos = Eigen::VectorXd::Zero(3);
+  com_dpos = com_dpos*0.25;
+  pc_goal = robot_->getCoMPosition() + com_dpos;
 
   // CoM planner
-  MOTION_DATA md;
+  Eigen::VectorXd periods;  
   ComMotionCommand mc_com;
-  if(mc_curr_.get_foot_motion(md))
-  {
+  if(mc_curr_.foot_motion_given) {
     rg_container_->com_sequence_planner_->computeSequence(pc_goal,
                                           mc_curr_,
                                           ws_container_->feet_contacts_,
                                           ws_container_->feet_magnets_);
     mc_com = rg_container_->
               com_sequence_planner_->getFullSupportCoMCmd();
-  }else if(mc_curr_.get_com_motion(md)){
-    Eigen::Vector3d zero_vel;
-    zero_vel.setZero();
+  }else if(mc_curr_.com_motion_given) {
+    double period = mc_curr_.motion_periods(0);
+    Eigen::Vector3d zero_vel(0.0, 0.0, 0.0);
     Eigen::Vector3d pa = robot_ ->getCoMPosition(); 
-    mc_com = ComMotionCommand( pa, zero_vel, pc_goal, zero_vel, md.motion_period );
+    mc_com = ComMotionCommand( pa, zero_vel, pc_goal, zero_vel, period );
   }else{
-    Eigen::Vector3d zero_vel;
-    zero_vel.setZero();
+    Eigen::Vector3d zero3d(0.0, 0.0, 0.0);
     Eigen::Vector3d pa = robot_ ->getCoMPosition(); 
-    mc_com = ComMotionCommand( pa, zero_vel, zero_vel, 0.1 );
+    mc_com = ComMotionCommand( pa, zero3d, zero3d, 1.0 );
   }
   
   // ---------------------------------------

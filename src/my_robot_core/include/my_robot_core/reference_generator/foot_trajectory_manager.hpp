@@ -20,6 +20,7 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   
 
   int link_idx_;
+  bool is_base_frame_;
   
   Eigen::VectorXd foot_pos_ini_;
   Eigen::MatrixXd foot_rot_ini_; // R_wb

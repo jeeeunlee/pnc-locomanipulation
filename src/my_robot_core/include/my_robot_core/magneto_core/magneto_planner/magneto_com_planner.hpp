@@ -22,7 +22,7 @@ class MagnetoCoMPlanner{
                         MotionCommand &_motion_command,
                         const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
                         const std::array<MagnetSpec*, Magneto::n_leg>& f_mag);
-    void setTransitionDuration(double _Tt) {Tt_ = _Tt;}
+    void setTransitionDuration(double _Tt) {Tt_given_ = _Tt;}
 
     ComMotionCommand getFullSupportCoMCmd();
     ComMotionCommand getSwingStartCoMCmd();
@@ -30,6 +30,7 @@ class MagnetoCoMPlanner{
     ComMotionCommand getSwingEndCoMCmd();
 
     private:
+        void _setPeriods(const Eigen::VectorXd& periods);
         void _buildCentroidalSystemMatrices();
         void _buildPfRf();        
         void _buildFrictionCone(const std::array<ContactSpec*, 
@@ -58,8 +59,11 @@ class MagnetoCoMPlanner{
         Eigen::Vector3d Ldot_;
 
         double Tf_; // fullsupport_period;
-        double Ts_; // swing_period;        
-        double Tt_; // transition_period;
+        double Tt1_; // transition_period;
+        double Ts_; // swing_period;                
+        double Tt2_; // transition_period;
+
+        double Tt_given_;
 
         double mass_;
         Eigen::Vector3d grav_;        

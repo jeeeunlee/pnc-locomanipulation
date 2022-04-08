@@ -64,21 +64,21 @@ void ClimbingInterruptLogic::addStateCommand(int _state_id,
 
 void ClimbingInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg) {
   // motion
-  int foot_idx;  
-  Eigen::VectorXd pos_temp;
-  Eigen::VectorXd ori_temp;
+  Eigen::VectorXd pos_temp, ori_temp;
   int frame;
-  MOTION_DATA md_temp;
-  
-  my_utils::readParameter(motion_cfg, "foot", foot_idx);
   my_utils::readParameter(motion_cfg, "pos",pos_temp);
-  my_utils::readParameter(motion_cfg, "ori", ori_temp);
-  my_utils::readParameter(motion_cfg, "frame", frame);  
-  my_utils::readParameter(motion_cfg, "duration", md_temp.motion_period);
-  my_utils::readParameter(motion_cfg, "swing_height", md_temp.swing_height);
-  md_temp.pose = POSE_DATA(pos_temp, ori_temp, frame==0);  
-  MotionCommand mc_temp = MotionCommand(
-                          MagnetoFoot::LinkIdx[foot_idx], md_temp);
+  my_utils::readParameter(motion_cfg, "ori", ori_temp);    
+  my_utils::readParameter(motion_cfg, "frame", frame);
+
+  SWING_DATA swing_motion;
+  swing_motion.dpose = POSE_DATA(pos_temp, ori_temp, frame==0);  
+  my_utils::readParameter(motion_cfg, "foot", swing_motion.foot_idx);    
+  my_utils::readParameter(motion_cfg, "swing_height", swing_motion.swing_height);
+
+  Eigen::VectorXd motion_periods;
+  my_utils::readParameter(motion_cfg, "durations", motion_periods);
+
+  MotionCommand mc_temp = MotionCommand(swing_motion, motion_periods);
 
   // simulation enviroment spec
   double mu;

@@ -38,30 +38,125 @@ struct POSE_DATA {
         pos << x,y,z;
         ori = Eigen::Quaternion<double>(w,qx,qy,qz);
     }
+    void printMotionInfo(){
+      std::cout<<"[ fr="<<is_baseframe<<" ] - ";
+      std::cout<<"pos : ("<< pos.transpose() << "), " ;
+      std::cout<<"ori : ("<< ori.w() <<"," << ori.x() <<"," << ori.y() <<"," << ori.z() << ")" << std::endl;
+    }
 };
 
-struct MOTION_DATA {
-    POSE_DATA pose;
-    double swing_height;
-    double motion_period;
-
-    MOTION_DATA() {
-        pose = POSE_DATA();
-        motion_period = 0.0;
-        swing_height = 0.0;
+class SWING_DATA {
+  public:
+    SWING_DATA(){
+      foot_idx = -1;
+      swing_height = 0.0;
+      dpose = POSE_DATA();
+    };
+    SWING_DATA(TARGET_LINK_IDX _foot_idx,
+              double _swing_height,
+              const POSE_DATA& _dpose){
+      foot_idx = _foot_idx;
+      swing_height = _swing_height;
+      dpose = _dpose;
+    };
+    void printMotionInfo(){
+      std::cout<<"["<<foot_idx<<"] : h="<< swing_height << " / ";
+      dpose.printMotionInfo();      
     }
-    MOTION_DATA(const POSE_DATA &_pose, 
-                double _motion_period,
-                double _swing_height=0.0) {
-        pose = _pose;
-        motion_period = _motion_period;
-        swing_height = _swing_height;
+  public:
+    TARGET_LINK_IDX foot_idx;
+    double swing_height;
+    POSE_DATA dpose;
+};
+
+
+
+// specific component
+class MotionCommand : public UserCommand {
+  public:
+    MotionCommand()
+    :com_motion_given(false), foot_motion_given(false) {
+      foot_motion_data = SWING_DATA();
+      com_motion_data = POSE_DATA();
+      motion_periods = Eigen::VectorXd::Zero(1);
+    }
+    MotionCommand( const POSE_DATA& _com_motion_data,
+                  double motion_period ):MotionCommand() {
+      com_motion_given = true;
+      com_motion_data = _com_motion_data;
+      motion_periods = Eigen::VectorXd::Constant(1,motion_period);
+    }
+    MotionCommand(const SWING_DATA& _foot_motion_data,
+                  const Eigen::VectorXd& _motion_periods ): MotionCommand() {
+      foot_motion_given = true;
+      foot_motion_data = _foot_motion_data;
+      motion_periods = _motion_periods;
+    }
+    MotionCommand(const POSE_DATA& _com_motion_data,
+                const SWING_DATA& _foot_motion_data,
+                const Eigen::VectorXd& _motion_periods )
+    :com_motion_given(true), foot_motion_given(true) {
+      com_motion_data = _com_motion_data;
+      foot_motion_data = _foot_motion_data;
+      motion_periods = _motion_periods;
+    }
+    MotionCommand(const MotionCommand& _mc){
+      com_motion_given = _mc.com_motion_given;
+      foot_motion_given = _mc.foot_motion_given;      
+      com_motion_data = _mc.com_motion_data;  
+      foot_motion_data = _mc.foot_motion_data;
+      motion_periods =  _mc.motion_periods;
+    }
+    ~MotionCommand() {};
+
+  public:
+    int get_moving_foot() {return foot_motion_data.foot_idx; }
+    bool get_foot_motion(SWING_DATA &_motion_data){
+      _motion_data = foot_motion_data;
+      return foot_motion_given;
+    }
+    bool get_com_motion(POSE_DATA &_motion_data){
+      _motion_data = com_motion_data;
+      return com_motion_given;
+    }
+    Eigen::VectorXd get_motion_periods(){
+      return motion_periods;
+    }
+    double get_swing_period(){
+      if(motion_periods.size()==4){
+        return motion_periods(2);
+      }else if(motion_periods.size()==2){
+        return motion_periods(1);
+      }
+      else if(motion_periods.size()==1){
+        return motion_periods(0);
+      }else{
+        return 1.0;
+      }
     }
 
     void printMotionInfo(){
-      std::cout<<"@("<<pose.pos[0]<<","<<pose.pos[1]<<","<<pose.pos[2]<< ")["<<pose.is_baseframe<<"] / motion period : "<<motion_period<<std::endl;
+      std::cout<<" -------------------------------- "<<std::endl;
+      std::cout<<" MotionCommand"<<std::endl;
+      std::cout<<"  * com motion : ";
+      if(com_motion_given){ com_motion_data.printMotionInfo(); }
+      else { std::cout<< "not given"<< std::endl; }
+      std::cout<<"  * foot motion";
+      if(foot_motion_given){ foot_motion_data.printMotionInfo(); }
+      else { std::cout<< " : not given"<< std::endl; }
+      std::cout<<"  * periods : " << motion_periods.transpose() << std::endl;
+      std::cout<<" -------------------------------- "<<std::endl;
     }
+
+  public:
+    bool com_motion_given;
+    bool foot_motion_given;
+    SWING_DATA foot_motion_data;
+    POSE_DATA com_motion_data;
+    Eigen::VectorXd motion_periods;
 };
+
+
 
 class ComMotionCommand :  public UserCommand{
   public:
@@ -109,89 +204,6 @@ class ComMotionCommand :  public UserCommand{
 
 };
 
-// specific component
-class MotionCommand : public UserCommand {
-  public:
-    MotionCommand()
-    :com_motion_given(false), foot_motion_given(false), swing_foot_idx(-1) {
-      foot_motion_data = MOTION_DATA();
-      com_motion_data = MOTION_DATA();
-    }
-    MotionCommand( const MOTION_DATA& _com_motion_data ):MotionCommand() {
-      com_motion_given = true;
-      com_motion_data = _com_motion_data;
-    }
-    MotionCommand(int _moving_link_id,
-                const MOTION_DATA& _foot_motion_data): MotionCommand() {
-      foot_motion_given = true;
-      swing_foot_idx =  _moving_link_id;
-      foot_motion_data = _foot_motion_data;
-    }
-    MotionCommand(int _moving_link_id,
-                const MOTION_DATA& _foot_motion_data,
-                const MOTION_DATA& _com_motion_data)
-    :com_motion_given(true), foot_motion_given(true), swing_foot_idx(_moving_link_id) {
-      com_motion_data = _com_motion_data;
-      foot_motion_data = _foot_motion_data;
-    }
-    MotionCommand(const MotionCommand& _mc){
-      com_motion_given = _mc.com_motion_given;
-      foot_motion_given = _mc.foot_motion_given;
-      swing_foot_idx =  _mc.swing_foot_idx;
-      com_motion_data = _mc.com_motion_data;  
-      foot_motion_data = _mc.foot_motion_data;
-    }
-    ~MotionCommand() {};
-
-  public:
-    void set_com_motion(const MOTION_DATA& _com_motion_data){
-      com_motion_given =  true;
-      com_motion_data = _com_motion_data;
-    }
-    void set_foot_motion(int _moving_link_id,
-                        const MOTION_DATA& _foot_motion_data){
-      foot_motion_given = true;
-      swing_foot_idx = _moving_link_id;
-      foot_motion_data = _foot_motion_data;
-    }
-    int get_moving_foot() {return swing_foot_idx; }
-    bool get_foot_motion(MOTION_DATA &_motion_data, TARGET_LINK_IDX &_idx){
-      _motion_data = foot_motion_data;
-      _idx = swing_foot_idx;
-      return foot_motion_given;
-    }
-    bool get_foot_motion(MOTION_DATA &_motion_data){
-      _motion_data = foot_motion_data;
-      return foot_motion_given;
-    }
-    bool get_com_motion(MOTION_DATA &_motion_data){
-      _motion_data = com_motion_data;
-      return com_motion_given;
-    }
-    double get_foot_motion_period(){
-      return foot_motion_data.motion_period;
-    }
-
-    void printMotionInfo(){
-      std::cout<<" ---------------- "<<std::endl;
-      std::cout<<" MotionCommand"<<std::endl;
-      std::cout<<"  * com motion : ";
-      if(com_motion_given){ com_motion_data.printMotionInfo(); }
-      else { std::cout<< "not given"<< std::endl; }
-      std::cout<<"  * foot motion";
-      if(foot_motion_given){ std::cout<<"["<<swing_foot_idx<<"] : "; 
-                            foot_motion_data.printMotionInfo(); }
-      else { std::cout<< " : not given"<< std::endl; }
-      std::cout<<" ---------------- "<<std::endl;
-    }
-
-  protected:
-    bool com_motion_given;
-    bool foot_motion_given;
-    TARGET_LINK_IDX swing_foot_idx;
-    MOTION_DATA foot_motion_data;
-    MOTION_DATA com_motion_data;
-};
 
 class SimulationCommand : public UserCommand {
   public:

@@ -41,6 +41,8 @@ MagnetoWorldNode::MagnetoWorldNode(const dart::simulation::WorldPtr& _world)
     sensor_data_->R_ground = ground_->getBodyNode("ground_link")
                                     ->getWorldTransform().linear();
 
+    my_utils::pretty_print(sensor_data_->R_ground, std::cout, "R_ground");
+
     // ---- SET control parameters %% motion script
     run_mode_ = ((MagnetoInterface*)interface_)->getRunMode();
 }
@@ -227,8 +229,8 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
                         * magnetic_force_map_[it.first];
             // std::cout<<"res: dist = "<<contact_distance_[it.first]<<", distance_ratio=" << distance_ratio << std::endl;
         }       
-        robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);        
-    }    
+        robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);
+    }
 }
 
 void MagnetoWorldNode::PlotResult_() {
@@ -331,13 +333,16 @@ void MagnetoWorldNode::PlotFootStepResult_() {
     Eigen::Isometry3d foot_iso;
     Eigen::VectorXd foot_pos_;
     Eigen::MatrixXd foot_rot_;
+    Eigen::Quaterniond foot_quat_;
     for(int i(0); i<Magneto::n_leg; ++i){
         varname = MagnetoFoot::Names[i]+"config";
         foot_iso = robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->getWorldTransform();
         foot_pos_ = foot_iso.translation();
         foot_rot_ = foot_iso.linear();
+        foot_quat_ = Eigen::Quaternion<double>(foot_iso.linear());
         my_utils::pretty_print(foot_pos_, std::cout, varname);
-        my_utils::pretty_print(foot_rot_, std::cout, varname);
+        // my_utils::pretty_print(foot_rot_, std::cout, varname);
+        my_utils::pretty_print(foot_quat_, std::cout, varname);
     }
     std::cout<<"================================"<<std::endl;
     
@@ -357,6 +362,8 @@ void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
         my_utils::readParameter(simulation_cfg["contact_params"], "friction", coef_fric_);
         my_utils::readParameter(simulation_cfg["magnetism_params"], "magnetic_force", magnetic_force_);  
         my_utils::readParameter(simulation_cfg["magnetism_params"], "residual_magnetism", residual_magnetism_); 
+
+        my_utils::readParameter(simulation_cfg, "magnetic_frame", magnetic_frame_type_);
        
 
         // read motion scripts
@@ -384,6 +391,12 @@ void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
     // my_utils::pretty_print(coef_fric_, std::cout, "sim : coef_fric_");
     
     // ---- SET MAGNETISM MAP
+    setMagneticParameter();
+
+    setFrictionCoeff();
+}
+
+void MagnetoWorldNode::setMagneticParameter(){
     magnetic_force_map_[MagnetoBodyNode::AL_foot_link] = magnetic_force_[MagnetoFoot::AL];
     magnetic_force_map_[MagnetoBodyNode::BL_foot_link] = magnetic_force_[MagnetoFoot::BL];
     magnetic_force_map_[MagnetoBodyNode::AR_foot_link] = magnetic_force_[MagnetoFoot::AR];
@@ -398,7 +411,13 @@ void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
     coef_fric_map_[MagnetoBodyNode::BL_foot_link] = coef_fric_[MagnetoFoot::BL];
     coef_fric_map_[MagnetoBodyNode::AR_foot_link] = coef_fric_[MagnetoFoot::AR];
     coef_fric_map_[MagnetoBodyNode::BR_foot_link] = coef_fric_[MagnetoFoot::BR];
-    setFrictionCoeff();
+
+    // TODOTODOTODO 
+    surface_normal_[MagnetoBodyNode::AL_foot_link] = 
+    surface_normal_[MagnetoBodyNode::BL_foot_link] = 
+    surface_normal_[MagnetoBodyNode::AR_foot_link] = 
+    surface_normal_[MagnetoBodyNode::BR_foot_link] =   
+
 }
 
 void MagnetoWorldNode::ReadMotions_(const std::string& _motion_file_name) {
