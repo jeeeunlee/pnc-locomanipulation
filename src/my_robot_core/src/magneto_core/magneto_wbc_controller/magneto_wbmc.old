@@ -98,7 +98,7 @@ void MagnetoWBMC::getCommand(void* _cmd) {
       ((MagnetoCommand*)_cmd)->qdot[i] = jvel_des_[i];
   }
 
-  ((MagnetoCommand*)_cmd)->b_magnetism_map = ws_container_->get_magnetism_map();
+  ws_container_->get_magnetism_onoff(((MagnetoCommand*)_cmd)->magnetism_onoff );
 
 
   // _PostProcessing_Command(); // unset task and contact

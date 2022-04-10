@@ -6,6 +6,7 @@
 #include <dart/gui/GLFuncs.hpp>
 #include <dart/gui/osg/osg.hpp>
 
+#include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 
 // MagnetoInterface
@@ -21,8 +22,10 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     void UpdateContactWrenchData_();
     
     void ReadMotions_(const std::string& _motion_file_name);
+    
     void PlotResult_();
     void PlotFootStepResult_();
+    void PlotForce_(int fidx, const Eigen::Vector3d& frc_foot);
 
     
     void CheckRobotSkeleton(const dart::dynamics::SkeletonPtr& skel);
@@ -53,21 +56,18 @@ class MagnetoWorldNode : public dart::gui::osg::WorldNode {
     double torque_limit_;
 
     int run_mode_;
-    int magnetic_frame_type_;
+    int contact_frame_type_;
 
-    Eigen::VectorXd coef_fric_;
-    Eigen::VectorXd magnetic_force_; // 147. #[N] 
-    Eigen::VectorXd residual_magnetism_; //  3.0 #[%]
+    Eigen::MatrixXd R_ground_;
+    Eigen::MatrixXd p_ground_;
 
-    std::map<int, double> coef_fric_map_;
-    std::map<int, double> magnetic_force_map_;
-    std::map<int, double> residual_magnetism_map_;
-    std::map<int, Eigen::Vector3d> surface_normal_;
-    
-
+    std::array<Eigen::Vector3d, Magneto::n_leg> surface_normal_;
+    std::array<double, Magneto::n_leg> coef_fric_;
+    std::array<double, Magneto::n_leg> magnetic_force_; // 147. #[N] 
+    std::array<double, Magneto::n_leg> residual_magnetism_; //  3.0 #[%]
 
     float contact_threshold_;
-    std::map<int, double> contact_distance_;
+    std::array<double, Magneto::n_leg> contact_distance_;
 
     Eigen::VectorXd trq_lb_;
     Eigen::VectorXd trq_ub_;

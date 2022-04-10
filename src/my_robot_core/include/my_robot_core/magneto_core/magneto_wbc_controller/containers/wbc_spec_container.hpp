@@ -122,7 +122,7 @@ class MagnetoWbcSpecContainer {
   //    set functions
   // -------------------------------------------------------
   // magnetism
-  std::map<FootLinkIdx, bool> get_magnetism_map();
+  void get_magnetism_onoff(std::array<bool, Magneto::n_leg>& onoff);
   void update_magnet_forces();
   void set_foot_magnet_off(int moving_cop);
   void set_contact_magnetic_force(int moving_cop);
