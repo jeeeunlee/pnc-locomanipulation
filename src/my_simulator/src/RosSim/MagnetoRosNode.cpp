@@ -22,10 +22,10 @@ MagnetoRosNode::MagnetoRosNode(ros::NodeHandle& nh, const dart::simulation::Worl
 
     // contact dinstance
     contact_threshold_ = 0.005;
-    contact_distance_[MagnetoBodyNode::AL_foot_link] = 0.05;
-    contact_distance_[MagnetoBodyNode::BL_foot_link] = 0.05;
-    contact_distance_[MagnetoBodyNode::AR_foot_link] = 0.05;
-    contact_distance_[MagnetoBodyNode::BR_foot_link] = 0.05;
+    contact_distance_[MagnetoFoot::AL] = 0.05;
+    contact_distance_[MagnetoFoot::BL] = 0.05;
+    contact_distance_[MagnetoFoot::AR] = 0.05;
+    contact_distance_[MagnetoFoot::BR] = 0.05;
 
     trq_cmd_ = Eigen::VectorXd::Zero(n_dof_);
 
@@ -33,9 +33,6 @@ MagnetoRosNode::MagnetoRosNode(ros::NodeHandle& nh, const dart::simulation::Worl
     interface_ = new MagnetoInterface();
     sensor_data_ = new MagnetoSensorData();
     command_ = new MagnetoCommand();
-
-    sensor_data_->R_ground = ground_->getBodyNode("ground_link")
-                                    ->getWorldTransform().linear();
 
     // ---- SET control parameters %% motion script
     run_mode_ = ((MagnetoInterface*)interface_)->getRunMode();
@@ -200,18 +197,20 @@ void MagnetoRosNode::ApplyMagneticForce()  {
                             = Eigen::Quaternion<double>( 
                                 ground_->getBodyNode("ground_link")
                                         ->getWorldTransform().linear() );
-    for(auto it : command_->b_magnetism_map) {
-        if( it.second ) {
+    for(int i(0); i<Magneto::n_leg; ++i) {
+        if( command_->magnetism_onoff[i] ) {
             force[2] = - magnetic_force_;
         } else {
             // distance 0->1 , infinite->0
-            distance_ratio = distance_constant / (contact_distance_[it.first] + distance_constant);
+            distance_ratio = distance_constant / (contact_distance_[i] + distance_constant);
             distance_ratio = distance_ratio*distance_ratio;
-            force[2] = - distance_ratio*(residual_magnetism_/100.)*magnetic_force_;
-            // std::cout<<"res: dist = "<<contact_distance_[it.first]<<", distance_ratio=" << distance_ratio << std::endl;
+            force[2] = - distance_ratio
+                        * (residual_magnetism_/100.)
+                        * magnetic_force_;
+            // std::cout<<"res: dist = "<<contact_distance_[i]<<", distance_ratio=" << distance_ratio << std::endl;
         }       
         force_w = quat_ground.toRotationMatrix() * force;
-        robot_->getBodyNode(it.first)->addExtForce(force, location, is_force_local);
+        robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->addExtForce(force, location, is_force_local);
         // robot_->getBodyNode(it.first)->addExtForce(force_w, location, is_force_global);
 
     }
@@ -380,10 +379,10 @@ void MagnetoRosNode::UpdateContactDistance_() {
     Eigen::VectorXd brf = p_gw + R_gw*robot_->getBodyNode("BR_foot_link")
                              ->getWorldTransform().translation();
 
-    contact_distance_[MagnetoBodyNode::AL_foot_link] = fabs(alf[2]);
-    contact_distance_[MagnetoBodyNode::BL_foot_link] = fabs(blf[2]);
-    contact_distance_[MagnetoBodyNode::AR_foot_link] = fabs(arf[2]);
-    contact_distance_[MagnetoBodyNode::BR_foot_link] = fabs(brf[2]);
+    contact_distance_[MagnetoFoot::AL] = fabs(alf[2]);
+    contact_distance_[MagnetoFoot::BL] = fabs(blf[2]);
+    contact_distance_[MagnetoFoot::AR] = fabs(arf[2]);
+    contact_distance_[MagnetoFoot::BR] = fabs(brf[2]);
 }
 
 
@@ -391,13 +390,13 @@ void MagnetoRosNode::UpdateContactSwitchData_() {
     
     // TODO : distance base -> force base ?  
     sensor_data_->alfoot_contact 
-        = contact_distance_[MagnetoBodyNode::AL_foot_link] < contact_threshold_;
+        = contact_distance_[MagnetoFoot::AL] < contact_threshold_;
     sensor_data_->blfoot_contact
-        = contact_distance_[MagnetoBodyNode::BL_foot_link] < contact_threshold_;    
+        = contact_distance_[MagnetoFoot::BL] < contact_threshold_;    
     sensor_data_->arfoot_contact
-        = contact_distance_[MagnetoBodyNode::AR_foot_link] < contact_threshold_;
+        = contact_distance_[MagnetoFoot::AR] < contact_threshold_;
     sensor_data_->brfoot_contact
-        = contact_distance_[MagnetoBodyNode::BR_foot_link] < contact_threshold_;
+        = contact_distance_[MagnetoFoot::BR] < contact_threshold_;
 
     // static bool first_contact = false;
     // if(!first_contact) {

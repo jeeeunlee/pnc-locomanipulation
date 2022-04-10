@@ -29,15 +29,15 @@
     </link>
     <link name="ground_link">
          <collision>
-            <origin xyz= "0 0 0" rpy="0. 0 0" />
+            <origin xyz= "-0.50 -0.50 0" rpy="0. 0 0" />
             <geometry>
-                <box size="1 1 5" />
+                <box size="1.0 1.0 5.00" />
             </geometry>
         </collision>
          <visual name="visual">
-            <origin xyz = "0 0 0" rpy="0. 0 0" />
+            <origin xyz = "-0.50 -0.50 0" rpy="0. 0 0" />
             <geometry>
-                <box size="1 1 5" />
+                <box size="1.00 1.00 5.00" />
             </geometry>
         </visual>
         <inertial>
@@ -47,7 +47,7 @@
         </inertial>
     </link>
     <joint name="ground_joint" type="fixed">
-        <origin xyz="-0.7 0.0 0.0" rpy="0.6154796 -0.5235987 -0.9553166" />
+        <origin xyz="0.0 0.0 0.0" rpy="0.6154796 -0.5235987 -0.9553166" />
         <parent link="world" />
         <child link="ground_link" />
     </joint>
@@ -57,7 +57,7 @@
         <child link="world_frame" />
     </joint>
     <joint name="ground_flat_joint" type="fixed">
-        <origin xyz="0.0 0.0 -2.5" rpy="0 0.0 0.0" />
+        <origin xyz="0.0 0.0 -2.0" rpy="0 0.0 0.0" />
         <parent link="world" />
         <child link="ground" />
     </joint>

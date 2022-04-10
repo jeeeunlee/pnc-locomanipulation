@@ -238,13 +238,10 @@ void MagnetoWbcSpecContainer::set_magnet_distance(int moving_cop,
   update_magnet_forces();
 }
 
-std::map<FootLinkIdx, bool> MagnetoWbcSpecContainer::get_magnetism_map() {
-  std::map<FootLinkIdx, bool> b_map;
-  b_map.clear();
-  for( auto &magnet : feet_magnets_){
-    b_map[magnet->getLinkIdx()] = magnet->getOnOff();
+void MagnetoWbcSpecContainer::get_magnetism_onoff(std::array<bool, Magneto::n_leg>& onoff) {
+  for( int i(0); i<Magneto::n_leg; ++i){
+    onoff[i] = feet_magnets_[i]->getOnOff();
   }
-  return b_map;
 }
 
 void MagnetoWbcSpecContainer::update_magnet_forces() {

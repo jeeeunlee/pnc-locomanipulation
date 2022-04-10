@@ -30,7 +30,6 @@ class MagnetoSensorData {
         arfoot_contact = false;
         brfoot_contact = false;
 
-        R_ground = Eigen::MatrixXd::Identity(3,3);
         tau_cmd_prev = Eigen::VectorXd::Zero(Magneto::n_adof);
     }
     virtual ~MagnetoSensorData() {}
@@ -48,7 +47,6 @@ class MagnetoSensorData {
     bool arfoot_contact;
     bool brfoot_contact;
 
-    Eigen::MatrixXd R_ground;
     Eigen::VectorXd tau_cmd_prev;
 };
 
@@ -59,17 +57,15 @@ class MagnetoCommand {
         qdot = Eigen::VectorXd::Zero(Magneto::n_adof);
         jtrq = Eigen::VectorXd::Zero(Magneto::n_adof);
 
-        b_magnetism_map[MagnetoBodyNode::AL_foot_link] = false;
-        b_magnetism_map[MagnetoBodyNode::BL_foot_link] = false;
-        b_magnetism_map[MagnetoBodyNode::AR_foot_link] = false;
-        b_magnetism_map[MagnetoBodyNode::BR_foot_link] = false;
+        for(auto &onoff : magnetism_onoff)
+            onoff =  false;
     }
     virtual ~MagnetoCommand() {}
 
     Eigen::VectorXd q;
     Eigen::VectorXd qdot;
     Eigen::VectorXd jtrq;
-    std::map<int, bool> b_magnetism_map;
+    std::array<bool, Magneto::n_leg> magnetism_onoff;
 
     // double alfoot_magnetism_on; // 0~1
     // double blfoot_magnetism_on; // 0~1
@@ -119,6 +115,7 @@ class MagnetoInterface : public EnvInterface {
     bool IsFootPlannerUpdated();
 
     void AddScriptMotion(const YAML::Node& motion_cfg);
-    int getCurrentMovingFoot();
-    void updateSimulationEnvironment(double& mu, double& f_adhesive);
+    int getCurrentMovingFootLinkIdx();
+    int getCurrentMovingFootIdx();
+    void getSimulationEnvironment(double& mu, double& f_adhesive);
 };

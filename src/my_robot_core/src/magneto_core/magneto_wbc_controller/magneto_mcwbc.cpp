@@ -114,7 +114,7 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
   ((MagnetoCommand*)_cmd)->jtrq = jtrq_des_;
   ((MagnetoCommand*)_cmd)->q = sp_->getActiveJointValue(jpos_des_);
   ((MagnetoCommand*)_cmd)->qdot = sp_->getActiveJointValue(jvel_des_);
-  ((MagnetoCommand*)_cmd)->b_magnetism_map = ws_container_->get_magnetism_map( );
+  ws_container_->get_magnetism_onoff(((MagnetoCommand*)_cmd)->magnetism_onoff);
   
 
   // _PostProcessing_Command(); // unset task and contact

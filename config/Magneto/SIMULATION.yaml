@@ -19,10 +19,14 @@ robot: robot_description/Robot/Magneto/MagnetoSim_Dart.urdf
 # initial_leg_config: [0.0, -0.47123889803, -1.5707963268, 0.0, 0.31415926535, 0.0]
 
 ground: robot_description/Ground/safe_climbing_test_2022/ground_3d_inclined.urdf
-initial_pose: [ 0.0, 0.0, 0.3, 0.0, 0.785398, 0.0 ] # x,y,z, rx,ry,rz
-initial_leg_config: [0.0, -0.5, -1.5707963268, 0.0, 0.5, 0.0]
-magnetic_frame: 1 # 0:foot local frame, 1:initial surface frame, 2:fixed given surface frame
-
+initial_pose: [ 0.0, 0.0, 0.01, 0.0, 0.785398, 0.0 ] # x,y,z, rx,ry,rz
+initial_leg_config: [0.0, -0.6, -1.5707963268, 0.0, 0.5, 0.0]
+contact_frame: 2 # 0:foot local frame, 1:initial surface frame, 2:fixed given surface frame
+contact_surface_noraml: # foot : AL-0, AR-1, BL-2, BR-3
+  AL: [ 0.7071066, 0.500000, 0.500000 ]
+  AR: [ 0.7071066, -0.500000, 0.500000  ]
+  BL: [ 0.7071066, 0.500000, 0.500000  ]  
+  BR: [ 0.7071066, -0.500000, 0.500000  ]
 
 # --motion script settings
 #motion_script: Config/CSIRO/MOTIONS/balanceset.yaml
@@ -45,6 +49,6 @@ contact_params:
   
 magnetism_params:
   # [AL, AR, BL, BR] >> MagnetoFoot @ magneto_definition.hpp
-  # magnetic_force: [70., 70., 70., 70.] #[N]
-  magnetic_force: [150., 150., 150., 150.] #[N]  
+  magnetic_force: [70., 70., 70., 70.] #[N]
+  # magnetic_force: [150., 150., 150., 150.] #[N]  
   residual_magnetism: [5.0, 5.0, 5.0, 5.0] #[0.0, 0.0, 0.0, 0.0] #5.0 # 3.0 #[%]

@@ -50,10 +50,10 @@ void displayLinkFrames(const dart::simulation::WorldPtr& world,
     // -- DISPLAY CERTAIN LINKS
     std::vector<std::string> LinkNametoDisplay;
     LinkNametoDisplay.clear();
-    // LinkNametoDisplay.push_back("AL_foot_link");
+    LinkNametoDisplay.push_back("AL_foot_link");
     // LinkNametoDisplay.push_back("AR_foot_link");
-    LinkNametoDisplay.push_back("BL_foot_link");
-    LinkNametoDisplay.push_back("BR_foot_link");
+    // LinkNametoDisplay.push_back("BL_foot_link");
+    // LinkNametoDisplay.push_back("BR_foot_link");
     // LinkNametoDisplay.push_back("base_link");
 
     for(int i=0; i<LinkNametoDisplay.size(); i++) {
@@ -70,18 +70,29 @@ void displayLinkFrames(const dart::simulation::WorldPtr& world,
         world->addSimpleFrame(frame);
     }
 
-
+    // -- DISPLAY WORLD FRAME
     dart::dynamics::SkeletonPtr ground = world->getSkeleton("ground_skeleton");
-    dart::dynamics::BodyNode* bn = ground->getBodyNode("world_frame");
-    dart::gui::osg::InteractiveFramePtr frame =
-    std::make_shared<dart::gui::osg::InteractiveFrame>(bn, bn->getName() + "/frame");
+    // dart::dynamics::BodyNode* bn = ground->getBodyNode("world_frame");
+    // dart::gui::osg::InteractiveFramePtr frame =
+    // std::make_shared<dart::gui::osg::InteractiveFrame>(bn, bn->getName() + "/frame");
+
+    // for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
+    //                         dart::gui::osg::InteractiveTool::PLANAR})
+    //     for (std::size_t i = 0; i < 3; ++i)
+    //         frame->getTool(type, i)->setEnabled(false);
+    // world->addSimpleFrame(frame);
+
+    // -- DISPLAY ground link FRAME
+    dart::dynamics::BodyNode* bn_ground = ground->getBodyNode("ground_link");
+    dart::gui::osg::InteractiveFramePtr frame_ground =
+    std::make_shared<dart::gui::osg::InteractiveFrame>(bn_ground, bn_ground->getName() + "/frame");
 
     for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
                             dart::gui::osg::InteractiveTool::PLANAR})
         for (std::size_t i = 0; i < 3; ++i)
-            frame->getTool(type, i)->setEnabled(false);
+            frame_ground->getTool(type, i)->setEnabled(false);
 
-    world->addSimpleFrame(frame);
+    world->addSimpleFrame(frame_ground);
 }        
 
 class OneStepProgress : public osgGA::GUIEventHandler {
