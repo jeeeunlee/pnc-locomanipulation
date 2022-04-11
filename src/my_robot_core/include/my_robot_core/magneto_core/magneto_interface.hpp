@@ -31,6 +31,8 @@ class MagnetoSensorData {
         brfoot_contact = false;
 
         tau_cmd_prev = Eigen::VectorXd::Zero(Magneto::n_adof);
+        surface_normal = {Eigen::Vector3d::UnitZ(), Eigen::Vector3d::UnitZ(), 
+                        Eigen::Vector3d::UnitZ(), Eigen::Vector3d::UnitZ()};
     }
     virtual ~MagnetoSensorData() {}
 
@@ -48,6 +50,8 @@ class MagnetoSensorData {
     bool brfoot_contact;
 
     Eigen::VectorXd tau_cmd_prev;
+    
+    std::array<Eigen::Vector3d, Magneto::n_leg> surface_normal;
 };
 
 class MagnetoCommand {

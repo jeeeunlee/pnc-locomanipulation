@@ -39,9 +39,9 @@ void Swing::firstVisit() {
   ctrl_end_time_ = rg_container_->foot_trajectory_manager_->getTrajEndTime();
   moving_foot_idx_ = rg_container_->foot_trajectory_manager_->getMovingFootIdx();
 
-  int foot_idx = ws_container_->footLink2FootIdx(moving_foot_idx_);
-  std::cout << " swing !! - moving_foot_idx_=" << moving_foot_idx_
-            << "foot_idx" << foot_idx << std::endl;
+  moving_foot_link_idx_ = MagnetoFoot::LinkIdx[moving_foot_idx_];
+  std::cout << " swing !! - moving_foot_link_idx_=" << moving_foot_link_idx_
+            << ", moving_foot_idx_=" << moving_foot_idx_ << std::endl;
 
 
   // --set com traj
@@ -70,16 +70,16 @@ void Swing::firstVisit() {
   ws_container_->add_task_list(
         ws_container_->base_ori_task_);
   ws_container_->add_task_list(
-        ws_container_->get_foot_pos_task(moving_foot_idx_));
+        ws_container_->get_foot_pos_task(moving_foot_link_idx_));
   ws_container_->add_task_list(
-        ws_container_->get_foot_ori_task(moving_foot_idx_));
+        ws_container_->get_foot_ori_task(moving_foot_link_idx_));
   ws_container_->add_task_list(
         ws_container_->joint_task_);
 
   // ---------------------------------------
   //      CONTACT LIST
   // --------------------------------------- 
-  ws_container_->set_contact_list(moving_foot_idx_);
+  ws_container_->set_contact_list(moving_foot_link_idx_);
   ws_container_->set_contact_maxfz();
 
   // ---------------------------------------
@@ -87,8 +87,8 @@ void Swing::firstVisit() {
   // ---------------------------------------
   // todo later : implement it with magnetic manager
   // simulation/real environment magnetism
-  ws_container_->set_foot_magnet_off(moving_foot_idx_);   
-  ws_container_->set_magnet_distance(moving_foot_idx_, 0.0);
+  ws_container_->set_foot_magnet_off(moving_foot_link_idx_);   
+  ws_container_->set_magnet_distance(moving_foot_link_idx_, 0.0);
 
   // ---------------------------------------
   //      QP PARAM - SET WEIGHT
@@ -100,8 +100,8 @@ void Swing::firstVisit() {
 void Swing::_taskUpdate() {
   // rg_container_->foot_trajectory_manager_->updateFootPosTrajectory(sp_->curr_time);
   rg_container_->foot_trajectory_manager_->updateTask(sp_->curr_time,
-              ws_container_->get_foot_pos_task(moving_foot_idx_),
-              ws_container_->get_foot_ori_task(moving_foot_idx_));
+              ws_container_->get_foot_pos_task(moving_foot_link_idx_),
+              ws_container_->get_foot_ori_task(moving_foot_link_idx_));
 
   // rg_container_->com_trajectory_manager_->updateCoMTrajectory(sp_->curr_time);
   rg_container_->com_trajectory_manager_->updateTask(sp_->curr_time,
@@ -126,7 +126,7 @@ void Swing::_ResidualMagnetismUpdate() {
   double cd = rg_container_->
               foot_trajectory_manager_->getTrajHeight();
   // std::cout << "contact_distance =  " << cd << std::endl;
-  ws_container_->set_magnet_distance(moving_foot_idx_, cd);
+  ws_container_->set_magnet_distance(moving_foot_link_idx_, cd);
 }
 
 void Swing::oneStep() {

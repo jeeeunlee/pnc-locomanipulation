@@ -23,9 +23,7 @@ void Transition::firstVisit() {
   std::cout << "[contact transition] Start : " << b_contact_start_ << std::endl;
 
   ctrl_start_time_ = sp_->curr_time;
-  ctrl_duration_ = trans_duration_;
-  ctrl_end_time_ = ctrl_start_time_ + ctrl_duration_;
-
+ 
   // ---------------------------------------
   //      CONTACT LIST
   // --------------------------------------- 
@@ -37,6 +35,11 @@ void Transition::firstVisit() {
   // -- set current motion param
   MotionCommand mc_curr_ = sp_->curr_motion_command;
   moving_foot_idx_ = mc_curr_.get_moving_foot();
+  moving_foot_link_idx_ = MagnetoFoot::LinkIdx[moving_foot_idx_];
+  std::cout << " transition !! - moving_foot_link_idx_=" << moving_foot_link_idx_
+            << ", moving_foot_idx_" << moving_foot_idx_ << std::endl;
+
+  
 
   // --set com traj
   // rg_container_->com_trajectory_manager_
@@ -52,6 +55,8 @@ void Transition::firstVisit() {
   }
   rg_container_->com_trajectory_manager_
                ->setCoMTrajectory(ctrl_start_time_, mc_com);
+  ctrl_duration_ = rg_container_->com_trajectory_manager_->getTrajDuration();
+  ctrl_end_time_ = rg_container_->com_trajectory_manager_->getTrajEndTime();
 
   // -- set base ori traj
   rg_container_->base_ori_trajectory_manager_
@@ -76,8 +81,8 @@ void Transition::firstVisit() {
     ws_container_->set_foot_magnet_off(-1);
     ws_container_->set_magnet_distance(-1, 0.0);   
   }  else {
-    ws_container_->set_foot_magnet_off(moving_foot_idx_); // off-magnetism on moving foot
-    ws_container_->set_magnet_distance(moving_foot_idx_, 0.0);
+    ws_container_->set_foot_magnet_off(moving_foot_link_idx_); // off-magnetism on moving foot
+    ws_container_->set_magnet_distance(moving_foot_link_idx_, 0.0);
   }
 
 
@@ -137,8 +142,8 @@ void Transition::_weightUpdate() {
   // change in normal force in contactSpec
   rg_container_->max_normal_force_manager_->updateTransition(sp_->curr_time);
 
-  ws_container_->set_contact_weight_param(moving_foot_idx_);
-  ws_container_->set_contact_maxfz(moving_foot_idx_);
+  ws_container_->set_contact_weight_param(moving_foot_link_idx_);
+  ws_container_->set_contact_maxfz(moving_foot_link_idx_);
 }
 
 

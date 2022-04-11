@@ -36,6 +36,7 @@ class Transition : public StateMachine {
   bool b_contact_start_;
   bool state_switch_button_trigger_;
 
+  int moving_foot_link_idx_;
   int moving_foot_idx_;
 
   void _taskUpdate();

@@ -51,9 +51,9 @@ void displayLinkFrames(const dart::simulation::WorldPtr& world,
     std::vector<std::string> LinkNametoDisplay;
     LinkNametoDisplay.clear();
     LinkNametoDisplay.push_back("AL_foot_link");
-    // LinkNametoDisplay.push_back("AR_foot_link");
-    // LinkNametoDisplay.push_back("BL_foot_link");
-    // LinkNametoDisplay.push_back("BR_foot_link");
+    LinkNametoDisplay.push_back("AR_foot_link");
+    LinkNametoDisplay.push_back("BL_foot_link");
+    LinkNametoDisplay.push_back("BR_foot_link");
     // LinkNametoDisplay.push_back("base_link");
 
     for(int i=0; i<LinkNametoDisplay.size(); i++) {
@@ -62,10 +62,14 @@ void displayLinkFrames(const dart::simulation::WorldPtr& world,
             std::make_shared<dart::gui::osg::InteractiveFrame>(
                 bn, bn->getName() + "/frame");
 
-        for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
-                                dart::gui::osg::InteractiveTool::PLANAR})
-            for (std::size_t i = 0; i < 3; ++i)
-                frame->getTool(type, i)->setEnabled(false);
+        // for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
+        //                         dart::gui::osg::InteractiveTool::PLANAR})
+        //     for (std::size_t i = 0; i < 3; ++i)
+        //         frame->getTool(type, i)->setEnabled(false);
+        for (size_t i = 0; i < 3; ++i)
+            for (size_t j = 0; j < 3; ++j)
+            frame->getTool((dart::gui::osg::InteractiveTool::Type)(i), j)
+                ->setEnabled(false);
 
         world->addSimpleFrame(frame);
     }
@@ -184,10 +188,10 @@ void _setInitialConfiguration(dart::dynamics::SkeletonPtr robot,
         q_leg_init(2) = -11./10.*M_PI_2; // -9./10.*M_PI_2;
     }
 
-    q[AL_coxa_joint] = q_leg_init(0);
+    q[AL_coxa_joint] = -q_leg_init(0);
     q[AL_femur_joint] = q_leg_init(1);
     q[AL_tibia_joint] = q_leg_init(2);
-    q[AL_foot_joint_1] = q_leg_init(3);
+    q[AL_foot_joint_1] = -q_leg_init(3);
     q[AL_foot_joint_2] = -q_leg_init(4);
     q[AL_foot_joint_3] = q_leg_init(5);
 
@@ -205,10 +209,10 @@ void _setInitialConfiguration(dart::dynamics::SkeletonPtr robot,
     q[BL_foot_joint_2] = q_leg_init(4);
     q[BL_foot_joint_3] = q_leg_init(5);
 
-    q[BR_coxa_joint] = q_leg_init(0);
+    q[BR_coxa_joint] = -q_leg_init(0);
     q[BR_femur_joint] = q_leg_init(1);
     q[BR_tibia_joint] = q_leg_init(2);
-    q[BR_foot_joint_1] = q_leg_init(3);
+    q[BR_foot_joint_1] = -q_leg_init(3);
     q[BR_foot_joint_2] = -q_leg_init(4);
     q[BR_foot_joint_3] = q_leg_init(5);
 

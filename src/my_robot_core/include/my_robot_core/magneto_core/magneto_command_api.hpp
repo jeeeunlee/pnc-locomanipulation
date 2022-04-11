@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-typedef int TARGET_LINK_IDX;
+typedef int FOOT_IDX;
 
 struct POSE_DATA {
     Eigen::Vector3d pos;
@@ -38,10 +38,10 @@ struct POSE_DATA {
         pos << x,y,z;
         ori = Eigen::Quaternion<double>(w,qx,qy,qz);
     }
-    void printMotionInfo(){
-      std::cout<<"[ fr="<<is_baseframe<<" ] - ";
-      std::cout<<"pos : ("<< pos.transpose() << "), " ;
-      std::cout<<"ori : ("<< ori.w() <<"," << ori.x() <<"," << ori.y() <<"," << ori.z() << ")" << std::endl;
+    void printMotionInfo(){      
+      std::cout<<"pos : ("<< pos[0]<<"," <<pos[1]<<"," <<pos[2]   << "), " ;
+      std::cout<<"ori : ("<< ori.w() <<"," << ori.x() <<"," << ori.y() <<"," << ori.z() << ")" ;
+      std::cout<<"[frame="<<is_baseframe<<"]"<< std::endl;
     }
 };
 
@@ -52,7 +52,7 @@ class SWING_DATA {
       swing_height = 0.0;
       dpose = POSE_DATA();
     };
-    SWING_DATA(TARGET_LINK_IDX _foot_idx,
+    SWING_DATA(FOOT_IDX _foot_idx,
               double _swing_height,
               const POSE_DATA& _dpose){
       foot_idx = _foot_idx;
@@ -64,7 +64,7 @@ class SWING_DATA {
       dpose.printMotionInfo();      
     }
   public:
-    TARGET_LINK_IDX foot_idx;
+    FOOT_IDX foot_idx;
     double swing_height;
     POSE_DATA dpose;
 };

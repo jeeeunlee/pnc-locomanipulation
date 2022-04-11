@@ -5,8 +5,8 @@
 KinWBC::KinWBC(const std::vector<bool>& act_joint)
     : num_act_joint_(0),
       threshold_(0.001)
-// threshold_(0.005)
-// threshold_(0.003)
+    // threshold_(0.005)
+    // threshold_(0.003)
 {
     my_utils::pretty_constructor(3, "Kin WBC");
     num_qdot_ = act_joint.size();
@@ -204,9 +204,10 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     qddot = - JcpinvJcDotQdot + JtPre_pinv * (task->acc_des - JtDotQdot); // modified 2021.2.7
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
 
-
-    //0112 my_utils::saveVector(delta_q, "delta_q0");
-    //0112 my_utils::saveVector(task->pos_err, "delta_x0");
+    Eigen::VectorXd xdot_c = Jc * delta_q;
+    my_utils::saveVector(delta_q, "delta_q0");
+    my_utils::saveVector(task->pos_err, "delta_x0");
+    my_utils::saveVector(xdot_c, "xdot_c0");
 
     Eigen::VectorXd prev_delta_q = delta_q;
     Eigen::VectorXd prev_qdot = qdot;
@@ -230,9 +231,10 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         qddot = prev_qddot +
                     JtPre_pinv * (task->acc_des - JtDotQdot - Jt * prev_qddot);
 
-        //0112 my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-        //0112 my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-
+        my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        xdot_c = Jc * delta_q;
+        my_utils::saveVector(xdot_c, "xdot_c"+ std::to_string(i) + "_" + std::to_string(task_list.size()) );
 
         // For the next task
         _BuildProjectionMatrix(JtPre, N_nx);
@@ -242,7 +244,6 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         prev_qddot = qddot;
     }
 
-    // my_utils::pretty_print(xdot_c, std::cout, "contact vel");
     jpos_cmd = curr_config + delta_q;
     jvel_cmd = qdot;
     jacc_cmd = qddot;
