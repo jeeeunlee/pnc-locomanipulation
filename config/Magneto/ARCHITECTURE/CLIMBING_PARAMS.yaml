@@ -13,7 +13,7 @@ controller_params:
     max_position_error: 0.2 # radians
 
 slip_observer_params:
-    weight_shaping: 0 # onoff
+    weight_shaping: 1 # onoff
     slip_velocity_threshold: 0.005
     lpf_vel_cutoff: 30 #hz
 

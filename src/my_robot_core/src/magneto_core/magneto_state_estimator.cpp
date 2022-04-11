@@ -64,4 +64,6 @@ void MagnetoStateEstimator::_FootContactUpdate(MagnetoSensorData* data) {
     sp_->bl_rf = data->blf_wrench;
     sp_->ar_rf = data->arf_wrench;
     sp_->br_rf = data->brf_wrench;
+
+    sp_->surface_normal = data->surface_normal;
 }

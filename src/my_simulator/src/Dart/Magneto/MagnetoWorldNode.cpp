@@ -15,7 +15,8 @@ MagnetoWorldNode::MagnetoWorldNode(const dart::simulation::WorldPtr& _world)
     R_ground_ = ground_->getBodyNode("ground_link")
                         ->getWorldTransform().linear();
     p_ground_ = ground_->getBodyNode("ground_link")
-                        ->getWorldTransform().translation();    
+                        ->getWorldTransform().translation();  
+    std::cout<<"R_ground_ = " << R_ground_ << std::endl;
     
     // ---- GET INFO FROM SKELETON
     // CheckRobotSkeleton(robot_);
@@ -119,10 +120,10 @@ void MagnetoWorldNode::customPreStep() {
                           kp_ * (command_->q[i] - sensor_data_->q[i]);
     }
     // spring in gimbal    
-    // double ks = 1.0;// N/rad
-    // for(int i=6; i< Magneto::n_vdof; ++i) {
-    //     trq_cmd_[Magneto::idx_vdof[i]] = ks * ( 0.0 - sensor_data_->virtual_q[i]);
-    // }
+    double ks = 2.0;// N/rad
+    for(int i=6; i< Magneto::n_vdof; ++i) {
+        trq_cmd_[Magneto::idx_vdof[i]] = ks * ( 0.0 - sensor_data_->virtual_q[i]);
+    }
 
     EnforceTorqueLimit();
     updateContactEnvSetup();
@@ -176,6 +177,10 @@ void MagnetoWorldNode::saveData() {
     my_utils::saveVector(sensor_data_->arf_wrench, "arf_wrench_local");   
     my_utils::saveVector(sensor_data_->brf_wrench, "brf_wrench_local");   
 
+    // com position
+    Eigen::Vector3d pcom = robot_->getCOM();
+    my_utils::saveVector(pcom, "com_simulation");  
+
 
 
 }
@@ -225,8 +230,7 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
             fm = - magnetic_force_[i];
         } else {
             // distance 0->1 , infinite->0            
-            double distance_constant = contact_threshold_ * 4.; // 0.045
-            double res_fm_ratio = (distance_constant / (contact_distance_[i] + distance_constant));
+            double res_fm_ratio = (4.*contact_threshold_ / (contact_distance_[i] + 4.*contact_threshold_));
             res_fm_ratio = res_fm_ratio * res_fm_ratio * (residual_magnetism_[i]/100.); 
             fm = - res_fm_ratio * magnetic_force_[i];
             // std::cout<<"res: dist = "<<contact_distance_[i]<<", res_fm_ratio=" << res_fm_ratio << std::endl;
@@ -238,8 +242,7 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
         }else{
             force = fm*surface_normal_[i];
             robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->addExtForce(force, location, false);            
-            // std::cout<< MagnetoFoot::Names[i] <<"="<< force.transpose() << std::endl;
-            PlotForce_(i, force);                     
+            PlotForce_(i, force);
         }
     }
 }
@@ -309,34 +312,40 @@ void MagnetoWorldNode::PlotResult_() {
 }
 
 void MagnetoWorldNode::PlotForce_(int fidx, const Eigen::Vector3d& frc_foot){
-    static int plotFrcCnt = 0;
-    if(plotFrcCnt++ > 10000){
-        plotFrcCnt = 0;   
+
+    static int plotFrcCnt[Magneto::n_leg] = {0};
+    if(plotFrcCnt[fidx]++ > 100){
+        plotFrcCnt[fidx] = 0;   
         // magnetic force
         // set color
-        Eigen::Isometry3d foot_tf = robot_->getBodyNode(MagnetoFoot::LinkIdx[fidx])->getTransform();
+        Eigen::Isometry3d foot_tf = robot_->getBodyNode(MagnetoFoot::LinkIdx[fidx])->getTransform();        
         Eigen::Vector3d arrow_tail = Eigen::Vector3d::Zero(); // foot_tf.translation();
         Eigen::Vector3d arrow_head(1.0, 1.0, 1.0);// arrow_tail + frc_foot;
+        
+        // // set shape
+        // dart::dynamics::ArrowShapePtr arrow_shape = 
+        //     std::make_shared<dart::dynamics::ArrowShape>(
+        //         dart::dynamics::ArrowShape(arrow_tail, 
+        //             arrow_head,
+        //             dart::dynamics::ArrowShape::Properties(0.002, 1.8),
+        //             dart::Color::Orange(1.0)) );
+
+        // // set frame     
+        // dart::dynamics::SimpleFramePtr frc_frame 
+        // = std::make_shared<dart::dynamics::SimpleFrame>(
+        //     dart::dynamics::Frame::World(), "frc_frame");
+
+        // if( frc_frame->getShape()== arrow_shape){
+        //     frc_frame->removeVisualAspect();
+        // }
+        // frc_frame->setShape(arrow_shape);
+        // world_->addSimpleFrame(frc_frame);
 
 
-        // set shape
-        dart::dynamics::ArrowShapePtr arrow_shape = 
-            std::make_shared<dart::dynamics::ArrowShape>(
-                dart::dynamics::ArrowShape(arrow_tail, 
-                    arrow_head,
-                    dart::dynamics::ArrowShape::Properties(0.002, 1.8),
-                    dart::Color::Orange(1.0)) );
-
-        // set frame     
-        dart::dynamics::SimpleFramePtr frc_frame 
-        = std::make_shared<dart::dynamics::SimpleFrame>(
-            dart::dynamics::Frame::World(), "frc_frame");
-
-        if( frc_frame->getShape()== arrow_shape){
-            frc_frame->removeVisualAspect();
-        }
-        frc_frame->setShape(arrow_shape);
-        world_->addSimpleFrame(frc_frame);
+        std::cout<< robot_->getBodyNode(MagnetoFoot::LinkIdx[fidx])->getName() <<"= (";
+        std::cout<< frc_foot.transpose() <<"), " <<frc_foot.norm();
+        Eigen::Vector3d zdir = foot_tf.linear().col(2);
+        std::cout<< ", zdir = ("<< zdir.transpose() <<")" << std::endl;
     }
 }
 
@@ -415,7 +424,7 @@ void MagnetoWorldNode::setParameters(const YAML::Node& simulation_cfg) {
             
             if(surface_normal_[i].norm() > 1e-5) surface_normal_[i] /= surface_normal_[i].norm(); 
         }
-                
+        sensor_data_->surface_normal =  surface_normal_;
 
         // read motion scripts
         std::string motion_file_name;      

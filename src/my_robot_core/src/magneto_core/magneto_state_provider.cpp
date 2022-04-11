@@ -1,7 +1,5 @@
 #include <my_robot_system/RobotSystem.hpp>
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
-#include <my_robot_core/magneto_core/magneto_definition.hpp>
-
 
 MagnetoStateProvider* MagnetoStateProvider::getStateProvider(
     RobotSystem* _robot) {
@@ -24,7 +22,8 @@ MagnetoStateProvider::MagnetoStateProvider(RobotSystem* _robot) {
     qdot = Eigen::VectorXd::Zero(Magneto::n_dof);
     tau_cmd_prev = Eigen::VectorXd::Zero(Magneto::n_dof);
 
-    
+    surface_normal = {Eigen::Vector3d::UnitZ(), Eigen::Vector3d::UnitZ(), 
+                        Eigen::Vector3d::UnitZ(), Eigen::Vector3d::UnitZ()};    
 
     b_arfoot_contact = 0;
     b_brfoot_contact = 0;

@@ -29,7 +29,9 @@ class Swing : public StateMachine {
   double ctrl_start_time_;
   double ctrl_end_time_;
   double ctrl_duration_;
+  int moving_foot_link_idx_; // link index
   int moving_foot_idx_; // link index
+
 
   bool state_switch_button_trigger_;
 

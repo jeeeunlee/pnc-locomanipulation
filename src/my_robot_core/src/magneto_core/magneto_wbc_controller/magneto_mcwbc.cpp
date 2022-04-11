@@ -86,8 +86,8 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
 
   // ---- Solve Inv Kinematics
   
-  kin_wbc_->FindConfiguration(sp_->q, task_list_, contact_list_, 
-                                jpos_des_, jvel_des_, jacc_des_); 
+  // kin_wbc_->FindConfiguration(sp_->q, task_list_, contact_list_, 
+  //                               jpos_des_, jvel_des_, jacc_des_); 
   // my_utils::saveVector(jpos_des_, "jpos_des");
   // my_utils::saveVector(jvel_des_, "jvel_des");
   kin_wbc_->FindFullConfiguration(sp_->q, task_list_, contact_list_, 

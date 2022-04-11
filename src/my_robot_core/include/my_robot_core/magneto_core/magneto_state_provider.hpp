@@ -5,6 +5,7 @@
 #include <my_utils/General/Clock.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
 //#include <RobotSystem/include/CentroidModel.hpp>
+#include <my_robot_core/magneto_core/magneto_definition.hpp>
 #include <my_robot_core/magneto_core/magneto_command_api.hpp>
 
 class RobotSystem;
@@ -49,6 +50,8 @@ class MagnetoStateProvider {
     int b_brfoot_contact;
     int b_alfoot_contact;
     int b_blfoot_contact;
+
+    std::array<Eigen::Vector3d, Magneto::n_leg> surface_normal;
 
     /* -------------- com planner ---------------*/
 

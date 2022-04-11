@@ -50,14 +50,17 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
                                             MotionCommand* _motion_cmd) {
   SWING_DATA motion_cmd_data;
   Eigen::VectorXd pos_dev_b;
+  foot_idx_ = -1;
   link_idx_ = -1;
   if(_motion_cmd->get_foot_motion(motion_cmd_data)) {
       // if com motion command is given
-      link_idx_ = motion_cmd_data.foot_idx;
+      foot_idx_ = motion_cmd_data.foot_idx;
+      link_idx_ = MagnetoFoot::LinkIdx[foot_idx_];
       traj_duration_ = _motion_cmd->get_swing_period();
       pos_dev_b = motion_cmd_data.dpose.pos;
       swing_height_ = motion_cmd_data.swing_height;
       is_base_frame_ = motion_cmd_data.dpose.is_baseframe;
+      std::cout<<" setFootPosTrajectory " << foot_idx_<< ", " << link_idx_<< std::endl;
   } else {
     // heuristic computation
     std::cout<< "NOOOOO!! no foot motion cmd?" << std::endl;
@@ -149,10 +152,13 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
                                               const Eigen::VectorXd& foot_pos_des,
                                               const double& swing_height) {
   // Set Middle Swing Position/Velocity for Swing
-  Eigen::Vector3d foot_pos_mid, foot_vel_mid;
-  Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
-  Eigen::Vector3d p_b(0, 0, swing_height);
-  foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;
+  Eigen::Vector3d foot_pos_mid, foot_vel_mid;  
+  // Eigen::Vector3d p_b(0, 0, swing_height);
+  // Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
+  // foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;
+
+  
+  foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + swing_height*sp_->surface_normal[foot_idx_];
   foot_vel_mid = (foot_pos_des - foot_pos_ini) / traj_duration_;
 
   // Construct Position trajectories
@@ -161,9 +167,9 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
   pos_traj_mid_to_end_.initialize(foot_pos_mid, foot_vel_mid,
                                   foot_pos_des, zero_vel_, 0.5*traj_duration_);
 
-  my_utils::pretty_print(foot_pos_ini_, std::cout, "foot_pos_ini_");
+  // my_utils::pretty_print(foot_pos_ini_, std::cout, "foot_pos_ini_");
   my_utils::pretty_print(foot_pos_mid, std::cout, "foot_pos_mid");
-  my_utils::pretty_print(foot_pos_des_, std::cout, "foot_pos_des_");
+  // my_utils::pretty_print(foot_pos_des_, std::cout, "foot_pos_des_");
   std::cout<<"swing_height_ = "<< swing_height_ << std::endl;
 }
 

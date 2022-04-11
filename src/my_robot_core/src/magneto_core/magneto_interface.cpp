@@ -80,6 +80,7 @@ void MagnetoInterface::getCommand(void* _data, void* _command) {
         interrupt_->processInterrupts();
         control_architecture_->getCommand(cmd);
         
+        
         if(!_CheckCommand(cmd)) { _SetStopCommand(data,cmd); }    
     }   
 

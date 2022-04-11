@@ -65,7 +65,7 @@ void setWorld(dart::simulation::WorldPtr& world, const SimulatorParameter& sim_p
     world->setTimeStep(sim_param.servo_rate_);
 
     // Display Joints / Links Frame
-    std::vector<std::string> link_to_display = {"AL_foot_link", "AR_foot_link"};
+    std::vector<std::string> link_to_display = {"AL_foot_link", "BL_foot_link"};
     if (sim_param.b_show_joint_frame_) displayJointFrames(world, robot);
     if (sim_param.b_show_link_frame_) displayLinkFrames(world, robot, link_to_display);
     if (sim_param.b_show_link_frame_) displayGroundFrames(world, ground);

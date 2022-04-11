@@ -18,7 +18,7 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   FootPosTrajectoryManager(RobotSystem* _robot);
   ~FootPosTrajectoryManager();
   
-
+  int foot_idx_;
   int link_idx_;
   bool is_base_frame_;
   
@@ -48,7 +48,7 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
 
   double getTrajEndTime() {  return traj_end_time_; };
   double getTrajDuration() {  return traj_duration_; };
-  int getMovingFootIdx() { return link_idx_; }
+  int getMovingFootIdx() { return foot_idx_; }
 
   double getTrajHeight();
 
