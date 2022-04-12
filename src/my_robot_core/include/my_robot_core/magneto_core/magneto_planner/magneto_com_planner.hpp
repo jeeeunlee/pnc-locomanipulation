@@ -68,7 +68,7 @@ class MagnetoCoMPlanner{
         double mass_;
         Eigen::Vector3d grav_;        
 
-        int swing_foot_idx_;
+        int swing_foot_link_idx_;
         Eigen::VectorXd swing_foot_dpos_;
 
         // system matrices

@@ -56,7 +56,7 @@ void MagnetoGoalPlanner::_setDesiredFootPosition(const POSE_DATA &foot_pose_data
   
   POSE_DATA zero_pose = POSE_DATA();
   for(auto &constraint : constraint_list){
-    if(constraint->getLinkIdx() == moving_foot_idx) 
+    if(constraint->getLinkIdx() == MagnetoFoot::LinkIdx[moving_foot_idx]) 
       constraint->setDesired(foot_pose_data);
     else
       constraint->setDesired(zero_pose);    
@@ -82,8 +82,8 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
 
   Eigen::Vector3d p_com_curr = robot_planner_->getCoMPosition();;
   std::cout<<"****************************************"<<std::endl;
-  std::cout<<  q_.transpose() <<std::endl;
-  std::cout<<  p_com_curr.transpose() <<std::endl;
+  my_utils::pretty_print(q_, std::cout, "q_init");
+  my_utils::pretty_print(p_com_curr, std::cout, "p_com_ini");
   
 
   double tol = 1e-5;
@@ -105,11 +105,12 @@ void MagnetoGoalPlanner::computeGoal(MotionCommand &_motion_command) {
   }
 
   q_goal_ = q_;
+  _UpdateConfiguration(q_goal_);
   pc_goal_ = robot_planner_->getCoMPosition();
 
   std::cout<<"****************************************"<<std::endl;
-  std::cout<<  q_.transpose() <<std::endl;
-  std::cout<<  pc_goal_.transpose() <<std::endl;
+  my_utils::pretty_print(q_goal_, std::cout, "q_goal");
+  my_utils::pretty_print(pc_goal_, std::cout, "p_com_goal");
   std::cout<<"****************************************"<<std::endl;
 }
 
@@ -224,10 +225,11 @@ void MagnetoGoalPlanner::_InitCostFunction() {
     }
   }
   theta = theta*0.25;
+  std::cout<<" theta = " << theta << std::endl;
   // J(q) = alpha_1*(q2+q3-theta)^2 + alpha_2*(q3+pi/2)^2 + alpha_3*(q1-q1_curr)^2
   // J(q) = q*A*q + b*q
   // J(q) = alpha_1*(q2^2) + 2*alpha_1*(q2*q3) + (alpha_1 + alpha_2)(q3^2)
-  //        + alpha_1*(-2*theta)*(q2) + 2*(alpha_1*(-theta) + alpha_2*pi/2)*q_3
+  //        + alpha_1*(-2*theta)*(q2) + (alpha_1*(-2*theta) + alpha_2*pi)*q_3
   double alpha_1 = 0.5;
   double alpha_2 = 1.;
   double alpha_3 = 1.;
@@ -251,7 +253,8 @@ void MagnetoGoalPlanner::_InitCostFunction() {
     // active
     if(_checkJoint(ii,MagnetoJointType::COXA)) {
       A_(ii,ii) = alpha_3;
-      b_(ii) =  -2.0*alpha_3*q_(ii);
+      // b_(ii) =  -2.0*alpha_3*q_(ii);
+      b_(ii) =  0.0;
     }
     else if(_checkJoint(ii, MagnetoJointType::FEMUR)) {
       b_(ii) = alpha_1*(-2*theta);
@@ -264,7 +267,7 @@ void MagnetoGoalPlanner::_InitCostFunction() {
     }
 
     // passive
-    double gamma = 0.0;
+    double gamma = 0.1;
     if(_checkJoint(ii, MagnetoJointType::FOOT1) ||
         _checkJoint(ii, MagnetoJointType::FOOT2) ||
         _checkJoint(ii, MagnetoJointType::FOOT3) ) {

@@ -1,5 +1,14 @@
 <?xml version="1.0"?>
 <robot name="ground_skeleton">
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
     <link name="world" />
     <link name="world_frame">
         <inertial>
@@ -8,18 +17,19 @@
             <inertia ixx="0.000000001" ixy="0.000000001" ixz="0.000000001" iyy="1.0" iyz="0" izz="1.0" />
         </inertial>
     </link>
-    <link name="ground_link">
+    <link name="ground">
          <collision>
-            <origin xyz="0 0 -0.025" rpy="0 -0 0" />
+            <origin xyz= "0 0 0" rpy="0. 0 0" />
             <geometry>
-                <box size="5000.0 500.0 0.05" />
+                <box size="10 10 0.1" />
             </geometry>
         </collision>
          <visual name="visual">
-            <origin xyz = "-10. -10. -0.1" rpy="0. 0 0" />
+            <origin xyz = "0 0 0" rpy="0. 0 0" />
             <geometry>
-                <mesh filename = "../mesh/tile_marble_diamond.dae" scale="1. 1. 0.1" />
+                <box size="10 10 0.1" />
             </geometry>
+            <material name="black"/>
         </visual>
         <inertial>
             <mass value="1.0" />
@@ -27,17 +37,17 @@
             <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0" />
         </inertial>
     </link>
-    <link name="wall_link">
+    <link name="ground_link">
          <collision>
-            <origin xyz="0 0 0.00" rpy="0 0.5 0" />
+            <origin xyz= "-0.0 -0.0 0" rpy="0. 0. 0.5236" />
             <geometry>
-                <box size="50.0 50.0 2.3" />
-            </geometry>
+        	    <mesh filename="meshes/hexa_column3.obj"/>
+      	    </geometry>
         </collision>
-         <visual>
-            <origin xyz = "0. -0. -0." rpy="0. 0 0" />
+         <visual name="visual">
+            <origin xyz = "-0.0 -0.0 0" rpy="0. 0.  0.5236" />
             <geometry>
-                <mesh filename = "../mesh/tile_marble_diamond.dae" scale="1. 1. 0.1" />
+        	    <mesh filename="meshes/hexa_column3.obj"/>
             </geometry>
         </visual>
         <inertial>
@@ -47,7 +57,7 @@
         </inertial>
     </link>
     <joint name="ground_joint" type="fixed">
-        <origin xyz="0 0 -0.01" rpy="0 1 0" />
+        <origin xyz="-0.33 0.0 0.0" rpy="0. 0. 0." />
         <parent link="world" />
         <child link="ground_link" />
     </joint>
@@ -56,9 +66,9 @@
         <parent link="world" />
         <child link="world_frame" />
     </joint>
-    <joint name="wall_joint" type="fixed">
-        <origin xyz="4 -10 -10" rpy="0 -1.5708 0" />
+    <joint name="ground_flat_joint" type="fixed">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0" />
         <parent link="world" />
-        <child link="wall_link" />
+        <child link="ground" />
     </joint>
 </robot>

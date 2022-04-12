@@ -84,14 +84,17 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
     // TODOJE : ? getBodyNodeIsometry(MagnetoBodyNode::base_link)
     Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear(); 
     // Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
-    foot_pos_des_ = foot_pos_ini_ + R_wb*pos_dev_b; 
+    Eigen::Vector3d pos_dev_tang = R_wb*pos_dev_b;
+    Eigen::Vector3d pos_dev_normal = (pos_dev_tang.transpose()*sp_->surface_normal[foot_idx_])*sp_->surface_normal[foot_idx_];
+    pos_dev_tang = pos_dev_tang - pos_dev_normal;
+    foot_pos_des_ = foot_pos_ini_ + pos_dev_tang;
   }
   else // absolute coordinate
     foot_pos_des_ = foot_pos_ini_ + pos_dev_b;
 
   my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b");
-  my_utils::pretty_print(foot_pos_ini_,std::cout,"foot_pos_ini_");
-  my_utils::pretty_print(foot_pos_des_,std::cout,"foot_pos_des_");
+  // my_utils::pretty_print(foot_pos_ini_,std::cout,"foot_pos_ini_");
+  // my_utils::pretty_print(foot_pos_des_,std::cout,"foot_pos_des_");
   
   setSwingPosCurve(foot_pos_ini_,foot_pos_des_,swing_height_);
 
@@ -157,7 +160,7 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
   // Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
   // foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;
 
-  
+  // mid
   foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + swing_height*sp_->surface_normal[foot_idx_];
   foot_vel_mid = (foot_pos_des - foot_pos_ini) / traj_duration_;
 
@@ -167,9 +170,9 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
   pos_traj_mid_to_end_.initialize(foot_pos_mid, foot_vel_mid,
                                   foot_pos_des, zero_vel_, 0.5*traj_duration_);
 
-  // my_utils::pretty_print(foot_pos_ini_, std::cout, "foot_pos_ini_");
+  my_utils::pretty_print(foot_pos_ini_, std::cout, "foot_pos_ini_");
   my_utils::pretty_print(foot_pos_mid, std::cout, "foot_pos_mid");
-  // my_utils::pretty_print(foot_pos_des_, std::cout, "foot_pos_des_");
+  my_utils::pretty_print(foot_pos_des_, std::cout, "foot_pos_des_");
   std::cout<<"swing_height_ = "<< swing_height_ << std::endl;
 }
 

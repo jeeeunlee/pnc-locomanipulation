@@ -71,7 +71,9 @@ void QuadProgSolver::setProblem(const Eigen::MatrixXd& _H,
     // s.t.
     //     CE^T x + ce0 = 0
     //     CI^T x + ci0 >= 0
-    x.resize(n);   
+    x.resize(n);
+    for (int i(0); i < n; ++i)
+        x=0.0;
 
     // Set Cost
     G.resize(n, n); // n * n
@@ -109,9 +111,9 @@ void QuadProgSolver::solveProblem(Eigen::VectorXd& _x){
         std::cout << "x: " << x << std::endl;
         // exit(0.0);        
     }
-    else{
-        for(int i(0); i<n; ++i){
-            _x[i] = x[i];
-        }
-    }
+    // else{
+    //     for(int i(0); i<n; ++i) _x[i] = x[i];
+    // }
+    for(int i(0); i<n; ++i) _x[i] = x[i];
+    
 }
