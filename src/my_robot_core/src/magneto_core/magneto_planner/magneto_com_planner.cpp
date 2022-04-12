@@ -46,10 +46,10 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
     my_utils::pretty_print(p_goal_, std::cout, "p_goal_");
 
     // next foot configuration
-    swing_foot_idx_ = -1;
+    swing_foot_link_idx_ = -1;
     SWING_DATA md;  
     if( _motion_command.get_foot_motion(md) ) {   
-        swing_foot_idx_ = md.foot_idx;     
+        swing_foot_link_idx_ = MagnetoFoot::LinkIdx[md.foot_idx];     
         swing_foot_dpos_ = md.dpose.pos;        
         if(md.dpose.is_baseframe){
             Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
@@ -117,8 +117,9 @@ ComMotionCommand MagnetoCoMPlanner::getSwingEndCoMCmd() {
     Eigen::Vector3d pa = sp_->com_pos_des;
     Eigen::Vector3d va = sp_->com_vel_des;
 
-    Eigen::Vector3d p_mid = 0.5*(pa + p_goal_);
-    
+    return ComMotionCommand( pa, va, p_goal_, zero_vel_, Tt2_ );
+
+    Eigen::Vector3d p_mid = 0.5*(pa + p_goal_);    
     return ComMotionCommand( pa, va, p_mid, zero_vel_, Tt2_ );
 }
 
@@ -171,7 +172,7 @@ void MagnetoCoMPlanner::_buildFm(
     Fmc_ = Eigen::VectorXd::Zero(0);
     for(auto &mag : f_mag) {
         Fmf_= my_utils::vStack(Fmf_, -mag->getMagneticForce3d());
-        if(mag->getLinkIdx() !=  swing_foot_idx_){
+        if(mag->getLinkIdx() !=  swing_foot_link_idx_){
             Fmc_ = my_utils::vStack(Fmc_, -mag->getMagneticForce3d());
         }
     }    
@@ -196,7 +197,7 @@ void MagnetoCoMPlanner::_buildFrictionCone(
         Di(1, 0) = 1.;
         Df_ = my_utils::dStack(Df_, Di);
         df_ = my_utils::vStack(df_, di);
-        if(contact->getLinkIdx() != swing_foot_idx_){
+        if(contact->getLinkIdx() != swing_foot_link_idx_){
             Dc_ = my_utils::dStack(Dc_, Di);
             dc_ = my_utils::vStack(dc_, di);
         }
@@ -213,11 +214,11 @@ void MagnetoCoMPlanner::_buildWeightMatrices(
     // Di*Fc >= di
     for(auto &contact : f_contacts) {
         mu = contact->getFrictionCoeff();
-        // wi << 1./mu, 1./mu, mu;
+        // wi << 1., 1., mu^2;
         invwi = Eigen::VectorXd::Zero(3);
-        invwi << mu, mu, 1./mu;
+        invwi << 1., 1., 1./mu/mu;
         invWf_ = my_utils::dStack(invWf_, invwi.asDiagonal());
-        if(contact->getLinkIdx() != swing_foot_idx_){
+        if(contact->getLinkIdx() != swing_foot_link_idx_){
             invWc_ = my_utils::dStack(invWc_, invwi.asDiagonal());
         }
     }
@@ -238,7 +239,7 @@ void MagnetoCoMPlanner::_buildPfRf() {
             MagnetoFoot::LinkIdx[i]).linear();            
         PRi = my_utils::skew(pi)*Ri;
         
-        if(MagnetoFoot::LinkIdx[i] != swing_foot_idx_){
+        if(MagnetoFoot::LinkIdx[i] != swing_foot_link_idx_){
             Pf_ = my_utils::hStack(Pf_, PRi);
             Rf_ = my_utils::hStack(Rf_, Ri);
             Pc_ = my_utils::hStack(Pc_, PRi);
@@ -358,6 +359,7 @@ void MagnetoCoMPlanner::_solveQuadProg(){
     // my_utils::pretty_print(DDs,std::cout,"DD");
     // my_utils::pretty_print(dds,std::cout,"dd");
 
+    std::cout<<"########################################################"<<std::endl;
     // solve quad prob for x = beta*dir
     // min 0.5*x'*x
     // s.t. -DD*x <= -dd
@@ -374,7 +376,8 @@ void MagnetoCoMPlanner::_solveQuadProg(){
     else dir_com_swing_ = Eigen::VectorXd::Zero(3);
 
     alpha_ = beta_*ratio;
-
+    
     std::cout<<" dir_com_swing= " << dir_com_swing_.transpose() << std::endl;
     std::cout<<" alpha= " <<alpha_ << ", beta= " <<beta_ << std::endl;
+    std::cout<<"########################################################"<<std::endl;
 }

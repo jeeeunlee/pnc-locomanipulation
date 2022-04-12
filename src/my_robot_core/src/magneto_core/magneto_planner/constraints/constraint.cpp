@@ -23,6 +23,9 @@ void Constraint::setDesired(const POSE_DATA& pos_del) {
         pos_des_ = pos_ini_ + pos_del.pos;
     }
     ori_des_ = Eigen::Quaternion<double>(ori_ini_); //pos_del.ori
+    // std::cout<<"constraint, setDesired: link_idx_ ="<<link_idx_ ;
+    // std::cout<<", pos_ini_=" << pos_ini_.transpose() ;
+    // std::cout<<" / pos_des_= " << pos_des_.transpose() << std::endl;
 }
 
 void Constraint::update() { 

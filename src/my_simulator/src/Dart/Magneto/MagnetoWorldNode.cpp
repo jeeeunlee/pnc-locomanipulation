@@ -99,7 +99,8 @@ void MagnetoWorldNode::customPreStep() {
     for(int i=0; i< Magneto::n_vdof; ++i) {
         sensor_data_->virtual_q[i] = q[Magneto::idx_vdof[i]];
         sensor_data_->virtual_qdot[i] = qdot[Magneto::idx_vdof[i]];
-    }
+    }    
+
     // update contact_distance_
     UpdateContactDistance_();
     // update sensor_data_->b_foot_contact 
@@ -113,9 +114,10 @@ void MagnetoWorldNode::customPreStep() {
     ((MagnetoInterface*)interface_)->getCommand(sensor_data_, command_);    
 
     trq_cmd_.setZero();
+    static int init_count = 0;    
     for(int i=0; i< Magneto::n_adof; ++i) {
-        trq_cmd_[Magneto::idx_adof[i]] 
-                        = command_->jtrq[i] + 
+        trq_cmd_[Magneto::idx_adof[i]] =
+                          command_->jtrq[i] + 
                           kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
                           kp_ * (command_->q[i] - sensor_data_->q[i]);
     }
@@ -123,6 +125,11 @@ void MagnetoWorldNode::customPreStep() {
     double ks = 2.0;// N/rad
     for(int i=6; i< Magneto::n_vdof; ++i) {
         trq_cmd_[Magneto::idx_vdof[i]] = ks * ( 0.0 - sensor_data_->virtual_q[i]);
+    }
+
+    if(init_count++ < 50)
+    {
+        trq_cmd_.setZero();
     }
 
     EnforceTorqueLimit();
@@ -144,7 +151,7 @@ void MagnetoWorldNode::customPreStep() {
         }
     }
 
-    saveData();
+    // saveData();
     count_++;
 }
 
@@ -181,6 +188,8 @@ void MagnetoWorldNode::saveData() {
     Eigen::Vector3d pcom = robot_->getCOM();
     my_utils::saveVector(pcom, "com_simulation");  
 
+    // Eigen::VectorXd q_gimbal = sensor_data_->virtual_q.tail(12);
+    // my_utils::pretty_print(q_gimbal, std::cout, "q_gimbal");
 
 
 }
@@ -242,7 +251,7 @@ void MagnetoWorldNode::ApplyMagneticForce()  {
         }else{
             force = fm*surface_normal_[i];
             robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->addExtForce(force, location, false);            
-            PlotForce_(i, force);
+            // PlotForce_(i, force);
         }
     }
 }
@@ -357,7 +366,7 @@ void MagnetoWorldNode::PlotFootStepResult_() {
     ((MagnetoInterface*)interface_)-> GetNextFootStep(foot_pos);
     Eigen::Isometry3d foot_tf = robot_->getBodyNode("base_link")->getTransform();
     foot_tf.translation() = foot_pos;  
-    my_utils::pretty_print(foot_pos, std::cout, "PlotFootStepResult_"); 
+    // my_utils::pretty_print(foot_pos, std::cout, "PlotFootStepResult_"); 
 
     // set shape
     dart::dynamics::BoxShapePtr foot_shape =

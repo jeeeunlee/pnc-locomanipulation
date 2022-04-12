@@ -69,7 +69,7 @@ void MagnetoCoMPlanner::_buildFm(
     Fmc_ = Eigen::VectorXd::Zero(0);
     for(auto &mag : f_mag) {
         Fmf_= my_utils::vStack(Fmf_, -mag->getMagneticForce());
-        if(mag->getLinkIdx() !=  swing_foot_idx_){
+        if(mag->getLinkIdx() !=  swing_foot_link_idx_){
             Fmc_ = my_utils::vStack(Fmc_, -mag->getMagneticForce());
         }
     }
@@ -91,7 +91,7 @@ void MagnetoCoMPlanner::_buildFrictionCone(
         ((BodyFramePointContactSpec*)contact)->getRFConstraintVec(di);
         Df_ = my_utils::dStack(Df_, Di);
         df_ = my_utils::vStack(df_, di);
-        if(contact->getLinkIdx() != swing_foot_idx_){
+        if(contact->getLinkIdx() != swing_foot_link_idx_){
             Dc_ = my_utils::dStack(Dc_, Di);
             dc_ = my_utils::vStack(dc_, di);
         }
@@ -112,7 +112,7 @@ void MagnetoCoMPlanner::_buildWeightMatrices(
         invwi = Eigen::VectorXd::Zero(3);
         invwi << mu, mu, 1./mu;
         invWf_ = my_utils::dStack(invWf_, invwi.asDiagonal());
-        if(contact->getLinkIdx() != swing_foot_idx_){
+        if(contact->getLinkIdx() != swing_foot_link_idx_){
             invWc_ = my_utils::dStack(invWc_, invwi.asDiagonal());
         }
     }
@@ -148,7 +148,7 @@ void MagnetoCoMPlanner::_buildPfRf() {
 
         Pf_ = my_utils::hStack(Pf_, PRi);
         Rf_ = my_utils::hStack(Rf_, Ri);
-        if(MagnetoFoot::LinkIdx[i] != swing_foot_idx_){
+        if(MagnetoFoot::LinkIdx[i] != swing_foot_link_idx_){
             Pc_ = my_utils::hStack(Pc_, PRi);
             Rc_ = my_utils::hStack(Rc_, Ri);
         }
@@ -166,7 +166,7 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
 
     // next foot configuration
     MOTION_DATA md;    
-    _motion_command.get_foot_motion(md, swing_foot_idx_);
+    _motion_command.get_foot_motion(md, swing_foot_link_idx_);
     // Tt_ set in advance
     Ts_ = _motion_command.get_foot_motion_period();
     Tf_ = Ts_;
