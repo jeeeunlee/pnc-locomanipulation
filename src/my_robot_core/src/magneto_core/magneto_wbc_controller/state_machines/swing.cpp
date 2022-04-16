@@ -65,16 +65,13 @@ void Swing::firstVisit() {
 
   // -- set task_list in taf with hierachy
   ws_container_->clear_task_list();
-  ws_container_->add_task_list(
-        ws_container_->com_task_);
-  ws_container_->add_task_list(
-        ws_container_->base_ori_task_);
+  ws_container_->add_task_list(ws_container_->com_task_);
+  ws_container_->add_task_list(ws_container_->base_ori_task_);
   ws_container_->add_task_list(
         ws_container_->get_foot_pos_task(moving_foot_link_idx_));
   ws_container_->add_task_list(
         ws_container_->get_foot_ori_task(moving_foot_link_idx_));
-  ws_container_->add_task_list(
-        ws_container_->joint_task_);
+  ws_container_->add_task_list(ws_container_->joint_task_);
 
   // ---------------------------------------
   //      CONTACT LIST

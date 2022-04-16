@@ -33,8 +33,8 @@ void CoMTrajectoryManager::updateTask(const double&  current_time,
 void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
                                     const ComMotionCommand& _motion_cmd) {
 
-  my_utils::pretty_print(_motion_cmd.pa, std::cout, "com_pos_ini_");
-  my_utils::pretty_print(_motion_cmd.va, std::cout, "com_vel_ini_");
+  // my_utils::pretty_print(_motion_cmd.pa, std::cout, "com_pos_ini_");
+  // my_utils::pretty_print(_motion_cmd.va, std::cout, "com_vel_ini_");
   
   traj_start_time_ = _start_time;  
   traj_duration_ = _motion_cmd.motion_period;
@@ -51,8 +51,8 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
     pos_traj.initialize(_motion_cmd.pa, _motion_cmd.va, 
                         _motion_cmd.pb, _motion_cmd.vb, 
                         traj_duration_);
-    my_utils::pretty_print(_motion_cmd.pb, std::cout, "com_pos_des_");
-    my_utils::pretty_print(_motion_cmd.vb, std::cout, "com_vel_des_");
+    // my_utils::pretty_print(_motion_cmd.pb, std::cout, "com_pos_des_");
+    // my_utils::pretty_print(_motion_cmd.vb, std::cout, "com_vel_des_");
   }
 }
 

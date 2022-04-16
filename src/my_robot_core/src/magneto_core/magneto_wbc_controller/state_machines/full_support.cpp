@@ -35,28 +35,39 @@ void FullSupport::firstVisit() {
   rg_container_->goal_planner_->getGoalConfiguration(q_goal);
   rg_container_->goal_planner_->getGoalComPosition(pc_goal);
   
-  // SWING_DATA mdtmp;  
-  // Eigen::Vector3d com_dpos;
-  // if( mc_curr_.get_foot_motion(mdtmp) ) {        
-  //     com_dpos = mdtmp.dpose.pos;
-  //     if(mdtmp.dpose.is_baseframe){
-  //         Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
-  //         com_dpos = Rwb*com_dpos;
-  //     }
-  // }
-  // else com_dpos = Eigen::VectorXd::Zero(3);
-  // com_dpos = com_dpos*0.25;
-  // pc_goal = robot_->getCoMPosition() + com_dpos;
-  // my_utils::pretty_print(q_goal, std::cout, "q_goal");
+  SWING_DATA mdtmp;  
+  Eigen::Vector3d com_dpos;
+  if( mc_curr_.get_foot_motion(mdtmp) ) {        
+      com_dpos = mdtmp.dpose.pos;
+      if(mdtmp.dpose.is_baseframe){
+          Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
+          // com_dpos = Rwb*com_dpos*0.25;
+          com_dpos << 0.0, 0.0, 0.07*0.25;
+      }
+  }
+  else com_dpos = Eigen::VectorXd::Zero(3);
+
+  Eigen::Vector3d pcom = robot_->getCoMPosition();
+
+  pc_goal = 0.5*pc_goal + 0.5*(pcom+ com_dpos);
+
+  sp_->com_pos_init = pcom;
+  sp_->com_pos_target = pc_goal;
+  my_utils::pretty_print(pcom, std::cout, "pc_init");
+  my_utils::pretty_print(pc_goal, std::cout, "pc_goal");
+  my_utils::pretty_print(q_goal, std::cout, "q_goal");
 
   // CoM planner
   Eigen::VectorXd periods;  
   ComMotionCommand mc_com;
   if(mc_curr_.foot_motion_given) {
-    rg_container_->com_sequence_planner_->computeSequence(pc_goal,
+    // for(int i_repeat(0); i_repeat<100; ++i_repeat){
+      rg_container_->com_sequence_planner_->computeSequence(pc_goal,
                                           mc_curr_,
                                           ws_container_->feet_contacts_,
                                           ws_container_->feet_magnets_);
+    // }
+    
     mc_com = rg_container_->
               com_sequence_planner_->getFullSupportCoMCmd();
   }else if(mc_curr_.com_motion_given) {

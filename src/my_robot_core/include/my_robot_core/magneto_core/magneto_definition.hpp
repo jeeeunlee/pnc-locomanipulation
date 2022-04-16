@@ -17,6 +17,9 @@ namespace MagnetoFoot {
 const std::string Names[4] = {
     "AL", "AR", "BL", "BR" };
 
+const std::string NamesLower[4] = {
+    "al", "ar", "bl", "br" };
+
 constexpr int LinkIdx[4] = {
     14, // AL_foot_link
     23, // AR_foot_link

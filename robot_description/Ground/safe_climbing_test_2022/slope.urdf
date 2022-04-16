@@ -39,15 +39,15 @@
     </link>
     <link name="ground_link">
          <collision>
-            <origin xyz= "-0.0 -0.0 -0.9" rpy="0. -0.00 -0.5236" />
+            <origin xyz= "-0.0 -0.0 0.0" rpy="0. 0. 3.141592" />
             <geometry>
-        	    <mesh filename="meshes/hexa_column3.obj"/>
+        	    <mesh filename="meshes/slope.obj"/>
       	    </geometry>
         </collision>
          <visual name="visual">
-            <origin xyz = "-0.0 -0.0 -0.9" rpy="0. -0.00  -0.5236" />
+            <origin xyz = "-0.0 -0.0 0.0" rpy="0. 0.  3.141592" />
             <geometry>
-        	    <mesh filename="meshes/hexa_column3.obj"/>
+        	    <mesh filename="meshes/slope.obj"/>
             </geometry>
         </visual>
         <inertial>
@@ -57,7 +57,7 @@
         </inertial>
     </link>
     <joint name="ground_joint" type="fixed">
-        <origin xyz="-0.33 0.0 0.0" rpy="0. 0. 0." />
+        <origin xyz="-0.05 -0.5 0.0" rpy="0. 1. 0." />
         <parent link="world" />
         <child link="ground_link" />
     </joint>
@@ -67,7 +67,7 @@
         <child link="world_frame" />
     </joint>
     <joint name="ground_flat_joint" type="fixed">
-        <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0" />
+        <origin xyz="0.0 0.0 -0.0" rpy="0 0.0 0.0" />
         <parent link="world" />
         <child link="ground" />
     </joint>
