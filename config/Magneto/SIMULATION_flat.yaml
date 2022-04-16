@@ -39,10 +39,9 @@ contact_surface_noraml:
   AR: [ 0.8414710, 0.0, 0.5403023 ]
   BL: [ 0.8414710, 0.0, 0.5403023 ] 
   BR: [ 0.8414710, 0.0, 0.5403023 ]
-motion_script: config/Magneto/MOTIONS/climbset.yaml
 
 # ground: robot_description/Ground/safe_climbing_test_2022/hexa_column.urdf
-# initial_pose: [ 0.00, 0.0, 0.5, 0.0, 1.5, 0.0 ] # x,y,z, rx,ry,rz
+# initial_pose: [ 0.015, 0.0, 0.5, 0.0, 1.5, 0.0 ] # x,y,z, rx,ry,rz
 # initial_leg_config: [0.0, -0.5, -1.5707963268, 0.1, 0.4, 0.0]
 # contact_frame: 2 # 0:foot local frame, 1:initial surface frame, 2:fixed given surface frame
 # contact_surface_noraml: # foot : AL-0, AR-1, BL-2, BR-3
@@ -50,13 +49,12 @@ motion_script: config/Magneto/MOTIONS/climbset.yaml
 #   AR: [ 0.8660254, -0.5, 0.0 ]
 #   BL: [ 0.8660254, 0.5, 0.0 ] 
 #   BR: [ 0.8660254, -0.5, 0.0 ] 
-# motion_script: config/Magneto/MOTIONS/climbset_normal.yaml
 
 
 # --motion script settings
 #motion_script: Config/CSIRO/MOTIONS/balanceset.yaml
 # motion_script: config/Magneto/MOTIONS/walkset.yaml
-# motion_script: config/Magneto/MOTIONS/climbset.yaml
+motion_script: config/Magneto/MOTIONS/climbset.yaml
 # motion_script: config/Magneto/MOTIONS/climbset_normal.yaml
 
 
@@ -74,8 +72,7 @@ contact_params:
   
 magnetism_params:
   # [AL, AR, BL, BR] >> MagnetoFoot @ magneto_definition.hpp
-  # magnetic_force: [75., 75., 75., 75.] #[N]
-  magnetic_force: [70., 30., 70., 70.] #[N]
+  magnetic_force: [70., 70., 70., 70.] #[N]
   # magnetic_force: [150., 150., 150., 150.] #[N]  
   # residual_magnetism: [5.0, 5.0, 5.0, 5.0] #5.0 # 3.0 #[%]
   residual_magnetism: [0.0, 0.0, 0.0, 0.0] #5.0 # 3.0 #[%]

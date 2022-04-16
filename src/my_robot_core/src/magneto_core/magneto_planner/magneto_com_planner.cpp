@@ -42,8 +42,8 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
     p_init_ = robot_->getCoMPosition();  
     p_goal_ = pcom_goal;
 
-    my_utils::pretty_print(p_init_, std::cout, "p_init_");
-    my_utils::pretty_print(p_goal_, std::cout, "p_goal_");
+    // my_utils::pretty_print(p_init_, std::cout, "p_init_");
+    // my_utils::pretty_print(p_goal_, std::cout, "p_goal_");
 
     // next foot configuration
     swing_foot_link_idx_ = -1;
@@ -67,7 +67,7 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
 
     // motion period 
     _setPeriods( _motion_command.get_motion_periods() );
-    std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
+    // std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
 
     // solve problem
     _solveQuadProg(); // get dir_com_swing_, alpha, beta
@@ -84,10 +84,11 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
     acc_swing_ = alpha_*dir_com_swing_;
     
     clock_t end = clock();
-    double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    std::cout<<"=============================================="<<std::endl;
-    std::cout<<" computation time =  "<< cpu_time_used<<std::endl;
-    std::cout<<"=============================================="<<std::endl;
+    double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;    
+    // std::cout<<" computation time =  "<< cpu_time_used<<std::endl;
+    // my_utils::saveValue(cpu_time_used, "cpu_time_used" );
+    // std::cout<<"########################################################"<<std::endl;
+
 }
 
 ComMotionCommand MagnetoCoMPlanner::getFullSupportCoMCmd() {
@@ -216,7 +217,8 @@ void MagnetoCoMPlanner::_buildWeightMatrices(
         mu = contact->getFrictionCoeff();
         // wi << 1., 1., mu^2;
         invwi = Eigen::VectorXd::Zero(3);
-        invwi << 1., 1., 1./mu/mu;
+        // invwi << 1., 1., 1./mu/mu;
+        invwi << mu*mu, mu*mu, 1.;
         invWf_ = my_utils::dStack(invWf_, invwi.asDiagonal());
         if(contact->getLinkIdx() != swing_foot_link_idx_){
             invWc_ = my_utils::dStack(invWc_, invwi.asDiagonal());

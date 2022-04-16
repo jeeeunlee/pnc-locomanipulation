@@ -109,8 +109,8 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
 
     b_state_first_visit_ = true;
 
-    if(states_sequence_->getNumStates()==0)
-      exit(0);
+    // if(states_sequence_->getNumStates()==0)
+    //   exit(0);
   }
   sp_->num_state = states_sequence_->getNumStates();
 };

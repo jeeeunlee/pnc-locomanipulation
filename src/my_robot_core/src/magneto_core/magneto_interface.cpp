@@ -194,6 +194,12 @@ void MagnetoInterface::GetNextFootStep(Eigen::VectorXd& foot_pos) {
     foot_pos = sp_->foot_pos_target;
 }
 
+void MagnetoInterface::GetCoMPlans(Eigen::VectorXd& com_pos_ini,
+                                    Eigen::VectorXd& com_pos_goal) {
+    com_pos_ini = sp_->com_pos_init;
+    com_pos_goal = sp_->com_pos_target;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 void MagnetoInterface::AddScriptMotion(const YAML::Node& motion_cfg){

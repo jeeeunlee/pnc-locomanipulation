@@ -104,7 +104,7 @@ void QuadProgSolver::solveProblem(Eigen::VectorXd& _x){
         return;
     }
     double f = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
-    std::cout<<" solve_quadprog done"<< std::endl;
+    // std::cout<<" solve_quadprog done"<< std::endl;
     _x = Eigen::VectorXd::Zero(n);
     if(f == std::numeric_limits<double>::infinity())  {
         std::cout << "Infeasible Solution f: " << f << std::endl;

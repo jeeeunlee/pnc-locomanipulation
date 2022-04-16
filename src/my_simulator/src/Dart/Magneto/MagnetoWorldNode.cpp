@@ -387,24 +387,48 @@ void MagnetoWorldNode::PlotFootStepResult_() {
     // for mpc test
 
     std::cout<<"================================"<<std::endl;
-    Eigen::Vector3d base_pos = robot_->getCOM();
-    my_utils::pretty_print(base_pos, std::cout, "P_com");  
+    Eigen::VectorXd composini, composgoal;
+    ((MagnetoInterface*)interface_)-> GetCoMPlans(composini, composgoal);
+    // my_utils::pretty_print(base_pos, std::cout, "P_com");  
+    std::cout<<"  com: ["<<composini(0)<<", "<<composini(1)<<", "<<composini(2)<<"]"<<std::endl;
+    std::cout<<"  com_goal: ["<<composgoal(0)<<", "<<composgoal(1)<<", "<<composgoal(2)<<"]"<<std::endl;
 
     std::string varname;
     Eigen::Isometry3d foot_iso;
-    Eigen::VectorXd foot_pos_;
-    Eigen::MatrixXd foot_rot_;
-    Eigen::Quaterniond foot_quat_;
+    Eigen::VectorXd fp;
+    Eigen::MatrixXd fr;
+    Eigen::Quaterniond fq;
+    std::cout<<"  eef_pose:"<<std::endl;
     for(int i(0); i<Magneto::n_leg; ++i){
-        varname = MagnetoFoot::Names[i]+"config";
+        varname = "    eef_"+MagnetoFoot::NamesLower[i];
         foot_iso = robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->getWorldTransform();
-        foot_pos_ = foot_iso.translation();
-        foot_rot_ = foot_iso.linear();
-        foot_quat_ = Eigen::Quaternion<double>(foot_iso.linear());
-        my_utils::pretty_print(foot_pos_, std::cout, varname);
-        // my_utils::pretty_print(foot_rot_, std::cout, varname);
-        my_utils::pretty_print(foot_quat_, std::cout, varname);
+        fp = foot_iso.translation();
+        fr = foot_iso.linear();
+        fq = Eigen::Quaternion<double>(foot_iso.linear());
+        // my_utils::pretty_print(fp, std::cout, varname);
+        // my_utils::pretty_print(fr, std::cout, varname);
+        // my_utils::pretty_print(foot_quat_, std::cout, varname);
+        std::cout << varname.c_str()<<": [1.0, " << fp(0) <<", "<< fp(1) <<", " << fp(2) <<", ";
+        std::cout << fq.w() <<", "<< fq.x() <<", "<< fq.y() <<", "<< fq.z() <<"]"<<std::endl;        
     }
+    std::cout<<"  eef_env:"<<std::endl;
+    for(int i(0); i<Magneto::n_leg; ++i){
+        varname = "    eef_"+MagnetoFoot::NamesLower[i];
+        std::cout << varname.c_str()<<": [" << coef_fric_[i] <<", 0.0, 0.0, "<< magnetic_force_[i] <<"]"<<std::endl;
+    }
+    for(int i(0); i<Magneto::n_leg; ++i){
+        varname = "  eefcnt_"+MagnetoFoot::NamesLower[i];
+        std::cout<< varname.c_str()<<": "<<std::endl;
+        foot_iso = robot_->getBodyNode(MagnetoFoot::LinkIdx[i])->getWorldTransform();
+
+        fp = foot_iso.translation();
+        fr = foot_iso.linear();
+        fq = Eigen::Quaternion<double>(foot_iso.linear());        
+        std::cout<<"    cnt0: [0.0, TT, " <<fp(0) <<", "<< fp(1) <<", " << fp(2) <<", ";
+        std::cout << fq.w() <<", "<< fq.x() <<", "<< fq.y() <<", "<< fq.z() <<", ";
+        std::cout<< "1.0, " << coef_fric_[i] <<", "<< magnetic_force_[i] <<"]"<<std::endl;
+    }
+
     std::cout<<"================================"<<std::endl;
     
 

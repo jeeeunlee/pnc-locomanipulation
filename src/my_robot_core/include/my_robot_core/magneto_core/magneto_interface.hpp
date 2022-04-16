@@ -114,6 +114,9 @@ class MagnetoInterface : public EnvInterface {
     void GetOptimalCoM(Eigen::VectorXd& com_pos);
     void GetCurrentFootStep(Eigen::VectorXd& foot_pos);
     void GetNextFootStep(Eigen::VectorXd& foot_pos);
+
+    void GetCoMPlans(Eigen::VectorXd& com_pos_ini,
+                    Eigen::VectorXd& com_pos_goal);
     
     bool IsPlannerUpdated();
     bool IsFootPlannerUpdated();
