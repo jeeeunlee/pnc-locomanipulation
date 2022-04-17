@@ -110,6 +110,8 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
   // wbmc
   mcwbc_->updateSetting(A_, Ainv_, coriolis_, grav_);
   mcwbc_->makeTorqueGivenRef(jacc_des_cmd, contact_list_, magnet_list_, jtrq_des_, mcwbc_param_);
+
+  set_grf_des();
   
   ((MagnetoCommand*)_cmd)->jtrq = jtrq_des_;
   ((MagnetoCommand*)_cmd)->q = sp_->getActiveJointValue(jpos_des_);
@@ -119,7 +121,7 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
 
   // _PostProcessing_Command(); // unset task and contact
 
-  set_grf_des(); 
+   
 
   // my_utils::pretty_print(((MagnetoCommand*)_cmd)->jtrq, std::cout, "jtrq");
   // my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
@@ -133,23 +135,34 @@ void MagnetoMCWBC::firstVisit() {
 }
 
 void MagnetoMCWBC::set_grf_des(){
-  int dim_grf_stacked = 0;
-  int dim_grf=0;
 
-  std::array<Eigen::VectorXd, Magneto::n_leg> grf_des_list;
+
+  std::array<Eigen::VectorXd, Magneto::n_leg> grf_des_list;  
+  // initialize
+  for(int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx) 
+    grf_des_list[foot_idx] = Eigen::VectorXd(6);
   
-  for(int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx) {
-    dim_grf = 0;
-    for ( auto &contact : contact_list_) {
-      if(contact->getLinkIdx() == MagnetoFoot::LinkIdx[foot_idx]){
-        dim_grf = contact->getDim();
-        grf_des_list[foot_idx]  = mcwbc_param_->Fr_.segment(dim_grf_stacked, dim_grf);
-        dim_grf_stacked += dim_grf;
-      }
-    }
-    if(dim_grf == 0)
-      grf_des_list[foot_idx] = Eigen::VectorXd(6);
+
+  int dim_grf_stacked(0), dim_grf(0), foot_idx;
+  for ( auto &contact : contact_list_) {
+    foot_idx = ws_container_->footLink2FootIdx(contact->getLinkIdx());
+    if(foot_idx>-1 && foot_idx< Magneto::n_leg){
+      dim_grf = contact->getDim();
+      grf_des_list[foot_idx]  = mcwbc_param_->Fr_.segment(dim_grf_stacked, dim_grf);
+      dim_grf_stacked += dim_grf;    
+    }else{
+      std::cout<<"foot_idx = "<< foot_idx << std::endl;
+      std::cout<<"link idx = "<< contact->getLinkIdx() << std::endl;
+    }    
   }
+
+  if( mcwbc_param_->Fr_.size() <  dim_grf_stacked){
+    std::cout<<"mcwbc_param_->Fr_.size() = "<< mcwbc_param_->Fr_.size() << std::endl;
+    std::cout<<"dim_grf_stacked = "<< dim_grf_stacked << std::endl;
+  }
+
+
+
 
   sp_->al_rf_des = grf_des_list[MagnetoFoot::AL];
   sp_->ar_rf_des = grf_des_list[MagnetoFoot::AR];
