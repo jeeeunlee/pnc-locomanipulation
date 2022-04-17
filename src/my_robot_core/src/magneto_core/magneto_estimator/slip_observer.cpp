@@ -88,11 +88,10 @@ void SlipObserver::updateContact(){
 
         // update contact
         initContact();
-        swing_foot_link_idx_ = sp_->curr_motion_command.get_moving_foot();        
+        swing_foot_idx_ = sp_->curr_motion_command.get_moving_foot();        
         for( int foot_idx(0); foot_idx<Magneto::n_leg; foot_idx++ ){
             ws_container_->feet_contacts_[foot_idx]->updateContactSpec();
-            if( b_swing_phase_ && swing_foot_link_idx_ ==
-                ws_container_->feet_contacts_[foot_idx]->getLinkIdx() ) {
+            if( b_swing_phase_ && swing_foot_idx_ == foot_idx ) {
                     b_foot_contact_map_[foot_idx] = false; }            
         }
 
@@ -101,6 +100,11 @@ void SlipObserver::updateContact(){
         grf_act_map_[MagnetoFoot::BL] = sp_->bl_rf;
         grf_act_map_[MagnetoFoot::AR] = sp_->ar_rf;
         grf_act_map_[MagnetoFoot::BR] = sp_->br_rf;
+
+        grf_des_map2_[MagnetoFoot::AL] = sp_->al_rf_des;
+        grf_des_map2_[MagnetoFoot::BL] = sp_->bl_rf_des;
+        grf_des_map2_[MagnetoFoot::AR] = sp_->ar_rf_des;
+        grf_des_map2_[MagnetoFoot::BR] = sp_->br_rf_des;
     }
 }
 
@@ -134,11 +138,11 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
     foot_acc_map_[foot_idx] = xcddot;
 
     // data saving
-    // std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
+    std::string foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel";
     // my_utils::saveVector(xcdot, foot_vel_name);    
 
-    // foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel_filtered";
-    // my_utils::saveVector(xcdot_filtered, foot_vel_name);    
+    foot_vel_name = MagnetoFoot::Names[foot_idx] + "_vel_filtered";
+    my_utils::saveVector(xcdot_filtered, foot_vel_name);    
 }
 
 void SlipObserver::checkForce() {
@@ -158,20 +162,24 @@ void SlipObserver::checkForce() {
         if(b_contact){
             dim_grf = dim_grf_map_[foot_idx];
             grf_des_map_[foot_idx] = grf_des_stacked.segment(dim_grf_stacked, dim_grf);
-            dim_grf_stacked += dim_grf;         }    
+            dim_grf_stacked += dim_grf;         
+        } else{
+            grf_des_map_[foot_idx] = Eigen::VectorXd::Zero(6);
+        }    
     }
 
     // DATA SAVING
-    // std::string filename;
-    // Eigen::VectorXd grf_act_des;
-    // for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
-    //     filename = MagnetoFoot::Names[foot_idx] + "_grf_act_des";
-    //     dim_grf = dim_grf_map_[foot_idx];
-    //     grf_act_des = Eigen::VectorXd::Zero(2*dim_grf);
-    //     grf_act_des.head(dim_grf) = grf_act_map_[foot_idx];
-    //     grf_act_des.tail(dim_grf) = grf_des_map_[foot_idx];
-    //     my_utils::saveVector(grf_act_des, filename);
-    // }
+    std::string filename;
+    Eigen::VectorXd grf_act_des;
+    for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
+        filename = MagnetoFoot::Names[foot_idx] + "_grf_act_des";
+        dim_grf = dim_grf_map_[foot_idx];
+        grf_act_des = Eigen::VectorXd::Zero(2*dim_grf);
+        grf_act_des.head(dim_grf) = grf_act_map_[foot_idx];
+        // grf_act_des.tail(dim_grf) = grf_des_map_[foot_idx];
+        grf_act_des.tail(dim_grf) = grf_des_map2_[foot_idx];        
+        my_utils::saveVector(grf_act_des, filename);
+    }
 }
 
 void SlipObserver::weightShaping() {
@@ -187,16 +195,16 @@ void SlipObserver::weightShaping() {
 
     double slip_level = 1.0;    
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
-        if( MagnetoFoot::LinkIdx[foot_idx]!=swing_foot_link_idx_ ) { //!b_swing_phase_ && 
+        if( foot_idx!=foot_idx ) { //!b_swing_phase_ && 
             // detect slip
             slip_level = xcdot.tail(3).norm() / lin_vel_thres_;
             if( slip_level > 1.0 ) {
                 // std::cout<< " slip detected at foot[" << foot_idx << "], under swing foot[";
-                // std::cout<<swing_foot_link_idx_<<"], phase="<<sp_->curr_state<<std::endl;
+                // std::cout<<foot_idx<<"], phase="<<sp_->curr_state<<std::endl;
                 
                 ws_container_->reshape_weight_param( slip_level,  
                                 MagnetoFoot::LinkIdx[foot_idx], 
-                                swing_foot_link_idx_ );
+                                MagnetoFoot::LinkIdx[swing_foot_idx_] );
             }            
         }
     }

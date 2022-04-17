@@ -35,6 +35,8 @@ class MagnetoMCWBC {
   // Redefine PreProcessing Command
   virtual void _PreProcessing_Command();
 
+  void set_grf_des();
+
  protected:
   RobotSystem* robot_;
   MagnetoWbcSpecContainer* ws_container_;

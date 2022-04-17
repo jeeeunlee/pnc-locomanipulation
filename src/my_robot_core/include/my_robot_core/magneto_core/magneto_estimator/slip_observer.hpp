@@ -47,7 +47,7 @@ class SlipObserver : public StateEstimator {
 
     double t_updated_;
     bool b_swing_phase_;
-    int swing_foot_link_idx_;
+    int swing_foot_idx_;
     
     std::map<int, bool> b_foot_contact_map_;
     std::map<int, int> dim_grf_map_;
@@ -56,6 +56,7 @@ class SlipObserver : public StateEstimator {
 
     std::map<int, Eigen::VectorXd> grf_act_map_;
     std::map<int, Eigen::VectorXd> grf_des_map_;
+    std::map<int, Eigen::VectorXd> grf_des_map2_;
 
     Eigen::MatrixXd Sa_;
 

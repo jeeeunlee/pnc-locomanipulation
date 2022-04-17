@@ -119,6 +119,8 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
 
   // _PostProcessing_Command(); // unset task and contact
 
+  set_grf_des(); 
+
   // my_utils::pretty_print(((MagnetoCommand*)_cmd)->jtrq, std::cout, "jtrq");
   // my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
   // my_utils::pretty_print(((MagnetoCommand*)_cmd)->q, std::cout, "q");
@@ -127,6 +129,32 @@ void MagnetoMCWBC::getCommand(void* _cmd) {
 
 
 void MagnetoMCWBC::firstVisit() { 
+  
+}
+
+void MagnetoMCWBC::set_grf_des(){
+  int dim_grf_stacked = 0;
+  int dim_grf=0;
+
+  std::array<Eigen::VectorXd, Magneto::n_leg> grf_des_list;
+  
+  for(int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx) {
+    dim_grf = 0;
+    for ( auto &contact : contact_list_) {
+      if(contact->getLinkIdx() == MagnetoFoot::LinkIdx[foot_idx]){
+        dim_grf = contact->getDim();
+        grf_des_list[foot_idx]  = mcwbc_param_->Fr_.segment(dim_grf_stacked, dim_grf);
+        dim_grf_stacked += dim_grf;
+      }
+    }
+    if(dim_grf == 0)
+      grf_des_list[foot_idx] = Eigen::VectorXd(6);
+  }
+
+  sp_->al_rf_des = grf_des_list[MagnetoFoot::AL];
+  sp_->ar_rf_des = grf_des_list[MagnetoFoot::AR];
+  sp_->bl_rf_des = grf_des_list[MagnetoFoot::BL];
+  sp_->br_rf_des = grf_des_list[MagnetoFoot::BR];
   
 }
 
