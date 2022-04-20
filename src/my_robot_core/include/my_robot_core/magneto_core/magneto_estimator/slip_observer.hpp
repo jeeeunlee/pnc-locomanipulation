@@ -3,6 +3,8 @@
 #include <my_robot_core/magneto_core/magneto_state_provider.hpp>
 #include <my_robot_core/state_estimator.hpp>
 #include <my_utils/Math/low_pass_filter.h>
+#include <my_utils/Math/simple_kalman_filter.h>
+#include <deque>
 
 class MagnetoWbcSpecContainer;
 class MagnetoReferenceGeneratorContainer;
@@ -69,7 +71,15 @@ class SlipObserver : public StateEstimator {
     Eigen::VectorXd qdot_;
     Eigen::VectorXd qddot_;  
 
-    std::array<LowPassFilter2*, Magneto::n_leg> lpf2_container_;
+    std::array<LowPassFilter2*, Magneto::n_leg> lpf2_container_;    
     double lpf_vel_cutoff_;
+
+    // parameter estimation
+    int time_sampling_period_;
+    std::array<std::deque<Eigen::VectorXd>>, Magneto::n_leg> stacked_grf_map_;
+    std::array<SimpleKalmanFilter*, Magneto::n_leg> kf_container_;
+    SimpleSystemParam* kf_sys_;
+
+
     
 };
