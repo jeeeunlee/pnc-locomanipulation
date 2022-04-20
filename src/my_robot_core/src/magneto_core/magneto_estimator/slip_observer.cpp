@@ -177,7 +177,8 @@ void SlipObserver::checkForce() {
         grf_act_des = Eigen::VectorXd::Zero(2*dim_grf);
         grf_act_des.head(dim_grf) = grf_act_map_[foot_idx];
         // grf_act_des.tail(dim_grf) = grf_des_map_[foot_idx];
-        grf_act_des.tail(dim_grf) = grf_des_map2_[foot_idx];        
+        grf_act_des.tail(dim_grf) = grf_des_map2_[foot_idx];       
+        // my_utils::pretty_print(grf_act_des, std::cout, "grf_act_des"); 
         my_utils::saveVector(grf_act_des, filename);
     }
 }
