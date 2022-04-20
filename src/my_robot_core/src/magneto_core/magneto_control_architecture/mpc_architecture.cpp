@@ -70,12 +70,12 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   // --------------------------------------------------
   // State Estimator / Observer
 
-  static double print_time = 0.0;
-  if( (sp_->curr_time-print_time) > 0.0001 ){
+  // static double print_time = 0.0;
+  // if( (sp_->curr_time-print_time) > 0.0001 ){
     slip_ob_->checkVelocity();    
     slip_ob_->checkForce();
-    print_time = sp_->curr_time;
-  }
+  //   print_time = sp_->curr_time;
+  // }
   // --------------------------------------------------
 
   // Initialize State

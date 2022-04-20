@@ -140,7 +140,7 @@ void MagnetoMCWBC::set_grf_des(){
   std::array<Eigen::VectorXd, Magneto::n_leg> grf_des_list;  
   // initialize
   for(int foot_idx(0); foot_idx<Magneto::n_leg; ++foot_idx) 
-    grf_des_list[foot_idx] = Eigen::VectorXd(6);
+    grf_des_list[foot_idx] = Eigen::VectorXd::Zero(6);
   
 
   int dim_grf_stacked(0), dim_grf(0), foot_idx;
@@ -151,18 +151,10 @@ void MagnetoMCWBC::set_grf_des(){
       grf_des_list[foot_idx]  = mcwbc_param_->Fr_.segment(dim_grf_stacked, dim_grf);
       dim_grf_stacked += dim_grf;    
     }else{
-      std::cout<<"foot_idx = "<< foot_idx << std::endl;
-      std::cout<<"link idx = "<< contact->getLinkIdx() << std::endl;
+      std::cout<<"set_grf_des??? foot_idx = "<< foot_idx << std::endl;
+      std::cout<<"set_grf_des???? link idx = "<< contact->getLinkIdx() << std::endl;
     }    
   }
-
-  if( mcwbc_param_->Fr_.size() <  dim_grf_stacked){
-    std::cout<<"mcwbc_param_->Fr_.size() = "<< mcwbc_param_->Fr_.size() << std::endl;
-    std::cout<<"dim_grf_stacked = "<< dim_grf_stacked << std::endl;
-  }
-
-
-
 
   sp_->al_rf_des = grf_des_list[MagnetoFoot::AL];
   sp_->ar_rf_des = grf_des_list[MagnetoFoot::AR];
