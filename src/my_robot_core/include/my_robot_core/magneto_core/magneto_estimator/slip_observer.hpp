@@ -28,6 +28,7 @@ class SlipObserver : public StateEstimator {
 
     void checkVelocity();   
     void checkVelocityFoot(int foot_idx);
+    void estimateParameters();
      
     void checkForce();
     Eigen::VectorXd computeGRFDesired(const Eigen::VectorXd& tau);
@@ -40,6 +41,7 @@ class SlipObserver : public StateEstimator {
   
   public:
     int weight_shaping_activated_;
+    int online_param_estimation_activated_;
     double lin_vel_thres_;
     
 
@@ -76,7 +78,7 @@ class SlipObserver : public StateEstimator {
 
     // parameter estimation
     int time_sampling_period_;
-    std::array<std::deque<Eigen::VectorXd>>, Magneto::n_leg> stacked_grf_map_;
+    std::array<std::deque<Eigen::VectorXd>, Magneto::n_leg> stacked_grf_map_;
     std::array<SimpleKalmanFilter*, Magneto::n_leg> kf_container_;
     SimpleSystemParam* kf_sys_;
 

@@ -576,8 +576,8 @@ void MagnetoWorldNode::UpdateContactWrenchData_() {
 
     bn_list.clear();
     bn_list.push_back(std::make_pair("AL_foot_link",robot_->getBodyNode("AL_foot_link_3")));
-    bn_list.push_back(std::make_pair("BL_foot_link",robot_->getBodyNode("BL_foot_link_3")));
     bn_list.push_back(std::make_pair("AR_foot_link",robot_->getBodyNode("AR_foot_link_3")));
+    bn_list.push_back(std::make_pair("BL_foot_link",robot_->getBodyNode("BL_foot_link_3")));    
     bn_list.push_back(std::make_pair("BR_foot_link",robot_->getBodyNode("BR_foot_link_3")));
 
     // (contact wrench)
@@ -646,8 +646,12 @@ void MagnetoWorldNode::UpdateContactWrenchData_() {
     // std::cout<<"-------------------------------" << std::endl;
 
     sensor_data_->alf_wrench = wrench_local_list[0];
-    sensor_data_->blf_wrench = wrench_local_list[1];
-    sensor_data_->arf_wrench = wrench_local_list[2];
+    sensor_data_->arf_wrench = wrench_local_list[1];
+    sensor_data_->blf_wrench = wrench_local_list[2];    
     sensor_data_->brf_wrench = wrench_local_list[3];
-    
+
+    sensor_data_->alf_wrench[5] = sensor_data_->alf_wrench[5] - magnetic_force_[0];
+    sensor_data_->arf_wrench[5] = sensor_data_->arf_wrench[5] - magnetic_force_[1];
+    sensor_data_->blf_wrench[5] = sensor_data_->blf_wrench[5] - magnetic_force_[2];    
+    sensor_data_->brf_wrench[5] = sensor_data_->brf_wrench[5] - magnetic_force_[3];    
 }
