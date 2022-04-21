@@ -37,7 +37,7 @@ MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot
   
   // Set Starting State
   state_ = MAGNETO_STATES::BALANCE;
-  prev_state_ = state_;
+  prev_state_ = MAGNETO_STATES::INITIALIZE;
   b_state_first_visit_ = true;
   sp_->curr_state = state_;
   
@@ -85,7 +85,12 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
   }
   // Update State Machine
   state_machines_[state_]->oneStep();
-  slip_ob_->weightShaping();
+
+  if(prev_state_ != MAGNETO_STATES::INITIALIZE){
+    slip_ob_->estimateParameters();
+    slip_ob_->weightShaping();
+  }
+  
 
   // Get Wholebody control commands
   if (state_ == MAGNETO_STATES::INITIALIZE) {

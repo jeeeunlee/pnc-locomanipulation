@@ -14,7 +14,8 @@ controller_params:
 
 slip_observer_params:
     weight_shaping: 0 # onoff
-    slip_velocity_threshold: 0.005
+    online_param_estimation: 1 #onoff
+    slip_velocity_threshold: 0.01
     lpf_vel_cutoff: 30 #hz
 
 contact_params:

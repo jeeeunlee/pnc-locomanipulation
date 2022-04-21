@@ -18,12 +18,14 @@ SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
     lpf2_container_[i] = new LowPassFilter2();   
     kf_container_[i] = new SimpleKalmanFilter(); 
   }
-  kf_sys_ = new SimpleSystemParam();
   time_sampling_period_ = 10;
-    kf_sys_->F = Eigen::MatrixXd::Identity(2);
-    kf_sys_->Q = 0.001*Eigen::MatrixXd::Identity(2);
-    kf_sys_->H = Eigen::MatrixXd::Zero(time_sampling_period_, 2);
-    kf_sys_->R = 0.01*Eigen::MatrixXd::Identity(time_sampling_period_);
+
+  kf_sys_ = new SimpleSystemParam();  
+  kf_sys_->F = Eigen::MatrixXd::Identity(2,2);
+  kf_sys_->Q = Eigen::MatrixXd::Zero(2,2);
+  kf_sys_->Q << 0.000004, 0. , 0., 0.01;
+  kf_sys_->H = Eigen::MatrixXd::Identity(time_sampling_period_, 2);
+  kf_sys_->R = 0.01*Eigen::MatrixXd::Identity(time_sampling_period_,time_sampling_period_);
 
   // set parameters  
   initParams();
@@ -42,6 +44,7 @@ void SlipObserver::initialization(const YAML::Node& node) {
     try { 
         my_utils::readParameter(node,"slip_velocity_threshold", lin_vel_thres_);  
         my_utils::readParameter(node,"weight_shaping", weight_shaping_activated_); 
+        my_utils::readParameter(node,"online_param_estimation", online_param_estimation_activated_); 
         my_utils::readParameter(node,"lpf_vel_cutoff", lpf_vel_cutoff_);
     } catch (std::runtime_error& e) {
         std::cout << "Error reading parameter [" << e.what() << "] at file: ["
@@ -60,6 +63,7 @@ void SlipObserver::initParams(){
     Sa_ = Eigen::MatrixXd::Zero(Magneto::n_adof, Magneto::n_dof);
     for(int i=0; i< Magneto::n_adof; ++i){ Sa_(i, Magneto::idx_adof[i]) = 1.; }
     weight_shaping_activated_=0;
+    online_param_estimation_activated_=0;
     lin_vel_thres_=0.02;
 }
 
@@ -153,10 +157,10 @@ void SlipObserver::checkVelocityFoot(int foot_idx) {
 }
 
 void SlipObserver::checkForce() {
-    std::cout<<" checkForce " << std::endl;
-    update grf_act_map_
+    // std::cout<<" checkForce " << std::endl;
+    // update grf_act_map_
     updateContact();    
-    compute desired value
+    // compute desired value
     Eigen::VectorXd tau = sp_->tau_cmd_prev;
     Eigen::VectorXd grf_des_stacked = computeGRFDesired(tau);    
     int dim_grf_stacked = 0;
@@ -171,7 +175,7 @@ void SlipObserver::checkForce() {
             grf_des_map_[foot_idx] = Eigen::VectorXd::Zero(6);
         }    
     }
-    DATA SAVING
+    // DATA SAVING
     std::string filename;
     Eigen::VectorXd grf_act_des;
     for( auto &[foot_idx, b_contact] : b_foot_contact_map_ ) {
@@ -188,21 +192,36 @@ void SlipObserver::checkForce() {
 
 void SlipObserver::estimateParameters(){
 
+    if(online_param_estimation_activated_==0) return;
+
     double mu, fm;
     Eigen::VectorXd x0 = Eigen::VectorXd::Zero(2); // mu, mu*fm
+    Eigen::VectorXd t_x0 = Eigen::VectorXd::Zero(3); 
 
 
     // check if slip occurs
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
-        if( foot_idx!=foot_idx ) {
+        if( foot_idx!=swing_foot_idx_ ) {
             // detect slip
-            if( xcdot.tail(3).norm() > lin_vel_thres_ ) {
+            double f_normal = grf_act_map_[foot_idx][5];
+            if( f_normal>1.0 && f_normal<200. && xcdot.tail(3).norm() > lin_vel_thres_ ) {
                 // std::cout<< " slip detected at foot[" << foot_idx << "], under swing foot[";
-                // std::cout<<foot_idx<<"], phase="<<sp_->curr_state<<std::endl;
+                // std::cout<<swing_foot_idx_<<"], phase="<<sp_->curr_state<<", fz=" <<f_normal<<std::endl;
                 stacked_grf_map_[foot_idx].push_back( grf_act_map_[foot_idx] );
 
                 // kalman filter
-                if( stacked_grf_map_[foot_idx].size() == time_sampling_period_){
+                if( stacked_grf_map_[foot_idx].size() == time_sampling_period_){      
+                    // controller value              
+                    fm = ws_container_->feet_magnets_[foot_idx]->getMagneticForceMagnitude();
+                    mu = ws_container_->feet_contacts_[foot_idx]->getFrictionCoeff();
+
+                    // check initialize
+                    if(!kf_container_[foot_idx]->b_initialize) {       
+                        x0 << mu, mu*fm;
+                        kf_container_[foot_idx]->initialize(x0, kf_sys_->Q);
+                        // std::cout<< foot_idx << "th kf initialized with " <<x0.transpose()<< std::endl;
+                    }
+
                     Eigen::VectorXd ftemp;
                     Eigen::VectorXd ft = Eigen::VectorXd::Zero(time_sampling_period_);
                     Eigen::VectorXd fz = Eigen::VectorXd::Zero(time_sampling_period_);
@@ -216,28 +235,46 @@ void SlipObserver::estimateParameters(){
                             fz(tt) = ftemp(2);
                         }                        
                     }
-                    // check initialize
-                    if(!kf_container_[foot_idx]->b_initialize) {
-                        fm = ws_container_->feet_magnets_[foot_idx]->getMagneticForceMagnitude();
-                        mu = ws_container_->feet_contacts_[foot_idx]->getFrictionCoeff();
-                        x0 << mu, mu*fm;
-                        kf_container_[foot_idx]->initialize(x0, kf_sys_->Q);
-                    }
+                    stacked_grf_map_[foot_idx].pop_front();
+
                     // kalman filter
                     kf_sys_->H = Eigen::MatrixXd::Constant(time_sampling_period_, 2 ,1.);
-                    kf_sys_->H.col(0)=ft;
-                    kf_container_[foot_idx]->propgate(fz, x0, kf_sys_);
-                    // update new parameter                    
-                    if(x0(0) > 0.1 && x0(0) < 0.9){
-                        mu = x0(0);
-                        fm = x0(1)/mu;
-                        if(fm > 0.0 && fm<150.){
-                            std::cout<< foot_idx << "th param update : mu= "<<mu <<", fm="<<fm<<std::endl; 
-                            ws_container_->feet_magnets_[foot_idx]->setMagneticForcee(fm);
+                    kf_sys_->H.col(0)=fz;
+                    kf_container_[foot_idx]->propagate(ft, x0, kf_sys_);                    
+
+                    // update new parameter
+                    double errchange = kf_container_[foot_idx]->getErrorChange();
+
+                    std::string foot_param_name = MagnetoFoot::Names[foot_idx] + "_param";
+                    t_x0 << sp_->curr_time, x0(0), x0(1);
+                    my_utils::saveVector(t_x0, foot_param_name);
+
+                    if(errchange < 0.01){
+                        // data saving
+                        foot_param_name += "_consistent";
+                        my_utils::saveVector(t_x0, foot_param_name); 
+
+                        // check safe region
+                        if(x0(0) > 0.1 && x0(0) < 0.7){               
+                       
+                            if( fabs(mu-x0(0)) < 0.01 && fabs(x0(1)/x0(0)-fm)<5 ) return; // no need to update
+                            
+                            mu = x0(0);
+                            fm = x0(1)/mu;
+
+                            foot_param_name += "_safe";
+                            my_utils::saveVector(t_x0, foot_param_name);                         
+
+                            std::cout<< foot_idx << "th param update : mu= "<<mu <<", fm="<<fm<<", errchange="<<errchange<<std::endl;
+                            ws_container_->feet_magnets_[foot_idx]->setMagneticForce(fm);
                             ws_container_->feet_contacts_[foot_idx]->setFrictionCoeff(mu);
-                        }                            
+
+                        }
+                        // else{
+                        //     kf_container_[foot_idx]->b_initialize = false;
+                        // }
                     }
-                    stacked_grf_map_[foot_idx].pop_front();
+                    
                 }
 
             } else{
@@ -261,12 +298,12 @@ void SlipObserver::weightShaping() {
 
     double slip_level = 1.0;    
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
-        if( foot_idx!=foot_idx ) { //!b_swing_phase_ && 
+        if( foot_idx!=swing_foot_idx_ ) { //!b_swing_phase_ && 
             // detect slip
             slip_level = xcdot.tail(3).norm() / lin_vel_thres_;
             if( slip_level > 1.0 ) {
                 // std::cout<< " slip detected at foot[" << foot_idx << "], under swing foot[";
-                // std::cout<<foot_idx<<"], phase="<<sp_->curr_state<<std::endl;
+                // std::cout<<swing_foot_idx_<<"], phase="<<sp_->curr_state<<std::endl;
                 
                 ws_container_->reshape_weight_param( slip_level,  
                                 MagnetoFoot::LinkIdx[foot_idx], 
