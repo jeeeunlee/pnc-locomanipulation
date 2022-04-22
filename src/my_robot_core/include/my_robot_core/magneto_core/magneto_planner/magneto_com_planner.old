@@ -17,7 +17,7 @@ class MagnetoCoMPlanner{
     MagnetoCoMPlanner(RobotSystem* robot);
     ~MagnetoCoMPlanner() {};
 
-    void computeSequence(const Eigen::Vector3d& pcom_goal,
+    void planCentroidalMotion(const Eigen::Vector3d& pcom_goal,
                         MotionCommand &_motion_command,
                         const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
                         const std::array<MagnetSpec*, Magneto::n_leg>& f_mag);

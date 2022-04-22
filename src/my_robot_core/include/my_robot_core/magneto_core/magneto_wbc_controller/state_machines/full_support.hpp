@@ -24,10 +24,6 @@ class FullSupport : public StateMachine {
   MagnetoWbcSpecContainer* ws_container_;
   MagnetoReferenceGeneratorContainer* rg_container_;
 
-  double ctrl_start_time_;
-  double ctrl_end_time_;
-  double ctrl_duration_;
-
   void _taskUpdate();
   void _weightUpdate();
 };

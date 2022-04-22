@@ -26,9 +26,6 @@ class Swing : public StateMachine {
   MagnetoWbcSpecContainer* ws_container_;
   MagnetoReferenceGeneratorContainer* rg_container_;
 
-  double ctrl_start_time_;
-  double ctrl_end_time_;
-  double ctrl_duration_;
   int moving_foot_link_idx_; // link index
   int moving_foot_idx_; // link index
 

@@ -28,7 +28,7 @@ class SlipObserver : public StateEstimator {
 
     void checkVelocity();   
     void checkVelocityFoot(int foot_idx);
-    void estimateParameters();
+    bool estimateParameters();
      
     void checkForce();
     Eigen::VectorXd computeGRFDesired(const Eigen::VectorXd& tau);
