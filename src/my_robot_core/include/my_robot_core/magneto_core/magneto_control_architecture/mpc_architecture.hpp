@@ -36,6 +36,7 @@ class MagnetoMpcControlArchitecture : public ControlArchitecture {
   void _ReadParameters();
   void _InitializeParameters();
   bool b_state_first_visit_;
+  bool b_env_param_updated_;
 
  protected:
   MagnetoStateProvider* sp_;  

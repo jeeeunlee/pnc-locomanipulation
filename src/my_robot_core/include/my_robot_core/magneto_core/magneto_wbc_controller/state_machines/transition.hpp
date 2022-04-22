@@ -27,10 +27,6 @@ class Transition : public StateMachine {
   MagnetoWbcSpecContainer* ws_container_;
   MagnetoReferenceGeneratorContainer* rg_container_;
 
-  double ctrl_start_time_;
-  double ctrl_end_time_;
-  double ctrl_duration_;
-
   double trans_duration_;
 
   bool b_contact_start_;

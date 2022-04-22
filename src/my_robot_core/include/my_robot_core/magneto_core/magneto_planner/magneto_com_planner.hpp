@@ -18,7 +18,7 @@ class MagnetoCoMPlanner{
     MagnetoCoMPlanner(RobotSystem* robot);
     ~MagnetoCoMPlanner() {};
 
-    void computeSequence(const Eigen::Vector3d& pcom_goal,
+    void planCentroidalMotion(const Eigen::Vector3d& pcom_goal,
                         MotionCommand &_motion_command,
                         const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
                         const std::array<MagnetSpec*, Magneto::n_leg>& f_mag);
@@ -29,7 +29,21 @@ class MagnetoCoMPlanner{
     ComMotionCommand getSwingCoMCmd();
     ComMotionCommand getSwingEndCoMCmd();
 
+    // for replanning
+    void replanCentroidalMotionPreSwing(
+                        const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
+                        const std::array<MagnetSpec*, Magneto::n_leg>& f_mag);
+    void replanCentroidalMotionSwing(
+                        const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
+                        const std::array<MagnetSpec*, Magneto::n_leg>& f_mag,
+                        double passed_time);
+
+    ComMotionCommand getFullSupportCoMCmdReplaned(double passed_time);  
+    ComMotionCommand getSwingCoMCmdReplaned(double passed_time);  
+
     private:
+        void _setConfigurations(const Eigen::Vector3d& pcom_goal,
+                                MotionCommand &_motion_command);
         void _setPeriods(const Eigen::VectorXd& periods);
         void _buildCentroidalSystemMatrices();
         void _buildPfRf();        
@@ -44,13 +58,19 @@ class MagnetoCoMPlanner{
                                         Eigen::VectorXd& dd);
         void _getSwingConditionGivenRatio(double ratio,
                                         Eigen::MatrixXd& DD,
-                                        Eigen::VectorXd& dd);
+                                        Eigen::VectorXd& dd);       
+                                    
         Eigen::MatrixXd _computeSwingDDa(double t,
                                         const Eigen::MatrixXd& invA1,
                                         const Eigen::MatrixXd& invA2);
         Eigen::MatrixXd _computeSwingDDb(double t,
                                         const Eigen::MatrixXd& invA1);
         void _solveQuadProg();
+
+        // replanning
+        void _getSwingConditionReplan(Eigen::MatrixXd& DD,
+                                      Eigen::VectorXd& dd);
+        void _solveQuadProgReplan();
 
     private:
         Eigen::Vector3d p_init_;

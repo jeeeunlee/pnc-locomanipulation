@@ -62,7 +62,7 @@ void FullSupport::firstVisit() {
   ComMotionCommand mc_com;
   if(mc_curr_.foot_motion_given) {
     // for(int i_repeat(0); i_repeat<100; ++i_repeat){
-      rg_container_->com_sequence_planner_->computeSequence(pc_goal,
+      rg_container_->com_sequence_planner_->planCentroidalMotion(pc_goal,
                                           mc_curr_,
                                           ws_container_->feet_contacts_,
                                           ws_container_->feet_magnets_);

@@ -33,30 +33,73 @@ MagnetoCoMPlanner::MagnetoCoMPlanner(RobotSystem* robot) {
     Tt_given_ = 0.0;
 }
 
-void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
+void MagnetoCoMPlanner::replanCentroidalMotionPreSwing(
+                                        const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
+                                        const std::array<MagnetSpec*, Magneto::n_leg>& f_mag){
+
+    // all the process almost same except these happen during the 
+
+    // set p_init_, p_goal_, swing_foot_dpos_
+    // _setConfigurations(pcom_goal,_motion_command);
+    // set matrices
+    _buildFrictionCone(f_contacts);
+    _buildWeightMatrices(f_contacts);
+    _buildFm(f_mag);
+    _buildPfRf();
+    _buildCentroidalSystemMatrices();
+
+    // 
+    // _setPeriods( _motion_command.get_motion_periods() );
+    // std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
+
+    // solve problem
+    _solveQuadProg(); // get dir_com_swing_, alpha, beta
+
+    p_swing_init_ = p_goal_ + ( 0.5*beta_*T3_*T3_ + beta_*T2_*T3_ 
+                                + 0.5*alpha_*T2_*T2_ )*dir_com_swing_;
+    v_swing_init_ = (-beta_*T3_ -alpha_*T2_)*dir_com_swing_;
+    acc_swing_ = alpha_*dir_com_swing_;
+    
+}
+
+void MagnetoCoMPlanner::replanCentroidalMotionSwing(
+                                        const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
+                                        const std::array<MagnetSpec*, Magneto::n_leg>& f_mag,
+                                        double passed_time){
+    if(acc_swing_.norm() > 1e-5){
+        std::cout<<"acc_swing_ ="  <<acc_swing_.transpose() <<std::endl;
+        return;
+    }
+
+    // set p_init_, p_goal_, swing_foot_dpos_
+    // _setConfigurations(pcom_goal,_motion_command);
+    // set matrices
+    _buildFrictionCone(f_contacts);
+    _buildWeightMatrices(f_contacts);
+    _buildFm(f_mag);
+    _buildPfRf();
+    _buildCentroidalSystemMatrices();
+
+    // motion period 
+    // _setPeriods( _motion_command.get_motion_periods() );
+    T2_ = Ts_ - passed_time;
+    std::cout<<"Tf_="<<Tf_<<", Tt1_="<<Tt1_<<", Ts_="<<Ts_<<", Tt2="<<Tt2_<<std::endl;
+    std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
+
+    _solveQuadProgReplan();
+
+    acc_swing_ = alpha_*dir_com_swing_;
+
+}
+
+void MagnetoCoMPlanner::planCentroidalMotion(const Eigen::Vector3d& pcom_goal,
                                         MotionCommand &_motion_command,
                                         const std::array<ContactSpec*, Magneto::n_leg>& f_contacts,
                                         const std::array<MagnetSpec*, Magneto::n_leg>& f_mag){
     clock_t start = clock();
     
-    p_init_ = robot_->getCoMPosition();  
-    p_goal_ = pcom_goal;
-
-    // my_utils::pretty_print(p_init_, std::cout, "p_init_");
-    // my_utils::pretty_print(p_goal_, std::cout, "p_goal_");
-
-    // next foot configuration
-    swing_foot_link_idx_ = -1;
-    SWING_DATA md;  
-    if( _motion_command.get_foot_motion(md) ) {   
-        swing_foot_link_idx_ = MagnetoFoot::LinkIdx[md.foot_idx];     
-        swing_foot_dpos_ = md.dpose.pos;        
-        if(md.dpose.is_baseframe){
-            Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
-            swing_foot_dpos_ = Rwb*swing_foot_dpos_;
-        }
-    }
-    else swing_foot_dpos_ = Eigen::VectorXd::Zero(3);
+    // set p_com init & goal, p_swing init & goal
+    _setConfigurations(pcom_goal,_motion_command);
 
     // set matrices
     _buildFrictionCone(f_contacts);
@@ -72,12 +115,6 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
     // solve problem
     _solveQuadProg(); // get dir_com_swing_, alpha, beta
 
-    // dir_com_swing_.setZero();
-    // dir_com_swing_<<-1.0927, 0.0108, 0.8831;
-    // alpha_ = 1.0538;
-    // beta_ = -1.4050;
-    // dir_com_swing_ = dir_com_swing_/beta_;
-
     p_swing_init_ = p_goal_ + ( 0.5*beta_*T3_*T3_ + beta_*T2_*T3_ 
                                 + 0.5*alpha_*T2_*T2_ )*dir_com_swing_;
     v_swing_init_ = (-beta_*T3_ -alpha_*T2_)*dir_com_swing_;
@@ -88,7 +125,20 @@ void MagnetoCoMPlanner::computeSequence(const Eigen::Vector3d& pcom_goal,
     // std::cout<<" computation time =  "<< cpu_time_used<<std::endl;
     // my_utils::saveValue(cpu_time_used, "cpu_time_used" );
     // std::cout<<"########################################################"<<std::endl;
+}
 
+ComMotionCommand MagnetoCoMPlanner::getFullSupportCoMCmdReplaned(double passed_time) {
+    Eigen::Vector3d pa = sp_->com_pos_des; 
+    Eigen::Vector3d va = sp_->com_vel_des;
+
+    return ComMotionCommand( pa, va, p_swing_init_, v_swing_init_, Tf_-passed_time );
+}
+
+ComMotionCommand MagnetoCoMPlanner::getSwingCoMCmdReplaned(double passed_time) {
+    Eigen::Vector3d pa = sp_->com_pos_des; 
+    Eigen::Vector3d va = sp_->com_vel_des;
+
+    return ComMotionCommand( pa, va, acc_swing_, Ts_-passed_time );
 }
 
 ComMotionCommand MagnetoCoMPlanner::getFullSupportCoMCmd() {
@@ -120,8 +170,31 @@ ComMotionCommand MagnetoCoMPlanner::getSwingEndCoMCmd() {
 
     return ComMotionCommand( pa, va, p_goal_, zero_vel_, Tt2_ );
 
-    Eigen::Vector3d p_mid = 0.5*(pa + p_goal_);    
-    return ComMotionCommand( pa, va, p_mid, zero_vel_, Tt2_ );
+    // Eigen::Vector3d p_mid = 0.5*(pa + p_goal_);    
+    // return ComMotionCommand( pa, va, p_mid, zero_vel_, Tt2_ );
+}
+
+void MagnetoCoMPlanner::_setConfigurations(const Eigen::Vector3d& pcom_goal,
+                                            MotionCommand &_motion_command){
+    // set init & goal configurations
+    p_init_ = robot_->getCoMPosition();  
+    p_goal_ = pcom_goal;
+
+    // my_utils::pretty_print(p_init_, std::cout, "p_init_");
+    // my_utils::pretty_print(p_goal_, std::cout, "p_goal_");
+
+    // next foot configuration
+    swing_foot_link_idx_ = -1;
+    SWING_DATA md;  
+    if( _motion_command.get_foot_motion(md) ) {
+        swing_foot_link_idx_ = MagnetoFoot::LinkIdx[md.foot_idx];     
+        swing_foot_dpos_ = md.dpose.pos;        
+        if(md.dpose.is_baseframe){
+            Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
+            swing_foot_dpos_ = Rwb*swing_foot_dpos_;
+        }
+    }
+    else swing_foot_dpos_ = Eigen::VectorXd::Zero(3);
 }
 
 void MagnetoCoMPlanner::_setPeriods(const Eigen::VectorXd& periods){
@@ -257,6 +330,37 @@ void MagnetoCoMPlanner::_buildPfRf() {
     }
 }
 
+void MagnetoCoMPlanner::_getSwingConditionReplan(Eigen::MatrixXd& DD,
+                                                Eigen::VectorXd& dd) {
+    // Centroidal Dynamics
+    // A*Fc = B*alpha*dir + C
+    // solve Fc with weighted inverse matirx
+    // Fc = invA*(B*delP + C)
+
+    Eigen::MatrixXd AWA = Af_*invWf_*Af_.transpose();
+    Eigen::MatrixXd AWAinv;
+    my_utils::pseudoInverse(AWA, 0.0001, AWAinv);
+
+    Eigen::MatrixXd invA = invWf_*Af_.transpose()*AWAinv;
+    Eigen::VectorXd ddf = - Df_*invA*Cf_ + df_;
+
+    Eigen::MatrixXd invA1 = invA.leftCols<3>();
+    Eigen::MatrixXd invA2 = invA.rightCols<3>();
+    
+    Eigen::MatrixXd DD1, DD2;
+    // centroidal dynamics soln applied friction cone
+    // D( 0.5*m*(t)^2*invA1*skew(g) + m*invA2)*alpha*pdir >= - D*invA*C + d    
+    // when t=0
+    // DD1*alpha*dir >= ddf
+    DD1 = Df_* mass_*invA2;
+    // when t=Ts
+    // DD2*alpha*dir >= ddf
+    DD2 = Df_*(0.5*mass_*(T2_*T2_)*invA1*my_utils::skew(grav_) + mass_*invA2);
+
+    DD = my_utils::vStack(DD1,DD2);
+    dd = my_utils::vStack(ddf,ddf);    
+}
+
 
 void MagnetoCoMPlanner::_getEndTransitionCondition(Eigen::MatrixXd& DD,
                                                    Eigen::VectorXd& dd) {
@@ -337,6 +441,35 @@ Eigen::MatrixXd MagnetoCoMPlanner::_computeSwingDDb(double t,
     // Db = D*( 0.5*m*T3*(T3+2*T2-t)*invA1*skew(g) );
     return Dc_*( 0.5*mass_*T3_*(T3_+2*T2_-t)*invA1*my_utils::skew(grav_) );
 }
+
+void MagnetoCoMPlanner::_solveQuadProgReplan(){
+    /* -- 1. solve alpha for swing phase --*/
+    Eigen::MatrixXd DDs;
+    Eigen::VectorXd dds;
+
+    _getSwingConditionReplan(DDs, dds);
+    // solve quad prob for x = alpha*dir
+    // min 0.5*x'*x
+    // s.t. -DDs*x <= -dds
+    Eigen::VectorXd x;
+    qp_solver_->setProblem(Eigen::MatrixXd::Identity(3,3),
+                        Eigen::VectorXd::Zero(3),-DDs,-dds);
+    qp_solver_->solveProblem(x);
+
+    alpha_ = x.norm();
+
+    if(std::fabs(alpha_) > 1e-5) dir_com_swing_ = x/alpha_;
+    else dir_com_swing_ = Eigen::VectorXd::Zero(3);
+   
+    std::cout<<" dir_com_swing= " << dir_com_swing_.transpose() << std::endl;
+    std::cout<<" alpha= " <<alpha_ << std::endl;
+    std::cout<<"########################################################"<<std::endl;
+
+    /* --  2. get Tt2 --*/
+
+
+}
+
 
 void MagnetoCoMPlanner::_solveQuadProg(){
     Eigen::MatrixXd DDf, DDs, DD;

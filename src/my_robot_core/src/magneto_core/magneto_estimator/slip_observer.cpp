@@ -18,8 +18,9 @@ SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
     lpf2_container_[i] = new LowPassFilter2();   
     kf_container_[i] = new SimpleKalmanFilter(); 
   }
-  time_sampling_period_ = 10;
 
+  // kalman filter setting
+  time_sampling_period_ = 10;
   kf_sys_ = new SimpleSystemParam();  
   kf_sys_->F = Eigen::MatrixXd::Identity(2,2);
   kf_sys_->Q = Eigen::MatrixXd::Zero(2,2);
@@ -190,15 +191,15 @@ void SlipObserver::checkForce() {
     }
 }
 
-void SlipObserver::estimateParameters(){
+bool SlipObserver::estimateParameters(){
 
-    if(online_param_estimation_activated_==0) return;
+    if(online_param_estimation_activated_==0) return false;
 
     double mu, fm;
     Eigen::VectorXd x0 = Eigen::VectorXd::Zero(2); // mu, mu*fm
     Eigen::VectorXd t_x0 = Eigen::VectorXd::Zero(3); 
 
-
+    bool b_updated = false;
     // check if slip occurs
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
         if( foot_idx!=swing_foot_idx_ ) {
@@ -257,7 +258,9 @@ void SlipObserver::estimateParameters(){
                         // check safe region
                         if(x0(0) > 0.1 && x0(0) < 0.7){               
                        
-                            if( fabs(mu-x0(0)) < 0.01 && fabs(x0(1)/x0(0)-fm)<5 ) return; // no need to update
+                            if( fabs(mu-x0(0)) < 0.01 && fabs(x0(1)/x0(0)-fm)<5 ) continue; // no need to update
+
+                            if( fabs(mu-x0(0)) > 0.1 && fabs(x0(1)/x0(0)-fm)>10 ) b_updated = true; // replanning
                             
                             mu = x0(0);
                             fm = x0(1)/mu;
@@ -267,8 +270,7 @@ void SlipObserver::estimateParameters(){
 
                             std::cout<< foot_idx << "th param update : mu= "<<mu <<", fm="<<fm<<", errchange="<<errchange<<std::endl;
                             ws_container_->feet_magnets_[foot_idx]->setMagneticForce(fm);
-                            ws_container_->feet_contacts_[foot_idx]->setFrictionCoeff(mu);
-
+                            ws_container_->feet_contacts_[foot_idx]->setFrictionCoeff(mu);                            
                         }
                         // else{
                         //     kf_container_[foot_idx]->b_initialize = false;
@@ -283,6 +285,7 @@ void SlipObserver::estimateParameters(){
             }
         }
     }
+    return b_updated;
 }
 
 void SlipObserver::weightShaping() {

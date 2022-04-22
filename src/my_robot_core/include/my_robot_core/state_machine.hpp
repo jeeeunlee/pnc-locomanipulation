@@ -13,8 +13,12 @@ class StateMachine {
     robot_ = _robot;
     state_machine_time_ = 0.;
     state_identity_ = state_identifier_in;
+    ctrl_start_time_= 0.;
+    ctrl_end_time_ = 0.;
+    ctrl_duration_ = 0.;
   }
 
+  double getStateMachineStartTime() {return ctrl_start_time_;}
   virtual ~StateMachine() {}
 
   virtual void oneStep() = 0;
@@ -29,4 +33,8 @@ class StateMachine {
   StateIdentifier state_identity_;  // Unique integer of this state
   RobotSystem* robot_;              // Pointer to the robot
   double state_machine_time_;
+
+  double ctrl_start_time_;
+  double ctrl_end_time_;
+  double ctrl_duration_;
 };

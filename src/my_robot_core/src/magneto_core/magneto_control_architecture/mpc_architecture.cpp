@@ -39,6 +39,7 @@ MagnetoMpcControlArchitecture::MagnetoMpcControlArchitecture(RobotSystem* _robot
   state_ = MAGNETO_STATES::BALANCE;
   prev_state_ = MAGNETO_STATES::INITIALIZE;
   b_state_first_visit_ = true;
+  b_env_param_updated_ = false;
   sp_->curr_state = state_;
   
 
@@ -83,11 +84,54 @@ void MagnetoMpcControlArchitecture::getCommand(void* _command) {
     state_machines_[state_]->firstVisit();
     b_state_first_visit_ = false;
   }
-  // Update State Machine
+  
+  // estimate friction parameters and replanning
+  if(prev_state_ != MAGNETO_STATES::INITIALIZE){
+    if(slip_ob_->estimateParameters()){
+      MotionCommand mc_curr = sp_->curr_motion_command;
+      ComMotionCommand mc_com;
+      double passed_time = sp_->curr_time-state_machines_[state_]->getStateMachineStartTime() ;
+      double ctrl_start_time = sp_->curr_time;
+      if( mc_curr.foot_motion_given ) {  
+        switch(state_){
+          case MAGNETO_STATES::BALANCE:
+          std::cout<<"fullsupport replan / passed_time= "<<passed_time<<std::endl;
+          rg_container_->com_sequence_planner_->replanCentroidalMotionPreSwing(
+                                          ws_container_->feet_contacts_,
+                                          ws_container_->feet_magnets_);
+          
+          mc_com = rg_container_->com_sequence_planner_
+                                ->getFullSupportCoMCmdReplaned(passed_time);
+          rg_container_->com_trajectory_manager_
+                       ->setCoMTrajectory(ctrl_start_time, mc_com);
+          break;
+          case MAGNETO_STATES::SWING_START_TRANS:
+          std::cout<<"swing start replan / ";
+          passed_time = 0.;
+          case MAGNETO_STATES::SWING:
+          std::cout<<"swing replan / passed_time= "<<passed_time<<std::endl;
+          rg_container_->com_sequence_planner_->replanCentroidalMotionSwing(
+                                          ws_container_->feet_contacts_,
+                                          ws_container_->feet_magnets_,
+                                          passed_time);
+          mc_com = rg_container_->com_sequence_planner_
+                                ->getSwingCoMCmdReplaned(passed_time);
+          rg_container_->com_trajectory_manager_
+                       ->setCoMTrajectory(ctrl_start_time, mc_com);
+
+          break;
+        }
+      }    
+    }
+  }
+
+  
+
+
   state_machines_[state_]->oneStep();
 
-  if(prev_state_ != MAGNETO_STATES::INITIALIZE){
-    slip_ob_->estimateParameters();
+  // Update State Machine
+  if(prev_state_ != MAGNETO_STATES::INITIALIZE){  
     slip_ob_->weightShaping();
   }
   
