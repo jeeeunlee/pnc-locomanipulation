@@ -87,7 +87,7 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
     Eigen::Vector3d pos_dev_tang = R_wb*pos_dev_b;
     Eigen::Vector3d pos_dev_normal = (pos_dev_tang.transpose()*sp_->surface_normal[foot_idx_])*sp_->surface_normal[foot_idx_];
     pos_dev_tang = pos_dev_tang - pos_dev_normal;
-    foot_pos_des_ = foot_pos_ini_ + pos_dev_tang;
+    foot_pos_des_ = foot_pos_ini_ + pos_dev_tang - 0.01*sp_->surface_normal[foot_idx_];
   }
   else // absolute coordinate
     foot_pos_des_ = foot_pos_ini_ + pos_dev_b;
@@ -162,7 +162,7 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
 
   // mid
   foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + swing_height*sp_->surface_normal[foot_idx_];
-  foot_vel_mid = (foot_pos_des - foot_pos_ini) / traj_duration_;
+  foot_vel_mid = 1.0*(foot_pos_des - foot_pos_ini) / traj_duration_;
 
   // Construct Position trajectories
   pos_traj_init_to_mid_.initialize(foot_pos_ini, zero_vel_, 
