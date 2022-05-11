@@ -26,7 +26,7 @@ SlipObserver::SlipObserver( MagnetoWbcSpecContainer* ws_container,
   kf_sys_->Q = Eigen::MatrixXd::Zero(2,2);
   kf_sys_->Q << 0.000004, 0. , 0., 0.01;
   kf_sys_->H = Eigen::MatrixXd::Identity(time_sampling_period_, 2);
-  kf_sys_->R = 0.01*Eigen::MatrixXd::Identity(time_sampling_period_,time_sampling_period_);
+  kf_sys_->R = 0.1*Eigen::MatrixXd::Identity(time_sampling_period_,time_sampling_period_);
 
   // set parameters  
   initParams();
@@ -204,10 +204,10 @@ bool SlipObserver::estimateParameters(){
     for( auto& [foot_idx, xcdot] : foot_vel_map_) {
         if( foot_idx!=swing_foot_idx_ ) {
             // detect slip
-            double f_normal = grf_act_map_[foot_idx][5];
-            if( f_normal>1.0 && f_normal<200. && xcdot.tail(3).norm() > lin_vel_thres_ ) {
+            if( fabs(xcdot[5]) < 0.001 && xcdot.segment(3,2).norm() > lin_vel_thres_ ) {
                 // std::cout<< " slip detected at foot[" << foot_idx << "], under swing foot[";
-                // std::cout<<swing_foot_idx_<<"], phase="<<sp_->curr_state<<", fz=" <<f_normal<<std::endl;
+                // std::cout<<swing_foot_idx_<<"], phase="<<sp_->curr_state<<", fz=" <<grf_act_map_[foot_idx][5]<<std::endl;
+                // std::cout<< " slip detected, vel=" << xcdot.segment(3,3).transpose() << std::endl;
                 stacked_grf_map_[foot_idx].push_back( grf_act_map_[foot_idx] );
 
                 // kalman filter

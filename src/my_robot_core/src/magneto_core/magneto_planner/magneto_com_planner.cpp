@@ -50,7 +50,8 @@ void MagnetoCoMPlanner::replanCentroidalMotionPreSwing(
 
     // 
     // _setPeriods( _motion_command.get_motion_periods() );
-    // std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
+    std::cout<<"Tf_="<<Tf_<<", Tt1_="<<Tt1_<<", Ts_="<<Ts_<<", Tt2="<<Tt2_<<std::endl;
+    std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
 
     // solve problem
     _solveQuadProg(); // get dir_com_swing_, alpha, beta
@@ -110,7 +111,8 @@ void MagnetoCoMPlanner::planCentroidalMotion(const Eigen::Vector3d& pcom_goal,
 
     // motion period 
     _setPeriods( _motion_command.get_motion_periods() );
-    // std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
+    std::cout<<"Tf_="<<Tf_<<", Tt1_="<<Tt1_<<", Ts_="<<Ts_<<", Tt2="<<Tt2_<<std::endl;
+    std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
 
     // solve problem
     _solveQuadProg(); // get dir_com_swing_, alpha, beta
@@ -291,7 +293,8 @@ void MagnetoCoMPlanner::_buildWeightMatrices(
         // wi << 1., 1., mu^2;
         invwi = Eigen::VectorXd::Zero(3);
         // invwi << 1., 1., 1./mu/mu;
-        invwi << mu*mu, mu*mu, 1.;
+        // invwi << mu*mu, mu*mu, 1.;
+        invwi << mu*mu, mu*mu, 2.;
         invWf_ = my_utils::dStack(invWf_, invwi.asDiagonal());
         if(contact->getLinkIdx() != swing_foot_link_idx_){
             invWc_ = my_utils::dStack(invWc_, invwi.asDiagonal());
@@ -451,6 +454,7 @@ void MagnetoCoMPlanner::_solveQuadProgReplan(){
     // solve quad prob for x = alpha*dir
     // min 0.5*x'*x
     // s.t. -DDs*x <= -dds
+    std::cout<<"########################################################"<<std::endl;
     Eigen::VectorXd x;
     qp_solver_->setProblem(Eigen::MatrixXd::Identity(3,3),
                         Eigen::VectorXd::Zero(3),-DDs,-dds);
@@ -463,6 +467,7 @@ void MagnetoCoMPlanner::_solveQuadProgReplan(){
    
     std::cout<<" dir_com_swing= " << dir_com_swing_.transpose() << std::endl;
     std::cout<<" alpha= " <<alpha_ << std::endl;
+    if(alpha_>1.0) alpha_ = 1.0; 
     std::cout<<"########################################################"<<std::endl;
 
     /* --  2. get Tt2 --*/
@@ -514,5 +519,7 @@ void MagnetoCoMPlanner::_solveQuadProg(){
     
     std::cout<<" dir_com_swing= " << dir_com_swing_.transpose() << std::endl;
     std::cout<<" alpha= " <<alpha_ << ", beta= " <<beta_ << std::endl;
+    if(alpha_>2.0) alpha_ = 2.0; 
+    beta_ = alpha_/ratio;
     std::cout<<"########################################################"<<std::endl;
 }
