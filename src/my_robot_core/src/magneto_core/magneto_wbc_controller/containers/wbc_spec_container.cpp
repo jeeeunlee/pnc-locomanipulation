@@ -341,6 +341,7 @@ void MagnetoWbcSpecContainer::reshape_weight_param( double alpha,
                   feet_weights_[i]->getWrf());
     }
   }
+
 }
 
 void MagnetoWbcSpecContainer::clear_task_list() {

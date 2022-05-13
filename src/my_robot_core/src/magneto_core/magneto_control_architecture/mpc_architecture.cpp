@@ -246,16 +246,14 @@ void MagnetoMpcControlArchitecture::saveData() {
 
 
   // weights
-  // std::string filename;
-  // Eigen::VectorXd W_tmp;
-  // for(int i(0); i<Magneto::n_leg; ++i) {
-  //   filename = MagnetoFoot::Names[i] + "_Wrf";    
-  //   W_tmp = ws_container_->feet_weights_[i]->getWrf();
-  //   my_utils::saveVector(W_tmp, filename);
+  std::string filename;
+  Eigen::VectorXd W_tmp;
+  for(int i(0); i<Magneto::n_leg; ++i) {
+    filename = MagnetoFoot::Names[i] + "_Wrf";    
+    W_tmp = ws_container_->feet_weights_[i]->getWrf();
+    my_utils::saveVector(W_tmp, filename);
 
-    // ws_container_->feet_weights_[i]->getWxddot()
-
-  // }
+  }
 
 
 }

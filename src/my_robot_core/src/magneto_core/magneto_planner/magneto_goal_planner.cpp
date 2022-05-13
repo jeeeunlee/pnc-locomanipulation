@@ -216,20 +216,24 @@ void MagnetoGoalPlanner::_UpdateConfiguration(
 
 void MagnetoGoalPlanner::_InitCostFunction() {
   double theta = 0.0;
+
+  double theta3 = 0.0;
   for(int ii(0); ii<num_joint_dof_; ++ii) {
     if( _checkJoint(ii,MagnetoJointType::FEMUR) ) {
       theta += q_(ii);
     }
     if( _checkJoint(ii, MagnetoJointType::TIBIA) ) {
       theta += q_(ii);
+      theta3+= q_(ii);
     }
   }
   theta = theta*0.25;
+  theta3 = theta3*0.25; // -pi/2
   // std::cout<<" theta = " << theta << std::endl;
-  // J(q) = alpha_1*(q2+q3-theta)^2 + alpha_2*(q3+pi/2)^2 + alpha_3*(q1-q1_curr)^2
+  // J(q) = alpha_1*(q2+q3-theta)^2 + alpha_2*(q3-theta3)^2 + alpha_3*(q1-q1_curr)^2
   // J(q) = q*A*q + b*q
   // J(q) = alpha_1*(q2^2) + 2*alpha_1*(q2*q3) + (alpha_1 + alpha_2)(q3^2)
-  //        + alpha_1*(-2*theta)*(q2) + (alpha_1*(-2*theta) + alpha_2*pi)*q_3
+  //        + alpha_1*(-2*theta)*(q2) + (alpha_1*(-2*theta) + 2*alpha_2*theta3)*q_3
   double alpha_1 = 0.5;
   double alpha_2 = 1.;
   double alpha_3 = 1.;
@@ -245,7 +249,7 @@ void MagnetoGoalPlanner::_InitCostFunction() {
   A_(MagnetoDoF::baseRotY, MagnetoDoF::baseRotY) = beta;
   A_(MagnetoDoF::_base_joint, MagnetoDoF::_base_joint) = beta;
   b_(MagnetoDoF::baseRotZ) = -2.0*beta*q_(MagnetoDoF::baseRotZ);
-  b_(MagnetoDoF::baseRotY) = -2.0*beta*1.4; // -2.0*beta*q_(MagnetoDoF::baseRotY);
+  b_(MagnetoDoF::baseRotY) = -2.0*beta*q_(MagnetoDoF::baseRotY);
   b_(MagnetoDoF::_base_joint) = -2.0*beta*q_(MagnetoDoF::_base_joint);
 
   // leg 
@@ -254,6 +258,8 @@ void MagnetoGoalPlanner::_InitCostFunction() {
     if(_checkJoint(ii,MagnetoJointType::COXA)) {
       A_(ii,ii) = alpha_3;
       // b_(ii) =  -2.0*alpha_3*q_(ii);
+      //b_(ii) =  -2.0*alpha_3*(q_(ii) + theta1)/2.0;
+      // b_(ii) =  -2.0*alpha_3*theta1;
       b_(ii) =  0.0;
     }
     else if(_checkJoint(ii, MagnetoJointType::FEMUR)) {
@@ -262,7 +268,7 @@ void MagnetoGoalPlanner::_InitCostFunction() {
       A_(ii,ii) = alpha_1;
       A_(ii,ii+1) = alpha_1;
     } else if(_checkJoint(ii, MagnetoJointType::TIBIA)) {
-      b_(ii) = (alpha_1*(-2*theta)+alpha_2*M_PI);
+      b_(ii) = alpha_1*(-2*theta) + alpha_2*(-theta3-q_(ii));
       A_(ii,ii) = alpha_1+ alpha_2;
       A_(ii,ii-1) = alpha_1;
     }

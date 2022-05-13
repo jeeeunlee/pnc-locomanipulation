@@ -294,7 +294,7 @@ void MagnetoCoMPlanner::_buildWeightMatrices(
         invwi = Eigen::VectorXd::Zero(3);
         // invwi << 1., 1., 1./mu/mu;
         // invwi << mu*mu, mu*mu, 1.;
-        invwi << mu*mu, mu*mu, 2.;
+        invwi << mu*mu, mu*mu, 1.;
         invWf_ = my_utils::dStack(invWf_, invwi.asDiagonal());
         if(contact->getLinkIdx() != swing_foot_link_idx_){
             invWc_ = my_utils::dStack(invWc_, invwi.asDiagonal());
@@ -467,7 +467,7 @@ void MagnetoCoMPlanner::_solveQuadProgReplan(){
    
     std::cout<<" dir_com_swing= " << dir_com_swing_.transpose() << std::endl;
     std::cout<<" alpha= " <<alpha_ << std::endl;
-    if(alpha_>1.0) alpha_ = 1.0; 
+    if(alpha_>0.5) alpha_ = 0.5; 
     std::cout<<"########################################################"<<std::endl;
 
     /* --  2. get Tt2 --*/
@@ -519,7 +519,7 @@ void MagnetoCoMPlanner::_solveQuadProg(){
     
     std::cout<<" dir_com_swing= " << dir_com_swing_.transpose() << std::endl;
     std::cout<<" alpha= " <<alpha_ << ", beta= " <<beta_ << std::endl;
-    if(alpha_>2.0) alpha_ = 2.0; 
+    if(alpha_>1.2) alpha_ = 1.2; 
     beta_ = alpha_/ratio;
     std::cout<<"########################################################"<<std::endl;
 }

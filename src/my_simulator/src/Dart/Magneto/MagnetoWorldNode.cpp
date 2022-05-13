@@ -114,19 +114,26 @@ void MagnetoWorldNode::customPreStep() {
     ((MagnetoInterface*)interface_)->getCommand(sensor_data_, command_);    
 
     trq_cmd_.setZero();
-    static int init_count = 0;    
+    //  
     for(int i=0; i< Magneto::n_adof; ++i) {
         trq_cmd_[Magneto::idx_adof[i]] =
                           command_->jtrq[i] + 
                           kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
                           kp_ * (command_->q[i] - sensor_data_->q[i]);
     }
+
+    // for(int i=0; i< Magneto::n_adof; ++i) {
+    //     trq_cmd_[Magneto::idx_adof[i]] = 
+    //                       kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
+    //                       kp_ * (command_->q[i] - sensor_data_->q[i]);
+    // }
     // spring in gimbal    
-    double ks = 2.0;// N/rad
+    double ks = 5.0;// N/rad
     for(int i=6; i< Magneto::n_vdof; ++i) {
         trq_cmd_[Magneto::idx_vdof[i]] = ks * ( 0.0 - sensor_data_->virtual_q[i]);
     }
 
+    static int init_count = 0;   
     if(init_count++ < 50)
     {
         trq_cmd_.setZero();
@@ -220,7 +227,7 @@ void MagnetoWorldNode::setFrictionCoeff(){
 
 void MagnetoWorldNode::updateContactEnvSetup() {
     int foot_idx =  ((MagnetoInterface*)interface_)->getCurrentMovingFootIdx();
-    if(foot_idx > 0 && foot_idx<Magneto::n_leg)
+    if(foot_idx > -1 && foot_idx<Magneto::n_leg)
         ((MagnetoInterface*)interface_)->getSimulationEnvironment(
                                         coef_fric_[foot_idx], 
                                         magnetic_force_[foot_idx]);
