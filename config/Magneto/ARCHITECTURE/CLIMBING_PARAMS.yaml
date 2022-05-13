@@ -13,7 +13,7 @@ controller_params:
     max_position_error: 0.2 # radians
 
 slip_observer_params:
-    weight_shaping: 0 # onoff
+    weight_shaping: 1 # onoff
     online_param_estimation: 0 #onoff
     slip_velocity_threshold: 0.005
     lpf_vel_cutoff: 30 #hz
@@ -21,16 +21,18 @@ slip_observer_params:
 contact_params:
     # AL,AR,BL,BR
     # friction: [0.5, 0.3, 0.5, 0.5]  
-    friction: [0.5, 0.5, 0.5, 0.5]    
-    # friction: [0.7, 0.7, 0.7, 0.7]
+    # friction: [0.5, 0.5, 0.5, 0.5]    
+    friction: [0.7, 0.7, 0.7, 0.7]
 
 magnetism_params:
     # AL,AR,BL,BR
-    # magnetic_force: [70., 30., 70., 70.] #[N] 
-    magnetic_force: [70., 70., 70., 70.] #[N]   
+    magnetic_force: [100., 100., 100., 100.] #[N] 
+    # magnetic_force: [80., 80., 80., 80.] #[N] 
+    # magnetic_force: [70., 70., 70., 70.] #[N]   
     # magnetic_force: [75., 75., 75., 75.] #[N]
-    # magnetic_force: [150., 150., 150., 150.] #[N]
-    residual_ratio: [5., 5., 5., 5.] #5 #[%]
+    # magnetic_force: [100., 100., 100., 100.] #[N]
+    # residual_ratio: [5., 5., 5., 5.] #5 #[%]
+    residual_ratio: [0., 0., 0., 0.] #5 #[%]
 
 transition_params:
     transition_duration: 0.25

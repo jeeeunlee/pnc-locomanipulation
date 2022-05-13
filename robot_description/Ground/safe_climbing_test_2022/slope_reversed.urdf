@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<robot name="ground_skeleton">
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+    <material name="greygreen">
+        <color rgba="0.324 0.346 0.330 1"/>
+    </material>
+    <link name="world" />
+    <link name="world_frame">
+        <inertial>
+            <mass value="0.000000001" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.000000001" ixy="0.000000001" ixz="0.000000001" iyy="1.0" iyz="0" izz="1.0" />
+        </inertial>
+    </link>
+    <link name="ground">
+         <collision>
+            <origin xyz= "0 0 0" rpy="0. 0 0" />
+            <geometry>
+                <box size="2.5 2.5 0.1" />
+            </geometry>
+        </collision>
+         <visual name="visual">
+            <origin xyz = "0 0 0" rpy="0. 0 0" />
+            <geometry>
+                <box size="2.5 2.5 0.1" />
+            </geometry>
+            <material name="greygreen"/>
+        </visual>
+        <inertial>
+            <mass value="1.0" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0" />
+        </inertial>
+    </link>
+    <link name="ground_link">
+         <collision>
+            <origin xyz= "-0.0 -0.0 0.0" rpy="3.141592 0. 0." />
+            <geometry>
+        	    <mesh filename="meshes/slope.obj"/>
+      	    </geometry>
+        </collision>
+         <visual name="visual">
+            <origin xyz = "-0.0 -0.0 0.0" rpy="3.141592 0.  0." />
+            <geometry>
+        	    <mesh filename="meshes/slope.obj"/>
+            </geometry>
+        </visual>
+        <inertial>
+            <mass value="1.0" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0" />
+        </inertial>
+    </link>
+    <joint name="ground_joint" type="fixed">
+        <origin xyz="-0.50 -0.5 1.5" rpy="0. 1. 0." />
+        <parent link="world" />
+        <child link="ground_link" />
+    </joint>
+    <joint name="frame_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="world" />
+        <child link="world_frame" />
+    </joint>
+    <joint name="ground_flat_joint" type="fixed">
+        <origin xyz="0.0 0.0 -0.0" rpy="0 0.0 0.0" />
+        <parent link="world" />
+        <child link="ground" />
+    </joint>
+</robot>

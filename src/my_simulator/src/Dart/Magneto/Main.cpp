@@ -338,14 +338,22 @@ int main(int argc, char** argv) {
         viewer.record(THIS_COM "/ExperimentVideo");
     }
 
+    // small window
     // viewer.setUpViewInWindow(1440, 0, 500, 500);
     // viewer.getCameraManipulator()->setHomePosition(
     //     ::osg::Vec3(5.14, 2.28, 3.0) * 1.5, ::osg::Vec3(0.0, 0.2, 0.5),
     //     ::osg::Vec3(0.0, 0.0, 1.0));
 
+    // large window
+    // viewer.setUpViewInWindow(0, 0, 2880, 1800);
+    // viewer.getCameraManipulator()->setHomePosition(
+    //     ::osg::Vec3(2.2, -2.0, 1.5), ::osg::Vec3(0.0, -0.5, 0.8),
+    //     ::osg::Vec3(0.0, 0.0, 1.0));
+
+    // back view
     viewer.setUpViewInWindow(0, 0, 2880, 1800);
     viewer.getCameraManipulator()->setHomePosition(
-        ::osg::Vec3(2.2, -2.0, 1.5), ::osg::Vec3(0.0, -0.5, 0.8),
+        ::osg::Vec3(-2.2, 2.0, 1.0), ::osg::Vec3(0.0, -0.5, 0.8),
         ::osg::Vec3(0.0, 0.0, 1.0));
     viewer.setCameraManipulator(viewer.getCameraManipulator());
     viewer.run();

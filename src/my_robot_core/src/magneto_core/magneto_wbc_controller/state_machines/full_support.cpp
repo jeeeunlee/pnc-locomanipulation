@@ -29,32 +29,34 @@ void FullSupport::firstVisit() {
   //      Planning
   // ---------------------------------------
   // robot goal configuration
+  Eigen::VectorXd q_init =  robot_->getQ();
   Eigen::VectorXd q_goal =  robot_->getQ();
+  Eigen::Vector3d pcom = robot_->getCoMPosition();
   Eigen::Vector3d pc_goal;
   rg_container_->goal_planner_->computeGoal(mc_curr_);  
   rg_container_->goal_planner_->getGoalConfiguration(q_goal);
   rg_container_->goal_planner_->getGoalComPosition(pc_goal);
   
-  SWING_DATA mdtmp;  
-  Eigen::Vector3d com_dpos;
-  if( mc_curr_.get_foot_motion(mdtmp) ) {        
-      com_dpos = mdtmp.dpose.pos;
-      if(mdtmp.dpose.is_baseframe){
-          Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
-          // com_dpos = Rwb*com_dpos*0.25;
-          com_dpos << 0.0, 0.0, 0.07*0.25;
-      }
-  }
-  else com_dpos = Eigen::VectorXd::Zero(3);
-
-  Eigen::Vector3d pcom = robot_->getCoMPosition();
-
-  pc_goal = 0.5*pc_goal + 0.5*(pcom+ com_dpos);
+  // SWING_DATA mdtmp;  
+  // Eigen::Vector3d com_dpos;
+  // if( mc_curr_.get_foot_motion(mdtmp) ) {        
+  //     com_dpos = mdtmp.dpose.pos;
+  //     if(mdtmp.dpose.is_baseframe){
+  //         Eigen::MatrixXd Rwb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear();
+  //         com_dpos = Rwb*com_dpos*0.25;
+  //         // com_dpos << 0.0, 0.0, 0.07*0.25;
+  //     }
+  // }
+  // else com_dpos = Eigen::VectorXd::Zero(3); 
+  // pc_goal = pcom+ com_dpos;
+  // pc_goal = 0.5*pc_goal + 0.5*(pcom+ com_dpos);
+  
 
   sp_->com_pos_init = pcom;
   sp_->com_pos_target = pc_goal;
   my_utils::pretty_print(pcom, std::cout, "pc_init");
   my_utils::pretty_print(pc_goal, std::cout, "pc_goal");
+  my_utils::pretty_print(q_init, std::cout, "q_init");
   my_utils::pretty_print(q_goal, std::cout, "q_goal");
 
   // CoM planner
