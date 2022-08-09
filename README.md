@@ -6,13 +6,13 @@ This software framework is developed by Jee-Eun Lee (https://github.com/jeeeunle
 
 based on C++ library PnC by junhyeok Ahn(https://github.com/junhyeokahn/PnC.git)
 
-# PnC for Magento
-Simulator environment and Controllers for Magento is available. 
+# PnC for Anymal-ur3
+Simulator environment and Controllers for Anymal-ur3 is available. 
 
 ## Run the Code
 ```
 $ source devel/setup.bash
-$ rosrun my_simulator anymal_ros "config/ANYmal/SIMULATION.yaml"
+$ rosrun my_simulator run_anymal
 ```
 
 ### Install Required Dependancies
