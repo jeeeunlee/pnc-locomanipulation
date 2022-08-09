@@ -22,10 +22,12 @@ class StateSequence{
       state_sequence_.push_back( std::make_pair(state_id, state_cmd) );
     }
     bool getNextState(int& state_id, T& state_cmd){
+      if(state_sequence_.empty()) return false;
       auto pair = state_sequence_.front();
       state_id = pair.first;
       state_cmd = pair.second;
       state_sequence_.pop_front();
+      return true;
     }
     int getNumStates(){
       return state_sequence_.size();

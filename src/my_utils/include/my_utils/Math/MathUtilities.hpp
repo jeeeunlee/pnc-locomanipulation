@@ -24,6 +24,9 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row);
 // void vStackConserve(Eigen::VectorXd& a, const Eigen::VectorXd& b);
 // void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
 
+void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in,  
+                            Eigen::VectorXd& ori_out);
+
 
 // =============================================================================
 // Simple Trajectory Generator

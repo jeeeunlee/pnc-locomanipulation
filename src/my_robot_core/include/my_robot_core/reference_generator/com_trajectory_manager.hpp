@@ -1,16 +1,14 @@
 #pragma once
 
-#include <my_robot_core/magneto_core/magneto_command_api.hpp>
-#include <my_robot_core/magneto_core/magneto_definition.hpp>
+#include <my_robot_core/anymal_core/anymal_command_api.hpp>
+#include <my_robot_core/anymal_core/anymal_definition.hpp>
 #include <my_robot_core/reference_generator/trajectory_manager_base.hpp>
-#include <my_wbc/Contact/BasicContactSpec.hpp>
-#include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/BasicTask.hpp>
 
 // interpolators
 #include <my_utils/Math/hermite_curve_vec.hpp>
 
-class MagnetoStateProvider;
+class ANYmalStateProvider;
 
 // Object to manage common trajectory primitives
 class CoMTrajectoryManager : public TrajectoryManagerBase {
@@ -35,9 +33,6 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
   // Initialize the swing com trajectory
   void setCoMTrajectory(double _start_time,
                         double _duration);
-// Initialize the swing com trajectory
-//   void setCoMTrajectory(const double& _start_time,
-//                         std::vector<ContactSpec*> &contact_list);
 
   // Computes the swing com trajectory
   void updateCoMTrajectory(double current_time);
@@ -51,6 +46,6 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
 
   // Hermite Curve containers
   HermiteCurveVec pos_traj;
-  MagnetoStateProvider* sp_;
+  ANYmalStateProvider* sp_;
 
 };

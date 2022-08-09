@@ -59,7 +59,7 @@ class RobotSystem {
 
     Eigen::VectorXd getActiveJointValue(const Eigen::VectorXd& q_full);
 
-    // JE test for magneto
+    // JE test for anymal
     void setRobotMass();
 
     void printRobotInfo();

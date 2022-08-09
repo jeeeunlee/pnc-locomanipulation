@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(my_robot_system)
 
 set(CMAKE_BUILD_TYPE "Release")
+set(PYTHON_EXECUTABLE "/usr/bin/python3")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

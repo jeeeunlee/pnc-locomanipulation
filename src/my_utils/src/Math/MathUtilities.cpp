@@ -139,6 +139,15 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row_) {
 // }
 
 
+void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in,  
+                            Eigen::VectorXd& ori_out) {
+  ori_out = Eigen::VectorXd::Zero(4);
+  ori_out[0] = quat_in.w();
+  ori_out[1] = quat_in.x();
+  ori_out[2] = quat_in.y();
+  ori_out[3] = quat_in.z();
+}
+
 
 double smooth_changing(double ini, double end, double moving_duration,
                        double curr_time) {

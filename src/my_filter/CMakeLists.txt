@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(my_filter)
 
 set(CMAKE_BUILD_TYPE "Release")
+set(PYTHON_EXECUTABLE "/usr/bin/python3")
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS

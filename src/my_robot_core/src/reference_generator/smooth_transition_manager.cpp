@@ -3,7 +3,7 @@
 
 SmoothTransitionManager::SmoothTransitionManager(double* _val)
   :TransitionManagerBase() {
-  my_utils::pretty_constructor(2, "SmoothTransitionManager");
+  my_utils::pretty_constructor(3, "SmoothTransitionManager");
   val_ = _val;
 }
 

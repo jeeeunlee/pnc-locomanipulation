@@ -1,5 +1,6 @@
 #include <Eigen/LU>
 #include <Eigen/SVD>
+#include <Eigen/Dense>
 
 #include <my_wbc/WBLC/WBLC.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
@@ -7,15 +8,12 @@
 WBLC::WBLC(const std::vector<bool>& act_list)
     : WBC(act_list) {
     my_utils::pretty_constructor(3, "WBLC");
-    Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
-    Sf_.block(0, 0, 6, 6).setIdentity();
 
-    act_list_.clear();
-    for (int i(0); i < num_qdot_; ++i) {
-        if (act_list[i]) act_list_.push_back(i);
-    }
     qddot_ = Eigen::VectorXd::Zero(num_qdot_);
     // dynacore::pretty_print(Sv_, std::cout, "Sv");
+
+    tau_min_= Eigen::VectorXd::Constant(num_act_joint_, -100);
+    tau_max_= Eigen::VectorXd::Constant(num_act_joint_, 100);
 }
 
 void WBLC::updateSetting(const Eigen::MatrixXd& A, const Eigen::MatrixXd& Ainv,
@@ -32,7 +30,7 @@ void WBLC::updateSetting(const Eigen::MatrixXd& A, const Eigen::MatrixXd& Ainv,
     // dynacore::pretty_print(A_, std::cout, "A");
 }
 
-void WBLC::makeWBLC_Torque(const Eigen::VectorXd& des_jacc_cmd,
+void WBLC::makeTorqueGivenRef(const Eigen::VectorXd& des_jacc_cmd,
                            const std::vector<ContactSpec*>& contact_list,
                            Eigen::VectorXd& cmd, void* extra_input) {
     if (!b_updatesetting_) {
@@ -40,10 +38,7 @@ void WBLC::makeWBLC_Torque(const Eigen::VectorXd& des_jacc_cmd,
     }
     if (extra_input) data_ = static_cast<WBLC_ExtraData*>(extra_input);
 
-
-    for (int i(0); i < num_act_joint_; ++i) {
-        qddot_[act_list_[i]] = des_jacc_cmd[i];
-    }
+    qddot_ = des_jacc_cmd;
 
     // Contact Jacobian & Uf & Fr_ieq
     _BuildContactMtxVect(contact_list);
@@ -64,7 +59,6 @@ void WBLC::makeWBLC_Torque(const Eigen::VectorXd& des_jacc_cmd,
         std::cout << "x: " << z << std::endl;
         // exit(0.0);
     }
-
 
     _GetSolution(cmd);
     // std::cout << "f: " << f << std::endl;
@@ -106,14 +100,14 @@ void WBLC::_Build_Inequality_Constraint() {
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         -Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
-        data_->tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_);
+        tau_min_ - Sa_ * (cori_ + grav_ + A_ * qddot_);
     row_idx += num_act_joint_;
 
     Cieq_.block(row_idx, 0, num_act_joint_, num_qdot_) = -Sa_ * A_;
     Cieq_.block(row_idx, num_qdot_, num_act_joint_, dim_rf_) =
         Sa_ * Jc_.transpose();
     dieq_.segment(row_idx, num_act_joint_) =
-        -data_->tau_max_ + Sa_ * (cori_ + grav_ + A_ * qddot_);
+        -tau_max_ + Sa_ * (cori_ + grav_ + A_ * qddot_);
 
     // my_utils::pretty_print(Cieq_, std::cout, "C ieq");
     // my_utils::pretty_print(dieq_, std::cout, "d ieq");

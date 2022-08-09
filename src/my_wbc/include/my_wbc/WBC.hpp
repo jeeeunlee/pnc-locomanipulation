@@ -15,13 +15,20 @@ class WBC{
             num_act_joint_(0),
             num_passive_(0)
     {
+        act_list_.clear();
         num_qdot_ = act_list.size();
+
+        for (int i(0); i < num_qdot_; ++i) {
+            if (act_list[i]) act_list_.push_back(i);
+        }        
         for(int i(0); i<num_qdot_; ++i){
             if(act_list[i] == true) ++num_act_joint_;
             else ++num_passive_;
         }
+        
         Sa_ = Eigen::MatrixXd::Zero(num_act_joint_, num_qdot_);
         Sv_ = Eigen::MatrixXd::Zero(num_passive_, num_qdot_);
+        Sf_ = Eigen::MatrixXd::Zero(6, num_qdot_);
 
         // Set virtual & actuated selection matrix
         int j(0);
@@ -35,8 +42,8 @@ class WBC{
                 Sv_(k, i) = 1.;
                 ++k;
             }
-        }
-
+        }        
+        Sf_.block(0, 0, 6, 6).setIdentity();
     }
         virtual ~WBC(){}
 
@@ -62,12 +69,15 @@ class WBC{
             Jinv = Winv * J.transpose() * lambda_inv;
         }
 
+        std::vector<int> act_list_;
+
         int num_qdot_;
         int num_act_joint_;
         int num_passive_;
 
         Eigen::MatrixXd Sa_; // Actuated joint
         Eigen::MatrixXd Sv_; // Virtual joint
+        Eigen::MatrixXd Sf_; //floating base
 
         Eigen::MatrixXd A_;
         Eigen::MatrixXd Ainv_;

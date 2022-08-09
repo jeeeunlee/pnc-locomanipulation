@@ -414,47 +414,6 @@ void RobotSystem::printRobotInfo() {
     //               << bn->getInertia().getMoment() << "kg*m2" << std::endl;
     // }
 
-
-    // AL_depth_sensor_link
-    int idx_depth_sensor_link [4] = {9,18,27,36};
-    // gazebo_AL_leg_optical_frame
-    int idx_leg_optical_frame [4] = {10,19,28,37};
-
-    std::cout << " === MASS ===" << std::endl;
-    for (int i = 0; i < 4; ++i) {
-        dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(idx_depth_sensor_link[i]);
-        std::cout << bn->getName() << " : "
-                  << bn->getMass() << "kg" << std::endl;
-
-        bn = skel_ptr_->getBodyNode(idx_leg_optical_frame[i]);
-        std::cout << bn->getName() << " : "
-                  << bn->getMass() << "kg" << std::endl;
-    }
-
-    std::cout << " === LocalCOM ===" << std::endl;
-    for (int i = 0; i < 4; ++i) {
-        dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(idx_depth_sensor_link[i]);
-        std::cout << bn->getName() << " : "
-                  << bn->getLocalCOM().transpose() << std::endl;
-
-        bn = skel_ptr_->getBodyNode(idx_leg_optical_frame[i]);
-        std::cout << bn->getName() << " : "
-                  << bn->getLocalCOM().transpose() << std::endl;
-    }
-
-    std::cout << " === Moment ===" << std::endl;
-    for (int i = 0; i < 4; ++i) {
-        dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(idx_depth_sensor_link[i]);
-        std::cout << bn->getName() << " : "
-                  << bn->getInertia().getMoment() << " kg*m2" << std::endl;
-
-        bn = skel_ptr_->getBodyNode(idx_leg_optical_frame[i]);
-        std::cout << bn->getName() << " : "
-                  << bn->getInertia().getMoment() << " kg*m2" << std::endl;
-
-    }
-    // exit(0);
-    std::cout << " === === === === === === === === ===" << std::endl;
 }
 
 // test JE
