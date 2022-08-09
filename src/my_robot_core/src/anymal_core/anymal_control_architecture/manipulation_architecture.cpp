@@ -85,8 +85,19 @@ void ANYmalManipulationControlArchitecture::getCommand(void* _command) {
     sp_->curr_state = state_;
     // sp_->curr_motion_command = MotionCommand(user_cmd_.ee_motion_data,
     //                                           user_cmd_.motion_period  ); 
-    sp_->curr_motion_command = MotionCommand();
-    sp_->curr_manipulation_command = user_cmd_;
+
+    if(user_cmd_.get_ee_idx() < 0 ) {
+      POSE_DATA com_motion_data;
+      user_cmd_.get_ee_motion(com_motion_data);
+      double motion_period = user_cmd_.get_motion_period();
+
+      sp_->curr_motion_command = MotionCommand(com_motion_data, motion_period);
+      sp_->curr_manipulation_command = user_cmd_;
+    }else{
+      sp_->curr_motion_command = MotionCommand();
+      sp_->curr_manipulation_command = user_cmd_;
+    }
+
 
     b_state_first_visit_ = true;
 
