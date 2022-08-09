@@ -1,11 +1,9 @@
 #pragma once
 
 #include <my_robot_core/reference_generator/trajectory_manager_base.hpp>
-#include <my_wbc/Contact/BasicContactSpec.hpp>
-#include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/BasicTask.hpp>
-#include <my_robot_core/magneto_core/magneto_command_api.hpp>
-#include <my_robot_core/magneto_core/magneto_definition.hpp>
+#include <my_robot_core/anymal_core/anymal_command_api.hpp>
+#include <my_robot_core/anymal_core/anymal_definition.hpp>
 
 // interpolators
 #include <my_utils/Math/hermite_curve_vec.hpp>
@@ -45,9 +43,5 @@ class BaseOriTrajectoryManager : public TrajectoryManagerBase {
  private:
   Eigen::VectorXd zero_vel_;
   HermiteQuaternionCurve quat_hermite_curve_;
-
- protected:
-  void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in, 
-                              Eigen::VectorXd& ori_out);
 
 };

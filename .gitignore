@@ -49,7 +49,7 @@ build
 devel
 etc
 RLData
-robot_description/Robot/Magneto
+robot_description/Robot/ANYmal
 experiment_data*
 ExperimentVideo
 

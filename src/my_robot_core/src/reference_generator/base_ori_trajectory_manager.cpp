@@ -2,7 +2,7 @@
 
 BaseOriTrajectoryManager::BaseOriTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {
-  my_utils::pretty_constructor(2, "TrajectoryManager: Base Ori");
+  my_utils::pretty_constructor(3, "TrajectoryManager: Base Ori");
 
   
   base_pos_ini_ = Eigen::VectorXd::Zero(4);
@@ -38,7 +38,7 @@ void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time,
 
   base_quat_ini_ = Eigen::Quaternion<double>(
                           robot_->getBodyNodeIsometry(
-                            MagnetoBodyNode::base_link).linear() );
+                            ANYmalBodyNode::base).linear() );
   base_quat_des_ = _base_quat_des;
   quat_hermite_curve_.initialize(base_quat_ini_, zero_vel_,
                                  base_quat_des_, zero_vel_, traj_duration_);
@@ -49,7 +49,7 @@ void BaseOriTrajectoryManager::setBaseOriTrajectory(const double& _start_time,
   Eigen::Quaterniond _base_quat_des 
                         = Eigen::Quaternion<double>(
                           robot_->getBodyNodeIsometry(
-                            MagnetoBodyNode::base_link).linear() );
+                            ANYmalBodyNode::base).linear() );
   setBaseOriTrajectory(_start_time, _duration, _base_quat_des);
 }
 
@@ -60,16 +60,7 @@ void BaseOriTrajectoryManager::updateBaseOriTrajectory(const double& current_tim
   quat_hermite_curve_.evaluate(t, base_quat_des_);
   quat_hermite_curve_.getAngularVelocity(t, base_ori_vel_des_);
   quat_hermite_curve_.getAngularAcceleration(t, base_ori_acc_des_);
-  convertQuatDesToOriDes(base_quat_des_, base_ori_pos_des_);
+  my_utils::convertQuatDesToOriDes(base_quat_des_, base_ori_pos_des_);
   
 }
 
-void BaseOriTrajectoryManager::convertQuatDesToOriDes(
-                                const Eigen::Quaterniond& quat_in,  
-                                Eigen::VectorXd& ori_out) {
-  ori_out = Eigen::VectorXd::Zero(4);
-  ori_out[0] = quat_in.w();
-  ori_out[1] = quat_in.x();
-  ori_out[2] = quat_in.y();
-  ori_out[3] = quat_in.z();
-}

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(my_robot_core)
 
 set(CMAKE_BUILD_TYPE "Release")
+set(PYTHON_EXECUTABLE "/usr/bin/python3")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -31,7 +32,7 @@ include_directories(
 
 file(GLOB_RECURSE sources "*.cpp")
 file(GLOB my_robot_core_headers "src/*.hpp")
-file(GLOB_RECURSE magneto_my_robot_core_headers "src/Magneto/*.hpp")
+file(GLOB_RECURSE anymal_my_robot_core_headers "src/ANYmal/*.hpp")
 
 #message("${sources}")
 #message("${headers}")

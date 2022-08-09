@@ -4,9 +4,9 @@
 
 KinWBC::KinWBC(const std::vector<bool>& act_joint)
     : num_act_joint_(0),
-    //   threshold_(0.001)
-    threshold_(0.005)
-    // threshold_(0.003)
+      threshold_(0.001)
+    // threshold_(0.005)
+    // threshold_(0.0005)
 {
     my_utils::pretty_constructor(3, "Kin WBC");
     num_qdot_ = act_joint.size();
@@ -155,6 +155,7 @@ bool KinWBC::FindConfiguration(const Eigen::VectorXd& curr_config,
         prev_delta_q = delta_q;
         prev_qdot = qdot;
         prev_qddot = qddot;
+
     }
     // xdot_c = Jc * delta_q;
     // my_utils::pretty_print(xdot_c, std::cout, "contact vel");
@@ -163,6 +164,9 @@ bool KinWBC::FindConfiguration(const Eigen::VectorXd& curr_config,
         jvel_cmd[i] = qdot[act_jidx_[i]];
         jacc_cmd[i] = qddot[act_jidx_[i]];
     }
+    
+    // my_utils::saveVector(jpos_des_, "jpos_des");
+    // my_utils::saveVector(jvel_des_, "jvel_des");
     return true;
 }
 
@@ -248,8 +252,10 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     jvel_cmd = qdot;
     jacc_cmd = qddot;
 
-    return true;
-    
+    // my_utils::saveVector(jpos_des_, "jpos_des_full");
+    // my_utils::saveVector(jvel_des_, "jvel_des_full");
+
+    return true;    
 }
 
 void KinWBC::_BuildJacobianFromContacts(const std::vector<ContactSpec*> & contact_list,

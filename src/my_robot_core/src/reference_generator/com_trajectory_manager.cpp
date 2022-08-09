@@ -1,11 +1,11 @@
 #include <my_robot_core/reference_generator/com_trajectory_manager.hpp>
-#include <my_robot_core/magneto_core/magneto_state_provider.hpp>
+#include <my_robot_core/anymal_core/anymal_state_provider.hpp>
 
 CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {
-  my_utils::pretty_constructor(2, "TrajectoryManager: CoM");
+  my_utils::pretty_constructor(3, "TrajectoryManager: CoM");
 
-  sp_ = MagnetoStateProvider::getStateProvider(robot_);
+  sp_ = ANYmalStateProvider::getStateProvider(robot_);
 
   // Initialize member variables
   com_pos_des_.setZero();
@@ -74,7 +74,7 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
 
 // Computes the swing com trajectory
 void CoMTrajectoryManager::updateCoMTrajectory(double current_time) {
-  double t = (current_time - traj_start_time_ + MagnetoAux::servo_rate) ;
+  double t = (current_time - traj_start_time_ + ANYmalAux::servo_rate) ;
   // Get com position and its derivatives
   // std::cout<<"s = " << s << std::endl;
   com_pos_des_ = pos_traj.evaluate(t);

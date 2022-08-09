@@ -1,0 +1,7 @@
+# test_name: balance_test
+# test_name: static_walking_test
+# test_name: mpc_climbing_test
+# motion_script: config/ANYmal/MOTIONS/walkset.yaml
+
+test_name: manipulation_test
+motion_script: config/ANYmal/MOTIONS/manipulationset.yaml

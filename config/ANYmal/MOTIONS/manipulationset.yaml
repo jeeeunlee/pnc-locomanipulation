@@ -1,0 +1,36 @@
+num_motion: 5
+
+motion0:
+  ee: 0  ## arm ee
+  pos: [0.1,-0.3,0]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion1:
+  ee: 0  ## arm ee
+  pos: [0,0.4,0]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion2:
+  ee: 0  ## arm ee
+  pos: [-0.4,0,0]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion3:
+  ee: 0  ## arm ee
+  pos: [0.4,0,0]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion4:
+  ee: 0  ## arm ee
+  pos: [-0.1,-0.1,0]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true

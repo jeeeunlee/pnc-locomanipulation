@@ -2,7 +2,7 @@
 
 JointTrajectoryManager::JointTrajectoryManager(RobotSystem* _robot)
     : TrajectoryManagerBase(_robot) {
-  my_utils::pretty_constructor(2, "TrajectoryManager: JointPos");
+  my_utils::pretty_constructor(3, "TrajectoryManager: JointPos");
 
   full_joint_dim_ = _robot->getNumDofs();
   active_joint_dim_ = _robot->getNumActuatedDofs();

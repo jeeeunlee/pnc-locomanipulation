@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(my_simulator)
 
 set(CMAKE_BUILD_TYPE "Release")
+set(PYTHON_EXECUTABLE "/usr/bin/python3")
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -21,7 +22,7 @@ find_package(Eigen3)
 find_package(DART 6.9 REQUIRED COMPONENTS utils-urdf gui-osg CONFIG)
 
 catkin_package(
-  LIBRARIES run_magneto magneto_ros
+  LIBRARIES run_anymal anymal_ros
   CATKIN_DEPENDS my_utils my_robot_core
 )
 
@@ -37,33 +38,15 @@ include_directories(
 )
 
 
-file(GLOB_RECURSE dart_magneto_sources "src/Dart/Magneto/*.cpp")
-file(GLOB_RECURSE dart_magneto_headers "src/Dart/Magneto/*.hpp")
-file(GLOB_RECURSE bullet_sources "src/Bullet/*.cpp")
-file(GLOB_RECURSE bullet_headers "src/Bullet/*.hpp")
-file(GLOB_RECURSE ros_dart_sources "src/RosSim/*.cpp")
-file(GLOB_RECURSE ros_dart_headers "src/RosSim/*.hpp")
+file(GLOB_RECURSE dart_anymal_sources "src/Dart/ANYmal/*.cpp")
+file(GLOB_RECURSE dart_anymal_headers "src/Dart/ANYmal/*.hpp")
 
 
-
-add_executable(run_magneto ${dart_magneto_sources}
-                          ${dart_magneto_headers})
-target_link_libraries(run_magneto ${DART_LIBRARIES}
+add_executable(run_anymal ${dart_anymal_sources}
+                          ${dart_anymal_headers})
+target_link_libraries(run_anymal ${DART_LIBRARIES}
                                   my_robot_core
                                   my_utils)
-
-add_executable(magneto_ros ${ros_dart_sources}
-                        ${ros_dart_headers})
-target_link_libraries(magneto_ros ${DART_LIBRARIES}
-                              ${catkin_LIBRARIES}
-                              my_robot_core
-                              my_utils)
-
-# add_executable(run_test ${bullet_sources}
-#                         ${bullet_headers})
-# target_link_libraries(run_test ${BULLET_LIBRARIES}
-#                                 my_utils)
-                                  
 
 
 ## Declare a C++ library

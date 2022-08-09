@@ -1,0 +1,24 @@
+# --simulator settings
+servo_rate: 0.001 # !!this should be match with controller servo rate!!
+is_record: false
+show_joint_frame: false #false
+show_link_frame: true #false
+plot_result: true # true
+
+# --configuration settings
+robot: robot_description/Robot/ANYmal/anymal_ur3.urdf
+
+ground: robot_description/Ground/ground.urdf
+initial_pose: [ 0.0, 0.0, 0.52, 0.0, 0.0, 0.0 ] # x,y,z, rx,ry,rz
+initial_leg_config: [0.1, 0.6, 1.0]
+initial_arm_config: [0.2, -2.0, 1.5, -1.0, -1.2, 0.0]
+
+contact_params:
+  friction: [0.7, 0.7, 0.7, 0.7] # 0:LF 1:LH 2:RF 3:RH
+
+# --controller settings
+control_configuration:
+  kp: 400 #225 #100
+  kd: 20 #15 #10
+  torque_limit: 80
+

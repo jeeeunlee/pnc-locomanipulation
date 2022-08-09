@@ -1,16 +1,14 @@
 #pragma once
 
 #include <my_robot_core/reference_generator/trajectory_manager_base.hpp>
-#include <my_wbc/Contact/BasicContactSpec.hpp>
-#include <my_wbc/Contact/BodyFrameContactSpec.hpp>
 #include <my_wbc/Task/BasicTask.hpp>
-#include <my_robot_core/magneto_core/magneto_command_api.hpp>
+#include <my_robot_core/anymal_core/anymal_command_api.hpp>
 
 // interpolators
 #include <my_utils/Math/hermite_curve_vec.hpp>
 #include <my_utils/Math/hermite_quaternion_curve.hpp>
 
-class MagnetoStateProvider;
+class ANYmalStateProvider;
 
 // Object to manage common trajectory primitives
 class FootPosTrajectoryManager : public TrajectoryManagerBase {
@@ -64,9 +62,7 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   HermiteQuaternionCurve quat_hermite_curve_;
 
  protected:
-  MagnetoStateProvider* sp_;
-  void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in, 
-                              Eigen::VectorXd& ori_out);
+  ANYmalStateProvider* sp_;
   void setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 
                         const Eigen::VectorXd& foot_pos_des,
                         const double& swing_height);

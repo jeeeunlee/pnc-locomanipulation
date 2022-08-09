@@ -1,12 +1,12 @@
-#include <my_robot_core/magneto_core/magneto_definition.hpp>
+#include <my_robot_core/anymal_core/anymal_definition.hpp>
 #include <my_robot_core/reference_generator/foot_trajectory_manager.hpp>
-#include <my_robot_core/magneto_core/magneto_state_provider.hpp>
+#include <my_robot_core/anymal_core/anymal_state_provider.hpp>
 
 FootPosTrajectoryManager::FootPosTrajectoryManager(RobotSystem* _robot)
                         : TrajectoryManagerBase(_robot) {
-  my_utils::pretty_constructor(2, "TrajectoryManager: FootPos");
+  my_utils::pretty_constructor(3, "TrajectoryManager: FootPos");
 
-  sp_ = MagnetoStateProvider::getStateProvider(robot_);
+  sp_ = ANYmalStateProvider::getStateProvider(robot_);
 
   // Initialize member variables
   foot_pos_des_.setZero();
@@ -55,7 +55,7 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
   if(_motion_cmd->get_foot_motion(motion_cmd_data)) {
       // if com motion command is given
       foot_idx_ = motion_cmd_data.foot_idx;
-      link_idx_ = MagnetoFoot::LinkIdx[foot_idx_];
+      link_idx_ = ANYmalFoot::LinkIdx[foot_idx_];
       traj_duration_ = _motion_cmd->get_swing_period();
       pos_dev_b = motion_cmd_data.dpose.pos;
       swing_height_ = motion_cmd_data.swing_height;
@@ -81,13 +81,10 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
   foot_rot_ini_ = robot_->getBodyNodeIsometry(link_idx_).linear();
 
   if(is_base_frame_) {
-    // TODOJE : ? getBodyNodeIsometry(MagnetoBodyNode::base_link)
-    Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(MagnetoBodyNode::base_link).linear(); 
+    // TODOJE : ? getBodyNodeIsometry(ANYmalBodyNode::base)
+    Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(ANYmalBodyNode::base).linear(); 
     // Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
-    Eigen::Vector3d pos_dev_tang = R_wb*pos_dev_b;
-    Eigen::Vector3d pos_dev_normal = (pos_dev_tang.transpose()*sp_->surface_normal[foot_idx_])*sp_->surface_normal[foot_idx_];
-    pos_dev_tang = pos_dev_tang - pos_dev_normal;
-    foot_pos_des_ = foot_pos_ini_ + pos_dev_tang - 0.01*sp_->surface_normal[foot_idx_];
+    foot_pos_des_ = foot_pos_ini_ + R_wb*pos_dev_b;
   }
   else // absolute coordinate
     foot_pos_des_ = foot_pos_ini_ + pos_dev_b;
@@ -126,7 +123,7 @@ void FootPosTrajectoryManager::updateFootPosTrajectory(const double& current_tim
   quat_hermite_curve_.evaluate(t, foot_quat_des_);
   quat_hermite_curve_.getAngularVelocity(t, foot_ori_vel_des_);
   quat_hermite_curve_.getAngularAcceleration(t, foot_ori_acc_des_);
-  convertQuatDesToOriDes(foot_quat_des_, foot_ori_pos_des_);
+  my_utils::convertQuatDesToOriDes(foot_quat_des_, foot_ori_pos_des_);
   // Get foot position and its derivatives
   if (t <= 0.5*traj_duration_) {  // 0.0 <= s < 0.5 use the first trajectory
     foot_pos_des_ = pos_traj_init_to_mid_.evaluate(t);
@@ -156,12 +153,9 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
                                               const double& swing_height) {
   // Set Middle Swing Position/Velocity for Swing
   Eigen::Vector3d foot_pos_mid, foot_vel_mid;  
-  // Eigen::Vector3d p_b(0, 0, swing_height);
-  // Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
-  // foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;
-
-  // mid
-  foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + swing_height*sp_->surface_normal[foot_idx_];
+  Eigen::Vector3d p_b(0, 0, swing_height);
+  Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
+  foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;  
   foot_vel_mid = 1.0*(foot_pos_des - foot_pos_ini) / traj_duration_;
 
   // Construct Position trajectories
@@ -177,12 +171,3 @@ void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_
 }
 
 
-void FootPosTrajectoryManager::convertQuatDesToOriDes(
-                                const Eigen::Quaterniond& quat_in,  
-                                Eigen::VectorXd& ori_out) {
-  ori_out = Eigen::VectorXd::Zero(4);
-  ori_out[0] = quat_in.w();
-  ori_out[1] = quat_in.x();
-  ori_out[2] = quat_in.y();
-  ori_out[3] = quat_in.z();
-}

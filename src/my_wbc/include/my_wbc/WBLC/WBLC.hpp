@@ -1,7 +1,7 @@
 #pragma once
 
 #include <my_utils/IO/IOUtilities.hpp>
-#include "ThirdParty/Goldfarb/QuadProg++.hh"
+#include "Goldfarb/QuadProg++.hh"
 #include <my_wbc/WBC.hpp>
 #include <my_wbc/Contact/ContactSpec.hpp>
 
@@ -17,8 +17,6 @@ class WBLC_ExtraData{
         Eigen::VectorXd W_rf_;
         Eigen::VectorXd W_xddot_;
 
-        Eigen::VectorXd tau_min_;
-        Eigen::VectorXd tau_max_;
 
         WBLC_ExtraData(){}
         ~WBLC_ExtraData(){}
@@ -35,7 +33,7 @@ class WBLC: public WBC{
                 const Eigen::VectorXd & grav,
                 void* extra_setting = NULL);
 
-        void makeWBLC_Torque(const Eigen::VectorXd & des_jacc_cmd,
+        void makeTorqueGivenRef(const Eigen::VectorXd & des_jacc_cmd,
                 const std::vector<ContactSpec*> & contact_list,
                 Eigen::VectorXd & cmd,
                 void* extra_input = NULL);
@@ -46,17 +44,21 @@ class WBLC: public WBC{
                 Eigen::VectorXd & cmd,
                 void* extra_input = NULL);
 
+        void setTorqueLimits(const Eigen::VectorXd& tau_min,
+                            const Eigen::VectorXd& tau_max) {
+                                tau_min_= tau_min;
+                                tau_max_= tau_max; };
 
 
     private:
-        std::vector<int> act_list_;
-
+        Eigen::VectorXd tau_min_;
+        Eigen::VectorXd tau_max_;
+        
         void _OptimizationPreparation(
                 const Eigen::MatrixXd & Aeq,
                 const Eigen::VectorXd & beq,
                 const Eigen::MatrixXd & Cieq,
                 const Eigen::VectorXd & dieq);
-
 
         void _GetSolution(Eigen::VectorXd & cmd);
         void _OptimizationPreparation();
@@ -104,7 +106,6 @@ class WBLC: public WBC{
 
         Eigen::VectorXd qddot_;
 
-        Eigen::MatrixXd Sf_; //floating base
         void _PrintDebug(double i) {
             //printf("[WBLC] %f \n", i);
         }
