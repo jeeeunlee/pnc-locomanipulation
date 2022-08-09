@@ -1,34 +1,62 @@
-num_motion: 5
+num_motion: 9
 
 motion0:
+  ee: -1  ## com motion
+  pos: [0.05,0,0.05]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion1:
+  ee: -1  ## com motion
+  pos: [-0.1,0.05,-0.1]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion2:
+  ee: -1  ## com motion
+  pos: [0.0,-0.1,0.05]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion3:
+  ee: -1  ## com motion
+  pos: [0.05,0.05,0.0]
+  ori: [1,0,0,0]
+  duration: 1.0
+  b_relative: true
+
+motion4:
   ee: 0  ## arm ee
   pos: [0.1,-0.3,0]
   ori: [1,0,0,0]
   duration: 1.0
   b_relative: true
 
-motion1:
+motion5:
   ee: 0  ## arm ee
   pos: [0,0.4,0]
   ori: [1,0,0,0]
   duration: 1.0
   b_relative: true
 
-motion2:
+motion6:
   ee: 0  ## arm ee
   pos: [-0.4,0,0]
   ori: [1,0,0,0]
   duration: 1.0
   b_relative: true
 
-motion3:
+motion7:
   ee: 0  ## arm ee
   pos: [0.4,0,0]
   ori: [1,0,0,0]
   duration: 1.0
   b_relative: true
 
-motion4:
+motion8:
   ee: 0  ## arm ee
   pos: [-0.1,-0.1,0]
   ori: [1,0,0,0]

@@ -3,6 +3,7 @@
 #include <my_robot_core/user_command.hpp>
 #include <Eigen/Dense>
 #include <iostream>
+#include <vector>
 
 typedef int FOOT_IDX;
 
@@ -197,7 +198,25 @@ class ManipulationCommand:  public UserCommand{
     double motion_period;
 };
 
+//----------------------------------
+struct TimeInterval{
+  double t_start;
+  double t_end;
+};
 
+class LocomanipulationCommand :  public UserCommand{
+  public:
+    bool com_motion_given;
+    bool foot_motion_given;
+    bool arm_motion_given;
+    std::vector< std::pair<TimeInterval, SWING_DATA> > foot_motion_command;
+    std::vector< std::pair<TimeInterval, POSE_DATA> > com_motion_command;
+    std::vector< std::pair<TimeInterval, POSE_DATA> > ee_motion_command;
+
+  public:
+    LocomanipulationCommand(){}
+    ~LocomanipulationCommand(){}  
+};
 //----------------------------------
 
 class ComMotionCommand :  public UserCommand{

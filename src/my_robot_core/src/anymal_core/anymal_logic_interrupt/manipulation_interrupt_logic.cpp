@@ -27,7 +27,8 @@ void ManipulationInterruptLogic::processInterrupts() {
           // set stateMachine sequences
           for(auto &it : script_user_cmd_deque_) {
             // set env for simulation
-            addStateCommand(ANYMAL_STATES::MANIPULATION, it);;
+            if(it.get_ee_idx() < 0) addStateCommand(ANYMAL_STATES::BALANCE, it);
+            else addStateCommand(ANYMAL_STATES::MANIPULATION, it);
           }
           addStateCommand(ANYMAL_STATES::BALANCE, ManipulationCommand());
 
