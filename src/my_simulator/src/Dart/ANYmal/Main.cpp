@@ -8,24 +8,50 @@
 
 void displayJointFrames(const dart::simulation::WorldPtr& world,
                         const dart::dynamics::SkeletonPtr& robot) {
-    for (std::size_t i = 0; i < robot->getNumBodyNodes(); ++i) {
-        dart::dynamics::BodyNode* bn = robot->getBodyNode(i);
-        for (std::size_t j = 0; j < bn->getNumChildJoints(); ++j) {
-            const dart::dynamics::Joint* joint = bn->getChildJoint(j);
-            const Eigen::Isometry3d offset =
-                joint->getTransformFromParentBodyNode();
+    // -- DISPLAY WHOLE JOINTS
+    // for (std::size_t i = 0; i < robot->getNumBodyNodes(); ++i) {
+    //     dart::dynamics::BodyNode* bn = robot->getBodyNode(i);
+    //     for (std::size_t j = 0; j < bn->getNumChildJoints(); ++j) {
+    //         const dart::dynamics::Joint* joint = bn->getChildJoint(j);
+    //         const Eigen::Isometry3d offset =
+    //             joint->getTransformFromParentBodyNode();
 
-            dart::gui::osg::InteractiveFramePtr frame =
-                std::make_shared<dart::gui::osg::InteractiveFrame>(
-                    bn, joint->getName() + "/frame", offset);
+    //         dart::gui::osg::InteractiveFramePtr frame =
+    //             std::make_shared<dart::gui::osg::InteractiveFrame>(
+    //                 bn, joint->getName() + "/frame", offset);
 
-            for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
-                                    dart::gui::osg::InteractiveTool::PLANAR})
-                for (std::size_t i = 0; i < 3; ++i)
-                    frame->getTool(type, i)->setEnabled(false);
+    //         for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
+    //                                 dart::gui::osg::InteractiveTool::PLANAR})
+    //             for (std::size_t i = 0; i < 3; ++i)
+    //                 frame->getTool(type, i)->setEnabled(false);
 
-            world->addSimpleFrame(frame);
-        }
+    //         world->addSimpleFrame(frame);
+    //     }
+    // }
+
+    // -- DISPLAY CERTAIN JOINTS
+    std::vector<std::string> JointNametoDisplay;
+    JointNametoDisplay.push_back("LF_HAA");
+    JointNametoDisplay.push_back("LH_HAA");
+    JointNametoDisplay.push_back("RF_HAA");
+    JointNametoDisplay.push_back("RH_HAA");
+
+    for(int i=0; i<JointNametoDisplay.size(); i++) {
+        dart::dynamics::Joint* joint = robot->getJoint(JointNametoDisplay[i]);
+        Eigen::Isometry3d offset = joint->getTransformFromParentBodyNode();
+        dart::dynamics::BodyNode* bn = joint->getParentBodyNode();
+
+        dart::gui::osg::InteractiveFramePtr frame =
+            std::make_shared<dart::gui::osg::InteractiveFrame>(
+                bn, joint->getName() + "/frame", offset);
+
+        for (const auto type : {dart::gui::osg::InteractiveTool::ANGULAR,
+                                dart::gui::osg::InteractiveTool::PLANAR})
+            for (std::size_t i = 0; i < 3; ++i)
+                frame->getTool(type, i)->setEnabled(false);
+
+        world->addSimpleFrame(frame);
+        
     }
 }
 
@@ -243,7 +269,7 @@ int main(int argc, char** argv) {
     // =========================================================================
     // Display Joints Frame
     // =========================================================================
-    // if (b_show_joint_frame) displayJointFrames(world, robot);
+    if (b_show_joint_frame) displayJointFrames(world, robot);
     if (b_show_link_frame) displayLinkFrames(world, robot);
 
     // =========================================================================

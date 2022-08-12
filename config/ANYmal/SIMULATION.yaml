@@ -1,7 +1,7 @@
 # --simulator settings
 servo_rate: 0.001 # !!this should be match with controller servo rate!!
 is_record: false
-show_joint_frame: false #false
+show_joint_frame: true #false
 show_link_frame: true #false
 plot_result: true # true
 
