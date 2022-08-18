@@ -7,11 +7,10 @@
 class ANYmalWbcSpecContainer;
 class ANYmalReferenceGeneratorContainer;
 
-class FullSupport : public StateMachine {
+class CoMStateMachine : public StateMachine {
  public:
-  FullSupport(const StateIdentifier state_identifier_in,
-              ANYmalReferenceGeneratorContainer* rg_container);
-  ~FullSupport();
+  CoMStateMachine(ANYmalReferenceGeneratorContainer* rg_container);
+  ~CoMStateMachine();
 
   void oneStep();
   void firstVisit();

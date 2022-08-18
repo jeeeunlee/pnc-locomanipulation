@@ -7,12 +7,11 @@
 class ANYmalWbcSpecContainer;
 class ANYmalReferenceGeneratorContainer;
 
-class Transition : public StateMachine {
+class Support : public StateMachine {
  public:
-  Transition(const StateIdentifier state_identifier_in,
-              ANYmalReferenceGeneratorContainer* rg_container, 
-              bool contact_start);
-  ~Transition();
+  Support(const StateIdentifier state_identifier_in,
+              ANYmalReferenceGeneratorContainer* rg_container);
+  ~Support();
 
   void oneStep();
   void firstVisit();
@@ -20,20 +19,13 @@ class Transition : public StateMachine {
   bool endOfState();
   void initialization(const YAML::Node& node);
 
-  void switchStateButtonTrigger() { state_switch_button_trigger_ = true; }
-
  protected:
   ANYmalStateProvider* sp_;
   ANYmalWbcSpecContainer* ws_container_;
   ANYmalReferenceGeneratorContainer* rg_container_;
 
-  double trans_duration_;
-
-  bool b_contact_start_;
-  bool state_switch_button_trigger_;
-
-  int moving_foot_link_idx_;
-  int moving_foot_idx_;
+  int foot_link_idx_; // link index
+  int foot_idx_; // foot index 0~3
 
   void _taskUpdate();
   void _weightUpdate();

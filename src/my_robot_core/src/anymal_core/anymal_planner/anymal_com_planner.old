@@ -103,7 +103,7 @@ void ANYmalCoMPlanner::planCentroidalMotion(const Eigen::Vector3d& pcom_goal,
     _buildCentroidalSystemMatrices();
 
     // motion period 
-    _setPeriods( _motion_command.get_motion_periods() );
+    _setPeriods( _motion_command.periods );
     std::cout<<"Tf_="<<Tf_<<", Tt1_="<<Tt1_<<", Ts_="<<Ts_<<", Tt2="<<Tt2_<<std::endl;
     std::cout<<"T1_="<<T1_<<", T2_="<<T2_<<", T3_="<<T3_<<std::endl;
 
@@ -180,6 +180,8 @@ void ANYmalCoMPlanner::_setConfigurations(const Eigen::Vector3d& pcom_goal,
 
     // next foot configuration
     swing_foot_link_idx_ = -1;
+    swing_foot_dpos_ = Eigen::VectorXd::Zero(3);
+    
     SWING_DATA md;  
     if( _motion_command.get_foot_motion(md) ) {
         swing_foot_link_idx_ = ANYmalFoot::LinkIdx[md.foot_idx];     
@@ -189,7 +191,7 @@ void ANYmalCoMPlanner::_setConfigurations(const Eigen::Vector3d& pcom_goal,
             swing_foot_dpos_ = Rwb*swing_foot_dpos_;
         }
     }
-    else swing_foot_dpos_ = Eigen::VectorXd::Zero(3);
+    else 
 }
 
 void ANYmalCoMPlanner::_setPeriods(const Eigen::VectorXd& periods){

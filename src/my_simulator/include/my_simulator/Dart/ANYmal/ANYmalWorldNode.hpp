@@ -44,8 +44,8 @@ class ANYmalWorldNode : public dart::gui::osg::WorldNode {
     double t_;
     double servo_rate_;
     int n_dof_;
-    double kp_;
-    double kd_;
+    Eigen::VectorXd kp_;
+    Eigen::VectorXd kd_;
     double torque_limit_;
 
     Eigen::MatrixXd R_ground_;

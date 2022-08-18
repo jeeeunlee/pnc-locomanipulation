@@ -9,12 +9,13 @@
 #include <my_utils/Math/hermite_quaternion_curve.hpp>
 
 class ANYmalStateProvider;
+class Task;
 
 // Object to manage common trajectory primitives
-class FootPosTrajectoryManager : public TrajectoryManagerBase {
+class FootTrajectoryManager : public TrajectoryManagerBase {
  public:
-  FootPosTrajectoryManager(RobotSystem* _robot);
-  ~FootPosTrajectoryManager();
+  FootTrajectoryManager(RobotSystem* _robot, Task* _pos, Task* _ori, int _foot_idx);
+  ~FootTrajectoryManager();
   
   int foot_idx_;
   int link_idx_;
@@ -34,12 +35,13 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   Eigen::Vector3d foot_ori_acc_des_; 
 
   // Updates the task desired values
-  void updateTask(const double& current_time, Task* _foot_pos_task);
-  void updateTask(const double& current_time, Task* _foot_pos_task, Task* _foot_ori_task);
+  void updatePosTask(const double& current_time);
+  void updateTask(const double& current_time);
 
   // Initialize the swing foot trajectory
   void setFootPosTrajectory(const double& _start_time,
-                            MotionCommand* _motion_cmd);
+                            const double& _end_time,
+                            const MotionCommand& _mc);
 
   // Computes the swing foot trajectory
   void updateFootPosTrajectory(const double& current_time);
@@ -48,13 +50,14 @@ class FootPosTrajectoryManager : public TrajectoryManagerBase {
   double getTrajDuration() {  return traj_duration_; };
   int getMovingFootIdx() { return foot_idx_; }
 
-  double getTrajHeight();
 
 
  private:
   double swing_height_; // swing height where the middle point will be located
-  MotionCommand* mp_curr_;
   Eigen::VectorXd zero_vel_;
+
+  Task* foot_pos_task_;
+  Task* foot_ori_task_;
 
   // Hermite Curve containers`
   HermiteCurveVec pos_traj_init_to_mid_;

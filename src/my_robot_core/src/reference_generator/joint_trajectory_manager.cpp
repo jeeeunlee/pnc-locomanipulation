@@ -1,11 +1,12 @@
 #include <my_robot_core/reference_generator/joint_trajectory_manager.hpp>
 
-JointTrajectoryManager::JointTrajectoryManager(RobotSystem* _robot)
+JointTrajectoryManager::JointTrajectoryManager(RobotSystem* _robot, Task* _joint)
     : TrajectoryManagerBase(_robot) {
   my_utils::pretty_constructor(3, "TrajectoryManager: JointPos");
 
   full_joint_dim_ = _robot->getNumDofs();
   active_joint_dim_ = _robot->getNumActuatedDofs();
+  joint_task_ = _joint;
 
   // default
   joint_dim_ = active_joint_dim_;
@@ -15,9 +16,9 @@ JointTrajectoryManager::JointTrajectoryManager(RobotSystem* _robot)
   joint_acc_des_ = Eigen::VectorXd::Zero(joint_dim_);
 }
 
-void JointTrajectoryManager::updateTask(const double&  current_time, Task* joint_task) {
+void JointTrajectoryManager::updateTask(const double&  current_time) {
   updateJointTrajectory(current_time);
-  joint_task->updateTask(joint_pos_des_, joint_vel_des_, joint_acc_des_);
+  joint_task_->updateTask(joint_pos_des_, joint_vel_des_, joint_acc_des_);
 }
 
 void JointTrajectoryManager::setJointTrajectory(const double& _start_time, 

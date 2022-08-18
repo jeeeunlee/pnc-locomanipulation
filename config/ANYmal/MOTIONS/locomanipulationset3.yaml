@@ -1,0 +1,31 @@
+num_motion: 4
+
+# arm ee = -2; com = -1;
+motion0:
+  ee: [-2]  ## arm motion
+  pos: [0.5,0.5,0.05]
+  ori: [1,0,0,0]
+  periods: [0.0, 10.0]
+  b_relative: true
+
+motion1:
+  ee: [-1] ## com motion
+  pos: [0.05,0.05,-0.05]
+  ori: [1,0,0,0]
+  periods: [0.0, 2.0]
+  b_relative: true
+
+motion2:
+  ee: [-1] ## com motion
+  pos: [0.2,0.2,0.1]
+  ori: [1,0,0,0]
+  periods: [2.0, 6.0]
+  b_relative: true
+
+motion3:
+  ee: [-1] ## com motion
+  pos: [0.2,0.2,0.1]
+  ori: [1,0,0,0]
+  periods: [6.0, 10.0]
+  b_relative: true
+

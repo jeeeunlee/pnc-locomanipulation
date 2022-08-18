@@ -7,10 +7,10 @@
 class ANYmalWbcSpecContainer;
 class ANYmalReferenceGeneratorContainer;
 
-class Manipulation : public StateMachine {
+class Swing : public StateMachine {
  public:
-  Manipulation(ANYmalReferenceGeneratorContainer* rg_container);
-  ~Manipulation();
+  Swing(int _foot_idx, ANYmalReferenceGeneratorContainer* rg_container );
+  ~Swing();
 
   void oneStep();
   void firstVisit();
@@ -18,10 +18,18 @@ class Manipulation : public StateMachine {
   bool endOfState();
   void initialization(const YAML::Node& node);
 
+  void switchStateButtonTrigger() { state_switch_button_trigger_ = true; }
+
  protected:
   ANYmalStateProvider* sp_;
   ANYmalWbcSpecContainer* ws_container_;
   ANYmalReferenceGeneratorContainer* rg_container_;
+
+  int foot_link_idx_; // link index
+  int foot_idx_; // foot index 0~3
+
+
+  bool state_switch_button_trigger_;
 
   void _taskUpdate();
   void _weightUpdate();

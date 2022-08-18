@@ -13,7 +13,7 @@ class ANYmalStateProvider;
 // Object to manage common trajectory primitives
 class CoMTrajectoryManager : public TrajectoryManagerBase {
  public:
-  CoMTrajectoryManager(RobotSystem* _robot);
+  CoMTrajectoryManager(RobotSystem* _robot,  Task* _com);
   ~CoMTrajectoryManager();
   
 
@@ -24,7 +24,7 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
   Eigen::Vector3d com_acc_des_;
 
   // Updates the task desired values
-  void updateTask(const double& current_time, Task* _com_pos_task);
+  void updateTask(const double& current_time);
 
   // Initialize the swing com trajectory
   void setCoMTrajectory(double  _start_time,
@@ -43,6 +43,7 @@ class CoMTrajectoryManager : public TrajectoryManagerBase {
 
  private:
   Eigen::VectorXd zero_vel_;
+  Task* com_task_;
 
   // Hermite Curve containers
   HermiteCurveVec pos_traj;

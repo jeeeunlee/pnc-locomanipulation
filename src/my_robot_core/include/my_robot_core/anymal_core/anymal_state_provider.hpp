@@ -32,10 +32,23 @@ class ANYmalStateProvider {
     
     // 
     double curr_time;
+    double motion_start_time;
     int curr_state;
-    MotionCommand curr_motion_command;
-    ManipulationCommand curr_manipulation_command;
     int num_state; // num of remaining states to run
+
+    std::array< int, ANYmal::n_leg> feet_curr_state;
+    std::array<MotionCommand, ANYmal::n_leg> feet_motion_command;
+    std::array<int,ANYmal::n_leg> num_feet_state;
+
+    int com_state;
+    MotionCommand com_motion_command;
+    int num_com_state;
+    
+    int arm_state;
+    MotionCommand ee_motion_command;
+    int num_ee_state;
+
+    
     //
 
     Eigen::VectorXd q;

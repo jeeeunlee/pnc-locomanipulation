@@ -6,7 +6,7 @@
 // Object to manage common trajectory primitives
 class JointTrajectoryManager : public TrajectoryManagerBase {
  public:
-  JointTrajectoryManager(RobotSystem* _robot);
+  JointTrajectoryManager(RobotSystem* _robot, Task* _joint);
   ~JointTrajectoryManager(){};
 
   int full_joint_dim_;
@@ -21,7 +21,7 @@ class JointTrajectoryManager : public TrajectoryManagerBase {
   Eigen::VectorXd joint_acc_des_;
 
   // Updates the task desired values
-  void updateTask(const double&  current_time, Task* _joint_task);
+  void updateTask(const double&  current_time);
 
   // Initialize the joint trajectory
   void setJointTrajectory(const double& _start_time,
@@ -31,5 +31,7 @@ class JointTrajectoryManager : public TrajectoryManagerBase {
                           const double& _duration);
                           
   void updateJointTrajectory(const double& current_time);
+ private:
+  Task* joint_task_;
   
 };

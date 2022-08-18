@@ -18,7 +18,7 @@ class ANYmalReferenceGeneratorContainer {
   ANYmalWbcSpecContainer* ws_container_;
 
   // Trajectory Managers
-  FootPosTrajectoryManager* foot_trajectory_manager_;
+  std::array<FootTrajectoryManager*,ANYmal::n_leg> foot_trajectory_managers_;
   CoMTrajectoryManager* com_trajectory_manager_;
   JointTrajectoryManager* joint_trajectory_manager_;
   BaseOriTrajectoryManager* base_ori_trajectory_manager_;
@@ -26,11 +26,11 @@ class ANYmalReferenceGeneratorContainer {
 
   // QP weight / max force transition manager
   SmoothTransitionManager* max_normal_force_manager_;
-  SmoothTransitionManager* W_xddot_manager_;
-  SmoothTransitionManager* W_rf_manager_;
+  SmoothTransitionManager* w_xddot_manager_;
+  SmoothTransitionManager* w_rf_manager_;
 
   // Planner
-  ANYmalCoMPlanner* com_sequence_planner_;
+  // ANYmalCoMPlanner* com_sequence_planner_;
 
 
 };

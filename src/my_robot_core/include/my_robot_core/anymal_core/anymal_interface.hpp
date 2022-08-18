@@ -96,7 +96,4 @@ class ANYmalInterface : public EnvInterface {
     
     bool IsPlannerUpdated();
     bool IsFootPlannerUpdated();
-
-    int getCurrentMovingFootLinkIdx();
-    int getCurrentMovingFootIdx();
 };

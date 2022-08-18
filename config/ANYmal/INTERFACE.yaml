@@ -4,4 +4,4 @@
 # motion_script: config/ANYmal/MOTIONS/walkset.yaml
 
 test_name: manipulation_test
-motion_script: config/ANYmal/MOTIONS/manipulationset.yaml
+motion_script: config/ANYmal/MOTIONS/locomanipulationset.yaml

@@ -106,19 +106,19 @@ void ANYmalWorldNode::customPreStep() {
     // --------------------------------------------------------------
     ((ANYmalInterface*)interface_)->getCommand(sensor_data_, command_);    
 
-    trq_cmd_.setZero();
-    for(int i=0; i< ANYmal::n_adof; ++i) {
-        trq_cmd_[ANYmal::idx_adof[i]] =
-                          command_->jtrq[i] + 
-                          kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
-                          kp_ * (command_->q[i] - sensor_data_->q[i]);
-    }
-
+    // trq_cmd_.setZero();
     // for(int i=0; i< ANYmal::n_adof; ++i) {
-    //     trq_cmd_[ANYmal::idx_adof[i]] = 
-    //                       kd_ * (command_->qdot[i] - sensor_data_->qdot[i]) +
-    //                       kp_ * (command_->q[i] - sensor_data_->q[i]);
+    //     trq_cmd_[ANYmal::idx_adof[i]] =
+    //                       command_->jtrq[i] + 
+    //                       kd_[i] * (command_->qdot[i] - sensor_data_->qdot[i]) +
+    //                       kp_[i] * (command_->q[i] - sensor_data_->q[i]);
     // }
+
+    for(int i=0; i< ANYmal::n_adof; ++i) {
+        trq_cmd_[ANYmal::idx_adof[i]] = 
+                          kd_[i] * (command_->qdot[i] - sensor_data_->qdot[i]) +
+                          kp_[i] * (command_->q[i] - sensor_data_->q[i]);
+    }
 
 
     static int init_count = 0;   
@@ -190,7 +190,7 @@ void ANYmalWorldNode::setFrictionCoeff(){
     // =========================================================================
     // Friction & Restitution Coefficient
     // =========================================================================
-    ground_->getBodyNode("ground_link")->setFrictionCoeff(0.7);
+    ground_->getBodyNode("ground_link")->setFrictionCoeff(1.0);
 
     robot_->getBodyNode(ANYmalFoot::LinkIdx[ANYmalFoot::RF])->setFrictionCoeff(coef_fric_[ANYmalFoot::RF]);
     robot_->getBodyNode(ANYmalFoot::LinkIdx[ANYmalFoot::LF])->setFrictionCoeff(coef_fric_[ANYmalFoot::LF]);
@@ -453,9 +453,12 @@ void ANYmalWorldNode::UpdateContactWrenchData_() {
                 wrench_global_list[ii] += w_w;  
 
             }  
-        }      
+        }
+        // my_utils::pretty_print(wrench_global_list[ii],std::cout,"wrench_global_list");
     }
 
-    sensor_data_->foot_wrench = wrench_local_list;  
-    // sensor_data_->foot_wrench = wrench_global_list;
+    // sensor_data_->foot_wrench = wrench_local_list;  
+    sensor_data_->foot_wrench = wrench_global_list;
+
+
 }

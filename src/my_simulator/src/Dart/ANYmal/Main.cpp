@@ -77,9 +77,9 @@ void displayLinkFrames(const dart::simulation::WorldPtr& world,
     std::vector<std::string> LinkNametoDisplay;
     LinkNametoDisplay.clear();
     LinkNametoDisplay.push_back("LF_FOOT");
-    LinkNametoDisplay.push_back("LH_FOOT");
-    LinkNametoDisplay.push_back("RF_FOOT");
-    LinkNametoDisplay.push_back("RH_FOOT");
+    // LinkNametoDisplay.push_back("LH_FOOT");
+    // LinkNametoDisplay.push_back("RF_FOOT");
+    // LinkNametoDisplay.push_back("RH_FOOT");
     LinkNametoDisplay.push_back("base");
 
     LinkNametoDisplay.push_back("ur3_base");

@@ -1,2 +1,1 @@
-#include <my_robot_core/anymal_core/anymal_logic_interrupt/manipulation_interrupt_logic.hpp>
-#include <my_robot_core/anymal_core/anymal_logic_interrupt/walking_interrupt_logic.hpp>
+#include <my_robot_core/anymal_core/anymal_logic_interrupt/locomanipulation_interrupt_logic.hpp>

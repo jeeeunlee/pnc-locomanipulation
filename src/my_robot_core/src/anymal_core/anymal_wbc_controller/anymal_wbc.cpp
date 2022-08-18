@@ -44,27 +44,34 @@ void ANYmalWBC::_PreProcessing_Command() {
   grav_ = robot_->getGravity();
   coriolis_ = robot_->getCoriolis();
 
-  // Grab Variables from the container.
-  wbc_param_->W_qddot_ = ws_container_->W_qddot_;
-  wbc_param_->W_xddot_ = ws_container_->W_xddot_;
-  wbc_param_->W_rf_ = ws_container_->W_rf_;
-
-  // Clear out local pointers
-  task_list_.clear();
-  contact_list_.clear();
-
   // Update task and contact list pointers from container object
-  for (int i = 0; i < ws_container_->task_list_.size(); i++) {
-    task_list_.push_back(ws_container_->task_list_[i]);
+  task_list_.clear();  
+  for (int i = 0; i < ANYMAL_TASK::n_task; i++) {
+    if(ws_container_->b_task_list_[i])
+      task_list_.push_back(ws_container_->task_container_[i]);
   }
-  for (int i = 0; i < ws_container_->contact_list_.size(); i++) {
-    contact_list_.push_back(ws_container_->contact_list_[i]);
+  contact_list_.clear();  
+  for (int i = 0; i < ANYmal::n_leg; i++) {
+    if(ws_container_->b_feet_contact_list_[i]) {
+      ws_container_->feet_contacts_[i]->updateContactSpec();
+      contact_list_.push_back(ws_container_->feet_contacts_[i]);
+    }
   }
 
-  // Update Contact Spec
-  for (int i = 0; i < contact_list_.size(); i++) {
-    contact_list_[i]->updateContactSpec();
+  // update weight params
+  Eigen::VectorXd W_xddot = Eigen::VectorXd::Zero(0);
+  Eigen::VectorXd W_rf = Eigen::VectorXd::Zero(0);
+  for (int i = 0; i < ANYmal::n_leg; i++) {  
+    if(ws_container_->b_feet_contact_list_[i]) {
+      W_xddot= my_utils::vStack(W_xddot, 
+            ws_container_->feet_weights_[i]->getWxddot());
+      W_rf = my_utils::vStack(W_rf, 
+            ws_container_->feet_weights_[i]->getWrf());
+    }
   }
+  wbc_param_->W_qddot_ = ws_container_->W_qddot_;
+  wbc_param_->W_xddot_ = W_xddot;
+  wbc_param_->W_rf_ = W_rf;
 }
 
 void ANYmalWBC::getCommand(void* _cmd) {

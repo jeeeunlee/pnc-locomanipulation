@@ -13,13 +13,25 @@ ANYmalStateProvider::ANYmalStateProvider(RobotSystem* _robot) {
     robot_ = _robot;
 
     //
-    curr_time = 0.;    
+    curr_time = 0.;
+    motion_start_time = 0.;
     curr_state = -1;
-    curr_motion_command = MotionCommand();    
-    curr_manipulation_command = ManipulationCommand();
     num_state = 0;
-    //
 
+    //* -------------- ctrl arch ---------------*/
+    for(int i=0;i<ANYmal::n_leg;++i){
+        feet_motion_command[i] = MotionCommand();
+        feet_curr_state[i]=-1;
+        num_feet_state[i] = 0;
+    }    
+    com_motion_command = MotionCommand();
+    com_state=-1;
+    num_com_state=0;
+    ee_motion_command = MotionCommand();  
+    arm_state=-1; 
+    num_ee_state=0;
+    
+    /* -------------- states ---------------*/
     q = Eigen::VectorXd::Zero(ANYmal::n_dof);
     qdot = Eigen::VectorXd::Zero(ANYmal::n_dof);
     q_des = Eigen::VectorXd::Zero(ANYmal::n_dof);

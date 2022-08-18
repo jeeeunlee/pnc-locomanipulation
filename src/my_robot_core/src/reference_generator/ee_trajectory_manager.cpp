@@ -2,11 +2,14 @@
 #include <my_robot_core/reference_generator/ee_trajectory_manager.hpp>
 #include <my_robot_core/anymal_core/anymal_state_provider.hpp>
 
-EETrajectoryManager::EETrajectoryManager(RobotSystem* _robot)
-                        : TrajectoryManagerBase(_robot) {
+EETrajectoryManager::EETrajectoryManager(RobotSystem* _robot,
+ Task* _pos, Task* _ori): TrajectoryManagerBase(_robot) {
   my_utils::pretty_constructor(3, "TrajectoryManager: ee");
 
   sp_ = ANYmalStateProvider::getStateProvider(robot_);
+  ee_pos_task_ = _pos;
+  ee_ori_task_ = _ori;
+  link_idx_ = ANYmalEE::EEarm;
 
   // Initialize member variables
   ee_pos_des_.setZero();
@@ -22,59 +25,35 @@ EETrajectoryManager::EETrajectoryManager(RobotSystem* _robot)
 
 EETrajectoryManager::~EETrajectoryManager() {}
 
-void EETrajectoryManager::updateTask(const double& current_time, 
-                                           Task* _ee_pos_task) {
+void EETrajectoryManager::updatePosTask(const double& current_time) {
   updateEETrajectory(current_time);
-  _ee_pos_task->updateTask(ee_pos_des_, 
+  ee_pos_task_->updateTask(ee_pos_des_, 
                             ee_vel_des_, 
                             ee_acc_des_);
 }
-void EETrajectoryManager::updateTask(const double& current_time,
-                                           Task* _ee_pos_task,
-                                           Task* _ee_ori_task) {
+void EETrajectoryManager::updateTask(const double& current_time) {
   updateEETrajectory(current_time);
-  _ee_pos_task->updateTask(ee_pos_des_, 
+  ee_pos_task_->updateTask(ee_pos_des_, 
                             ee_vel_des_, 
                             ee_acc_des_);                                
-  _ee_ori_task->updateTask(ee_ori_pos_des_, 
+  ee_ori_task_->updateTask(ee_ori_pos_des_, 
                             ee_ori_vel_des_, 
                             ee_ori_acc_des_);
-
   // my_utils::pretty_print(ee_pos_des_, std::cout, "ee_pos_traj_");
-}
-
-void EETrajectoryManager::setEETrajectory(const double& _start_time,
-                                          const double& _motion_period){
-  ManipulationCommand motion_cmd(ANYmalBodyNode::ur3_ee_link, 
-                                POSE_DATA(), 
-                                _motion_period);
-  setEETrajectory(_start_time, &motion_cmd);
 }
 
 // Initialize the swing ee trajectory
 void EETrajectoryManager::setEETrajectory(const double& _start_time,
-                                            ManipulationCommand* _motion_cmd) {
-  POSE_DATA motion_cmd_data;
-  Eigen::VectorXd pos_dev_b;
-  int ee_idx_ = 0;
-  link_idx_ = ANYmalBodyNode::ur3_ee_link; 
+                                          const double& _end_time,
+                                          MotionCommand _motion_cmd) {
 
-  if( _motion_cmd->get_ee_motion(motion_cmd_data)) {
-    ee_idx_ = _motion_cmd->get_ee_idx(); 
-    link_idx_ = ANYmalEE::EEarm;
-    traj_duration_ = _motion_cmd->get_motion_period(); 
-    pos_dev_b = motion_cmd_data.pos;
-    is_base_frame_ = motion_cmd_data.is_baseframe;
-  } else {
-    traj_duration_ = 1.0;
-    pos_dev_b = Eigen::VectorXd::Zero(3);
-    is_base_frame_=true;
-  }
+  is_base_frame_ = _motion_cmd.dpose.is_baseframe;
+  Eigen::VectorXd pos_dev_b = _motion_cmd.dpose.pos; 
+  my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b_ee");
 
-  
-  traj_duration_ = traj_duration_ > 0 ? traj_duration_ : 0.01;
   traj_start_time_ = _start_time;
-  traj_end_time_ = traj_start_time_ + traj_duration_;
+  traj_end_time_ = _end_time;
+  traj_duration_ = traj_end_time_ - traj_start_time_;  
 
   //-----------------------------------------
   //            SET EE POS
@@ -89,11 +68,7 @@ void EETrajectoryManager::setEETrajectory(const double& _start_time,
   else // absolute coordinate
     ee_pos_des_ = ee_pos_ini_ + pos_dev_b;
   pos_hermite_curve_.initialize(ee_pos_ini_, zero_vel_, 
-                  ee_pos_des_, zero_vel_, traj_duration_);
-
-  my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b_ee");
-  // my_utils::pretty_print(ee_pos_ini_,std::cout,"ee_pos_ini_");
-  // my_utils::pretty_print(ee_pos_des_,std::cout,"ee_pos_des_"); 
+                  ee_pos_des_, zero_vel_, traj_duration_);  
 
   //-----------------------------------------
   //            SET EE ORI

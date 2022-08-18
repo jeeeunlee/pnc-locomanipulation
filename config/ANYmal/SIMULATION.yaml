@@ -14,11 +14,14 @@ initial_leg_config: [0.1, 0.6, 1.0]
 initial_arm_config: [0.2, -2.0, 1.5, -1.0, -1.2, 0.0]
 
 contact_params:
-  friction: [0.7, 0.7, 0.7, 0.7] # 0:LF 1:LH 2:RF 3:RH
+  # friction: [0.7, 0.7, 0.7, 0.7] # 0:LF 1:LH 2:RF 3:RH
+  friction: [0.9, 0.9, 0.9, 0.9]
 
 # --controller settings
 control_configuration:
-  kp: 400 #225 #100
-  kd: 20 #15 #10
+  # kp: 400 #400 #225 #100
+  # kd: 100 #20 #15 #10
+  kp: [ 600, 600, 600, 400, 400, 400, 400, 400, 400, 400, 400, 400, 100, 100, 100, 100, 100, 9]
+  kd: [ 100, 100, 100, 40, 40, 40, 40, 40, 40, 40, 40, 40, 20, 20, 20, 20, 20, 3 ]
   torque_limit: 80
 

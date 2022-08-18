@@ -9,10 +9,9 @@ typedef int StateIdentifier;
 
 class StateMachine {
  public:
-  StateMachine(const StateIdentifier state_identifier_in, RobotSystem* _robot) {
+  StateMachine(RobotSystem* _robot) {
     robot_ = _robot;
     state_machine_time_ = 0.;
-    state_identity_ = state_identifier_in;
     ctrl_start_time_= 0.;
     ctrl_end_time_ = 0.;
     ctrl_duration_ = 0.;
@@ -27,7 +26,6 @@ class StateMachine {
   virtual bool endOfState() = 0;
   virtual void initialization(const YAML::Node& node) = 0;
 
-  StateIdentifier getStateIdentity() { return state_identity_; }
 
  protected:
   StateIdentifier state_identity_;  // Unique integer of this state

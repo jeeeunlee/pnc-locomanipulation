@@ -35,10 +35,10 @@ ANYmalInterface::ANYmalInterface() : EnvInterface() {
 
     // control_architecture_ = new ANYmalWblcControlArchitecture(robot_);
     // control_architecture_ = new ANYmalMpcControlArchitecture(robot_);     
-    control_architecture_ = new ANYmalManipulationControlArchitecture(robot_);     
+    control_architecture_ = new ANYmalLocoManipulationControlArchitecture(robot_);     
 
     // interrupt_ = new WalkingInterruptLogic(control_architecture_);  
-    interrupt_ = new ManipulationInterruptLogic(control_architecture_);   
+    interrupt_ = new LocoManipulationInterruptLogic(control_architecture_);   
 
     // read from INTERFACE.yaml
     _ParameterSetting(cfg);
@@ -190,16 +190,6 @@ void ANYmalInterface::GetCoMPlans(Eigen::VectorXd& com_pos_ini,
                                     Eigen::VectorXd& com_pos_goal) {
     com_pos_ini = sp_->com_pos_init;
     com_pos_goal = sp_->com_pos_target;
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-
-int ANYmalInterface::getCurrentMovingFootLinkIdx() {
-    int foot_idx =  sp_-> curr_motion_command.get_moving_foot(); 
-    return ANYmalFoot::LinkIdx[foot_idx];
-}
-int ANYmalInterface::getCurrentMovingFootIdx() {
-    return sp_-> curr_motion_command.get_moving_foot();
 }
 
 

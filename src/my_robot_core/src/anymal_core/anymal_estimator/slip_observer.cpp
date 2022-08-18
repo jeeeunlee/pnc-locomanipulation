@@ -86,7 +86,9 @@ void SlipObserver::updateContact(){
     // one time update
     if( t_updated_ < sp_->curr_time ) {
         t_updated_ = sp_->curr_time;
-        b_swing_phase_ = (sp_->curr_state == ANYMAL_STATES::SWING);
+        b_swing_phase_ = false;
+        for( int foot_idx(0); foot_idx<ANYmal::n_leg; foot_idx++ )
+            b_swing_phase_ = b_swing_phase_ || ( sp_->feet_curr_state[foot_idx] == ANYMAL_FOOT_STATES::SWING );
 
         // update kinematics
         q_ = robot_->getQ();
@@ -99,11 +101,10 @@ void SlipObserver::updateContact(){
         coriolis_ = robot_->getCoriolis();       
 
         // update contact
-        initContact();
-        swing_foot_idx_ = sp_->curr_motion_command.get_moving_foot();        
+        initContact();      
         for( int foot_idx(0); foot_idx<ANYmal::n_leg; foot_idx++ ){
             ws_container_->feet_contacts_[foot_idx]->updateContactSpec();
-            if( b_swing_phase_ && swing_foot_idx_ == foot_idx ) {
+            if( sp_->feet_curr_state[foot_idx] == ANYMAL_FOOT_STATES::SWING ) {
                     b_foot_contact_map_[foot_idx] = false; }            
         }
 

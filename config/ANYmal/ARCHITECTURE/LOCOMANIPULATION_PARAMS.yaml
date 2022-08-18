@@ -1,0 +1,48 @@
+contact_params:
+    #friction: [0.7, 0.7, 0.7, 0.7]
+    friction: [0.9, 0.9, 0.9, 0.9]
+
+state_swing_params:
+    # Percent of end_time to check if there are early contacts 
+    swing_time_percent_early_contact_check: 0.5 
+    # Exit swing when 10 Newtons have been detected on the foot contact sensor
+    early_contact_force_threshold: 10 
+
+qp_weights_params:
+    w_qddot: 100. #1000
+
+    w_xddot: 10.
+    w_xddot_z_contact: 10
+    w_xddot_z_nocontact: 10
+
+    w_rf: 0.01
+    w_rf_z_contact: 0.00001 #0.01    
+    w_rf_z_nocontact: 1 #0.5
+    
+    max_rf_z: 1000
+    max_rf_z_nocontact: 10
+
+controller_params:
+    # Enable torque limits
+    enable_torque_limits: true
+    torque_limit: 80 #4.5
+    # Integration_parameters
+    velocity_freq_cutoff: 2.0 #Hz
+    position_freq_cutoff: 1.0 #Hz
+    max_position_error: 0.2 # radians
+    # kp: [ 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 9]
+    # kd: [  20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 3 ]
+
+    # kp: [ 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+    # kd: [  12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12 ]
+    
+    kp: [ 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 100, 100, 100, 100, 100, 9]
+    kd: [ 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 20, 20, 20, 20, 20, 3 ]
+
+    # kp: [ 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+    # kd: [ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+
+    # kp: [ 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,  100, 100, 100, 100, 100, 9]
+    # kd: [ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 10, 10, 10, 10, 10, 3]
+
+

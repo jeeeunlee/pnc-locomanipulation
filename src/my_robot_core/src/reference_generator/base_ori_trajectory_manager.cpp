@@ -1,10 +1,10 @@
 #include <my_robot_core/reference_generator/base_ori_trajectory_manager.hpp>
 
-BaseOriTrajectoryManager::BaseOriTrajectoryManager(RobotSystem* _robot)
+BaseOriTrajectoryManager::BaseOriTrajectoryManager(RobotSystem* _robot, Task* _baseori)
                         : TrajectoryManagerBase(_robot) {
   my_utils::pretty_constructor(3, "TrajectoryManager: Base Ori");
 
-  
+  base_ori_task_ = _baseori;
   base_pos_ini_ = Eigen::VectorXd::Zero(4);
   base_quat_ini_ = Eigen::Quaternion<double> (1,0,0,0);;
   base_quat_des_ = Eigen::Quaternion<double> (1,0,0,0);;
@@ -18,10 +18,9 @@ BaseOriTrajectoryManager::BaseOriTrajectoryManager(RobotSystem* _robot)
 
 BaseOriTrajectoryManager::~BaseOriTrajectoryManager() {}
 
-void BaseOriTrajectoryManager::updateTask(const double& current_time, 
-                                          Task* _base_ori_task) {
+void BaseOriTrajectoryManager::updateTask(const double& current_time) {
   updateBaseOriTrajectory(current_time);
-  _base_ori_task->updateTask(base_ori_pos_des_, 
+  base_ori_task_->updateTask(base_ori_pos_des_, 
                             base_ori_vel_des_, 
                             base_ori_acc_des_);
 }

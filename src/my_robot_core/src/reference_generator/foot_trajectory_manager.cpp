@@ -2,11 +2,16 @@
 #include <my_robot_core/reference_generator/foot_trajectory_manager.hpp>
 #include <my_robot_core/anymal_core/anymal_state_provider.hpp>
 
-FootPosTrajectoryManager::FootPosTrajectoryManager(RobotSystem* _robot)
-                        : TrajectoryManagerBase(_robot) {
-  my_utils::pretty_constructor(3, "TrajectoryManager: FootPos");
+FootTrajectoryManager::FootTrajectoryManager(
+  RobotSystem* _robot, Task* _pos, Task* _ori, int _foot_idx)
+  : TrajectoryManagerBase(_robot) {
+  my_utils::pretty_constructor(3, "TrajectoryManager: Foot pos and ori");
 
   sp_ = ANYmalStateProvider::getStateProvider(robot_);
+  foot_pos_task_ = _pos;
+  foot_ori_task_ = _ori;
+  foot_idx_ = _foot_idx;
+  link_idx_ = ANYmalFoot::LinkIdx[foot_idx_];
 
   // Initialize member variables
   foot_pos_des_.setZero();
@@ -22,56 +27,39 @@ FootPosTrajectoryManager::FootPosTrajectoryManager(RobotSystem* _robot)
   swing_height_ = 0.04;  // 4cm default
 }
 
-FootPosTrajectoryManager::~FootPosTrajectoryManager() {}
+FootTrajectoryManager::~FootTrajectoryManager() {}
 
-void FootPosTrajectoryManager::updateTask(const double& current_time, 
-                                           Task* _foot_pos_task) {
+void FootTrajectoryManager::updatePosTask(const double& current_time) {
   updateFootPosTrajectory(current_time);
-  _foot_pos_task->updateTask(foot_pos_des_, 
+  foot_pos_task_->updateTask(foot_pos_des_, 
                             foot_vel_des_, 
                             foot_acc_des_);
 }
-void FootPosTrajectoryManager::updateTask(const double& current_time,
-                                           Task* _foot_pos_task,
-                                           Task* _foot_ori_task) {
+
+void FootTrajectoryManager::updateTask(const double& current_time) {
   updateFootPosTrajectory(current_time);
-  _foot_pos_task->updateTask(foot_pos_des_, 
+  foot_pos_task_->updateTask(foot_pos_des_, 
                             foot_vel_des_, 
                             foot_acc_des_);                                
-  _foot_ori_task->updateTask(foot_ori_pos_des_, 
+  foot_ori_task_->updateTask(foot_ori_pos_des_, 
                             foot_ori_vel_des_, 
                             foot_ori_acc_des_);
-
-  // my_utils::pretty_print(foot_pos_des_, std::cout, "foot_pos_traj_");
 }
 
 // Initialize the swing foot trajectory
-void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
-                                            MotionCommand* _motion_cmd) {
-  SWING_DATA motion_cmd_data;
-  Eigen::VectorXd pos_dev_b;
-  foot_idx_ = -1;
-  link_idx_ = -1;
-  if(_motion_cmd->get_foot_motion(motion_cmd_data)) {
-      // if com motion command is given
-      foot_idx_ = motion_cmd_data.foot_idx;
-      link_idx_ = ANYmalFoot::LinkIdx[foot_idx_];
-      traj_duration_ = _motion_cmd->get_swing_period();
-      pos_dev_b = motion_cmd_data.dpose.pos;
-      swing_height_ = motion_cmd_data.swing_height;
-      is_base_frame_ = motion_cmd_data.dpose.is_baseframe;
-      std::cout<<" setFootPosTrajectory " << foot_idx_<< ", " << link_idx_<< std::endl;
-  } else {
-    // heuristic computation
-    std::cout<< "NOOOOO!! no foot motion cmd?" << std::endl;
-    traj_duration_ = 1.0;
-    pos_dev_b = Eigen::VectorXd::Zero(3);
-    swing_height_ = 0.5;
-    is_base_frame_=true;
-  }
-  traj_duration_ = traj_duration_ > 0 ? traj_duration_ : 0.01;
+void FootTrajectoryManager::setFootPosTrajectory(
+                              const double& _start_time,
+                              const double& _end_time,
+                              const MotionCommand& _mc) { 
+  // TODO
+  swing_height_ = 0.1;
+  is_base_frame_ = _mc.dpose.is_baseframe;
+  Eigen::VectorXd pos_dev_b = _mc.dpose.pos;  
+  my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b");  
+
   traj_start_time_ = _start_time;
-  traj_end_time_ = traj_start_time_ + traj_duration_;
+  traj_end_time_ = _end_time;
+  traj_duration_ = traj_end_time_ - traj_start_time_;  
 
   //-----------------------------------------
   //            SET FOOT POS
@@ -81,18 +69,12 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
   foot_rot_ini_ = robot_->getBodyNodeIsometry(link_idx_).linear();
 
   if(is_base_frame_) {
-    // TODOJE : ? getBodyNodeIsometry(ANYmalBodyNode::base)
-    Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(ANYmalBodyNode::base).linear(); 
     // Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
+    Eigen::MatrixXd R_wb = robot_->getBodyNodeIsometry(ANYmalBodyNode::base).linear();
     foot_pos_des_ = foot_pos_ini_ + R_wb*pos_dev_b;
   }
   else // absolute coordinate
-    foot_pos_des_ = foot_pos_ini_ + pos_dev_b;
-
-  my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b");
-  // my_utils::pretty_print(foot_pos_ini_,std::cout,"foot_pos_ini_");
-  // my_utils::pretty_print(foot_pos_des_,std::cout,"foot_pos_des_");
-  
+    foot_pos_des_ = foot_pos_ini_ + pos_dev_b; 
   setSwingPosCurve(foot_pos_ini_,foot_pos_des_,swing_height_);
 
   //-----------------------------------------
@@ -107,18 +89,10 @@ void FootPosTrajectoryManager::setFootPosTrajectory(const double& _start_time,
   sp_->foot_pos_init = foot_pos_ini_;
   sp_->foot_pos_target = foot_pos_des_;
   sp_->check_foot_planner_updated ++; // draw plot on the simulation
-
-}
-
-double FootPosTrajectoryManager::getTrajHeight() {
-  // R bw *(p_curr - p_init)
-  Eigen::VectorXd pos_dev_b 
-    = foot_rot_ini_.transpose() * (foot_pos_des_ - foot_pos_ini_);
-  return pos_dev_b[2];
 }
 
 // Computes the swing foot trajectory
-void FootPosTrajectoryManager::updateFootPosTrajectory(const double& current_time) {
+void FootTrajectoryManager::updateFootPosTrajectory(const double& current_time) {
   double t = (current_time - traj_start_time_) ;
   quat_hermite_curve_.evaluate(t, foot_quat_des_);
   quat_hermite_curve_.getAngularVelocity(t, foot_ori_vel_des_);
@@ -135,8 +109,6 @@ void FootPosTrajectoryManager::updateFootPosTrajectory(const double& current_tim
     foot_vel_des_ = pos_traj_mid_to_end_.evaluateFirstDerivative(t);
     foot_acc_des_ = pos_traj_mid_to_end_.evaluateSecondDerivative(t);
   }
-  //0112 my_utils::saveVector(foot_pos_des_, "foot_pos_des_");
-  // //0112 my_utils::saveVector(foot_quat_des_, "foot_quat_des_");
 
   // my_utils::saveVector(foot_pos_des_, "foot_pos_des_");
   // my_utils::saveVector(foot_vel_des_, "foot_vel_des_");
@@ -148,7 +120,7 @@ void FootPosTrajectoryManager::updateFootPosTrajectory(const double& current_tim
 
 }
 
-void FootPosTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 
+void FootTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini, 
                                               const Eigen::VectorXd& foot_pos_des,
                                               const double& swing_height) {
   // Set Middle Swing Position/Velocity for Swing

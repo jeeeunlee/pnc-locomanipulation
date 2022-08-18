@@ -1,11 +1,12 @@
 #include <my_robot_core/reference_generator/com_trajectory_manager.hpp>
 #include <my_robot_core/anymal_core/anymal_state_provider.hpp>
 
-CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
+CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot,  Task* _com)
                         : TrajectoryManagerBase(_robot) {
   my_utils::pretty_constructor(3, "TrajectoryManager: CoM");
 
   sp_ = ANYmalStateProvider::getStateProvider(robot_);
+  com_task_ = _com;
 
   // Initialize member variables
   com_pos_des_.setZero();
@@ -17,10 +18,9 @@ CoMTrajectoryManager::CoMTrajectoryManager(RobotSystem* _robot)
 
 CoMTrajectoryManager::~CoMTrajectoryManager() {}
 
-void CoMTrajectoryManager::updateTask(const double&  current_time, 
-                                      Task* _com_pos_task) {
+void CoMTrajectoryManager::updateTask(const double&  current_time) {
   updateCoMTrajectory(current_time);
-  _com_pos_task->updateTask(com_pos_des_, 
+  com_task_->updateTask(com_pos_des_, 
                             com_vel_des_, 
                             com_acc_des_); 
 

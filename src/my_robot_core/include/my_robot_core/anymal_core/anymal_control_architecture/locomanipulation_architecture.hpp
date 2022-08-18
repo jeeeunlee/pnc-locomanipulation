@@ -8,36 +8,47 @@
 #include <my_robot_core/anymal_core/anymal_command_api.hpp>
 
 #include <my_robot_core/anymal_core/anymal_wbc_controller/state_machines/state_machine_set.hpp>
-// #include <my_robot_core/anymal_core/anymal_wbc_controller/anymal_wbmc.hpp>
 #include <my_robot_core/anymal_core/anymal_wbc_controller/anymal_wbc.hpp>
 #include <my_robot_core/anymal_core/anymal_wbc_controller/containers/wbc_spec_container.hpp>
 #include <my_robot_core/anymal_core/anymal_wbc_controller/containers/reference_generator_container.hpp>
 
-#include <my_robot_core/anymal_core/anymal_planner/anymal_planner_set.hpp>
-#include <my_robot_core/anymal_core/anymal_estimator/slip_observer.hpp>
+#include <my_robot_core/anymal_core/anymal_logic_interrupt/locomanipulation_interrupt_logic.hpp>
 
 class ANYmalStateProvider;
 
-class ANYmalMpcControlArchitecture : public ControlArchitecture {
+class ANYmalLocoManipulationControlArchitecture : public ControlArchitecture {
  public:
-  ANYmalMpcControlArchitecture(RobotSystem* _robot);
-  virtual ~ANYmalMpcControlArchitecture();
+  ANYmalLocoManipulationControlArchitecture(RobotSystem* _robot);
+  virtual ~ANYmalLocoManipulationControlArchitecture();
   virtual void ControlArchitectureInitialization();
   virtual void getCommand(void* _command);
-  virtual void addState(StateIdentifier _state_id, void* _user_state_command);
+  virtual void addState(StateIdentifier _state_id, void* _user_state_command, int state_type=-100);
+  virtual void setMotionStartTime();
 
   void saveData();
-  void getIVDCommand(void* _command);
-  
-  StateSequence<MotionCommand>* states_sequence_;
+  void getIVDCommand(void* _command);  
+
   MotionCommand user_cmd_;
+    
+  StateSequence<MotionCommand>* com_states_sequence_;
+  StateMachine* com_state_machine;
+  bool b_com_state_first_visit_;
+  int com_state_;
+
+  StateSequence<MotionCommand>* arm_states_sequence_;
+  StateMachine* ee_state_machine;
+  bool b_ee_state_first_visit_;  
+  int arm_state_;
+
+  std::array< StateSequence<MotionCommand>*, ANYmal::n_leg> feet_states_sequence_;
+  std::array< std::map<StateIdentifier, StateMachine*>, ANYmal::n_leg> foot_state_machines_;
+  std::array< bool, ANYmal::n_leg> b_foot_state_first_visit_;
+  std::array< int, ANYmal::n_leg> foot_state_;
   
   // initialize parameters
   void _ReadParameters();
   void _InitializeParameters();
-  bool b_state_first_visit_;
-  bool b_env_param_updated_;
-
+  
  protected:
   ANYmalStateProvider* sp_;   
   YAML::Node cfg_;
@@ -49,10 +60,6 @@ class ANYmalMpcControlArchitecture : public ControlArchitecture {
 
   // Controller Object
   ANYmalWBC* wbc_controller;
-
-  // Observers
-  SlipObserver* slip_ob_;
-  SlipObserverData* slip_ob_data_;
 
   private:
     Eigen::VectorXd tau_min_;

@@ -13,7 +13,7 @@ class ANYmalStateProvider;
 // Object to manage common trajectory primitives
 class EETrajectoryManager : public TrajectoryManagerBase {
  public:
-  EETrajectoryManager(RobotSystem* _robot);
+  EETrajectoryManager(RobotSystem* _robot, Task* _pos, Task* _ori);
   ~EETrajectoryManager();
   
   int ee_idx_;
@@ -34,12 +34,13 @@ class EETrajectoryManager : public TrajectoryManagerBase {
   Eigen::Vector3d ee_ori_acc_des_; 
 
   // Updates the task desired values
-  void updateTask(const double& current_time, Task* _ee_pos_task);
-  void updateTask(const double& current_time, Task* _ee_pos_task, Task* _ee_ori_task);
+  void updatePosTask(const double& current_time);
+  void updateTask(const double& current_time);
 
   // Initialize the swing ee trajectory
-  void setEETrajectory(const double& _start_time, const double& _motion_period);
-  void setEETrajectory(const double& _start_time, ManipulationCommand* _motion_cmd);
+  void setEETrajectory(const double& _start_time,
+                      const double& _end_time,
+                      MotionCommand _motion_cmd);
 
   // Computes the swing ee trajectory
   void updateEETrajectory(const double& current_time);
@@ -56,6 +57,9 @@ class EETrajectoryManager : public TrajectoryManagerBase {
   // Hermite Curve containers`
   HermiteCurveVec pos_hermite_curve_;
   HermiteQuaternionCurve quat_hermite_curve_;
+
+  Task* ee_pos_task_;
+  Task* ee_ori_task_;
 
  protected:
   ANYmalStateProvider* sp_;

@@ -7,11 +7,12 @@
 class ANYmalWbcSpecContainer;
 class ANYmalReferenceGeneratorContainer;
 
-class Swing : public StateMachine {
+class Transition : public StateMachine {
  public:
-  Swing(const StateIdentifier state_identifier_in,
-              ANYmalReferenceGeneratorContainer* rg_container);
-  ~Swing();
+  Transition(const StateIdentifier state_identifier_in,
+              ANYmalReferenceGeneratorContainer* rg_container, 
+              bool contact_start);
+  ~Transition();
 
   void oneStep();
   void firstVisit();
@@ -26,11 +27,13 @@ class Swing : public StateMachine {
   ANYmalWbcSpecContainer* ws_container_;
   ANYmalReferenceGeneratorContainer* rg_container_;
 
-  int moving_foot_link_idx_; // link index
-  int moving_foot_idx_; // link index
+  double trans_duration_;
 
-
+  bool b_contact_start_;
   bool state_switch_button_trigger_;
+
+  int foot_link_idx_;
+  int foot_idx_;
 
   void _taskUpdate();
   void _weightUpdate();
