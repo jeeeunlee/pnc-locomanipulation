@@ -209,9 +209,9 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
 
     Eigen::VectorXd xdot_c = Jc * delta_q;
-    my_utils::saveVector(delta_q, "delta_q0");
-    my_utils::saveVector(task->pos_err, "delta_x0");
-    my_utils::saveVector(xdot_c, "xdot_c0");
+    // my_utils::saveVector(delta_q, "delta_q0");
+    // my_utils::saveVector(task->pos_err, "delta_x0");
+    // my_utils::saveVector(xdot_c, "xdot_c0");
 
     Eigen::VectorXd prev_delta_q = delta_q;
     Eigen::VectorXd prev_qdot = qdot;
@@ -235,10 +235,10 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         qddot = prev_qddot +
                     JtPre_pinv * (task->acc_des - JtDotQdot - Jt * prev_qddot);
 
-        my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-        my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-        xdot_c = Jc * delta_q;
-        my_utils::saveVector(xdot_c, "xdot_c"+ std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        // my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        // my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        // xdot_c = Jc * delta_q;
+        // my_utils::saveVector(xdot_c, "xdot_c"+ std::to_string(i) + "_" + std::to_string(task_list.size()) );
 
         // For the next task
         _BuildProjectionMatrix(JtPre, N_nx);
@@ -252,8 +252,8 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     jvel_cmd = qdot;
     jacc_cmd = qddot;
 
-    my_utils::saveVector(jpos_cmd, "jpos_des_full");
-    my_utils::saveVector(jvel_cmd, "jvel_des_full");
+    // my_utils::saveVector(jpos_cmd, "jpos_des_full");
+    // my_utils::saveVector(jvel_cmd, "jvel_des_full");
 
     return true;    
 }

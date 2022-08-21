@@ -223,7 +223,6 @@ void ANYmalLocoManipulationControlArchitecture::saveData() {
   double state_val = (double) state_;
   my_utils::saveValue( state_val, "fsm_state" );
 
-
   // weights
   std::string filename;
   Eigen::VectorXd W_tmp;
@@ -231,8 +230,27 @@ void ANYmalLocoManipulationControlArchitecture::saveData() {
     filename = ANYmalFoot::Names[i] + "_Wrf";    
     W_tmp = ws_container_->feet_weights_[i]->getWrf();
     my_utils::saveVector(W_tmp, filename);
-
   }
+
+  // feet position
+  Eigen::VectorXd fpos;  
+  for(int i(0); i<ANYmal::n_leg; ++i) {
+    filename = ANYmalFoot::Names[i] + "_position";    
+    fpos = robot_->getBodyNodeIsometry(
+            ANYmalFoot::LinkIdx[i]).translation();
+    my_utils::saveVector(fpos, filename);
+  }
+
+  //  feet fsm state
+
+  Eigen::VectorXd pos;  
+  for(int i(0); i<ANYmal::n_leg; ++i) {
+    filename = ANYmalFoot::Names[i] + "_state";    
+    state_val = (double) foot_state_[i];
+    my_utils::saveValue( state_val, filename );
+  }
+
+  
 
 
 }

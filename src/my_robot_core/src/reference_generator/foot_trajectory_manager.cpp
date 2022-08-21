@@ -52,7 +52,7 @@ void FootTrajectoryManager::setFootPosTrajectory(
                               const double& _end_time,
                               const MotionCommand& _mc) { 
   // TODO
-  swing_height_ = 0.1;
+  swing_height_ = 0.2;
   is_base_frame_ = _mc.dpose.is_baseframe;
   Eigen::VectorXd pos_dev_b = _mc.dpose.pos;  
   my_utils::pretty_print(pos_dev_b,std::cout,"pos_dev_b");  
@@ -126,8 +126,9 @@ void FootTrajectoryManager::setSwingPosCurve(const Eigen::VectorXd& foot_pos_ini
   // Set Middle Swing Position/Velocity for Swing
   Eigen::Vector3d foot_pos_mid, foot_vel_mid;  
   Eigen::Vector3d p_b(0, 0, swing_height);
-  Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
-  foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;  
+  // Eigen::Matrix3d R_wb = robot_->getBodyNodeIsometry(link_idx_).linear();
+  // foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + R_wb*p_b;  
+  foot_pos_mid = 0.5*(foot_pos_des+foot_pos_ini) + p_b;  
   foot_vel_mid = 1.0*(foot_pos_des - foot_pos_ini) / traj_duration_;
 
   // Construct Position trajectories
