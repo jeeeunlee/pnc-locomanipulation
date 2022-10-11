@@ -18,6 +18,7 @@ constexpr int MPCCLIMBING = 2;
 class ANYmalSensorData {
    public:
     ANYmalSensorData() {
+        elapsedtime = 0.;
         q = Eigen::VectorXd::Zero(ANYmal::n_adof);
         qdot = Eigen::VectorXd::Zero(ANYmal::n_adof);
         virtual_q = Eigen::VectorXd::Zero(ANYmal::n_vdof);
@@ -30,6 +31,7 @@ class ANYmalSensorData {
     }
     virtual ~ANYmalSensorData() {}
 
+    double elapsedtime;
     Eigen::VectorXd q;
     Eigen::VectorXd qdot;
     Eigen::VectorXd virtual_q;

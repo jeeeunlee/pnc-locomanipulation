@@ -1,0 +1,1 @@
+#include <my_robot_core/anymal_core/anymal_logic_interrupt/locomanipulation_interrupt_logic.hpp>

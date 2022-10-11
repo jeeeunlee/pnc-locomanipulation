@@ -152,32 +152,44 @@ void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in,
 double smooth_changing(double ini, double end, double moving_duration,
                        double curr_time) {
   double ret;
-  ret = ini + (end - ini) * 0.5 * (1 - cos(curr_time / moving_duration * M_PI));
-  if (curr_time > moving_duration) {
-    ret = end;
-  }
+  if(moving_duration<1e-5){
+    ret = ini;
+  }else{
+    ret = ini + (end - ini) * 0.5 * (1 - cos(curr_time / moving_duration * M_PI));
+    if (curr_time > moving_duration) {
+        ret = end;
+    }
+  }  
   return ret;
 }
 
 double smooth_changing_vel(double ini, double end, double moving_duration,
                            double curr_time) {
   double ret;
-  ret = (end - ini) * 0.5 * (M_PI / moving_duration) *
-        sin(curr_time / moving_duration * M_PI);
-  if (curr_time > moving_duration) {
-    ret = 0.0;
+  if(moving_duration<1e-5){
+    ret = 0.;
+  }else{
+    ret = (end - ini) * 0.5 * (M_PI / moving_duration) *
+            sin(curr_time / moving_duration * M_PI);
+    if (curr_time > moving_duration) {
+        ret = 0.0;
+    }
   }
   return ret;
 }
 double smooth_changing_acc(double ini, double end, double moving_duration,
                            double curr_time) {
   double ret;
-  ret = (end - ini) * 0.5 * (M_PI / moving_duration) *
-        (M_PI / moving_duration) * cos(curr_time / moving_duration * M_PI);
-  if (curr_time > moving_duration) {
-    ret = 0.0;
+if(moving_duration<1e-5){
+    ret = 0.;
+  }else{
+    ret = (end - ini) * 0.5 * (M_PI / moving_duration) *
+            (M_PI / moving_duration) * cos(curr_time / moving_duration * M_PI);
+    if (curr_time > moving_duration) {
+        ret = 0.0;
+    }
+    return ret;
   }
-  return ret;
 }
 
 double smoothing(double ini, double fin, double rat) {

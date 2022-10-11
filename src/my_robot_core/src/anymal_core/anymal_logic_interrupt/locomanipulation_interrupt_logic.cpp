@@ -17,13 +17,12 @@ LocoManipulationInterruptLogic::~LocoManipulationInterruptLogic() {}
 // Process Interrupts here
 void LocoManipulationInterruptLogic::processInterrupts() {   
   if(b_button_pressed) {
-    // std::cout << "[Walking Interrupt Logic] button pressed : " << pressed_button << std::endl;
+    std::cout << "[LocoManipulationInterruptLogic Logic] button pressed : " << pressed_button << std::endl;
     switch(pressed_button){
       case 's':
         std::cout << "[LocoManipulation Interrupt Logic] button S pressed" << std::endl;        
-        std::cout << "---------     SCRIPT MOTION      ---------" << std::endl;
         if (ctrl_arch_->getState() == ANYMAL_STATES::IDLE) {
-          std::cout << "------------------------------------------" << std::endl;
+          std::cout << "---------     SCRIPT MOTION      ---------" << std::endl;
           // set stateMachine sequences
           ctrl_arch_->setMotionStartTime();
           scriptMotionToCommandSet();
@@ -36,12 +35,12 @@ void LocoManipulationInterruptLogic::processInterrupts() {
               addStateCommand(it.first, it.second, foot_idx);
           }       
         }
-      break;
+        break;
       default:
         break;
     }
-  }
-  resetFlags();
+    resetFlags();
+  }  
 }
 
 void LocoManipulationInterruptLogic::addStateCommand(int _state_id, 
@@ -149,6 +148,8 @@ void LocoManipulationInterruptLogic::scriptMotionToFeetCommandSet(int ee_idx,
 
 void LocoManipulationInterruptLogic::setInterruptRoutine(const YAML::Node& motion_cfg){
   // add motion_command_script_list_  
+
+  std::cout<<" setInterruptRoutine " <<std::endl;
 
   bool is_baseframe;
   Eigen::VectorXd pos_temp, ori_temp;  

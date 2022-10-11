@@ -91,9 +91,9 @@ void ANYmalInterface::_ParameterSetting(const YAML::Node& cfg) {
 void ANYmalInterface::getCommand(void* _data, void* _command) {
     ANYmalCommand* cmd = ((ANYmalCommand*)_command);
     ANYmalSensorData* data = ((ANYmalSensorData*)_data);
-    
 
     if(!_Initialization(data, cmd)) {
+        std::cout<<"getCommand : Iniitilized"<<std::endl;
         state_estimator_->Update(data); // robot skelPtr in robotSystem updated 
         interrupt_->processInterrupts();
         control_architecture_->getCommand(cmd);
@@ -105,9 +105,9 @@ void ANYmalInterface::getCommand(void* _data, void* _command) {
     // save data
     _SaveDataCmd(data,cmd);
 
-    running_time_ = ((double)count_)*ANYmalAux::servo_rate;
+    count_++;
+    running_time_ = (double)(data->elapsedtime);
     sp_->curr_time = running_time_;
-    ++count_;
 }
 
 bool ANYmalInterface::_Initialization(ANYmalSensorData* data,

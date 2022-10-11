@@ -1,5 +1,3 @@
-#pragma once
-
 #include <my_robot_core/anymal_core/anymal_planner/constraints/constraint.hpp>
 
 Constraint::Constraint(RobotSystem* _robot, int _link_idx) {

@@ -176,20 +176,20 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
                                 Eigen::VectorXd& jpos_cmd,
                                 Eigen::VectorXd& jvel_cmd,
                                 Eigen::VectorXd& jacc_cmd) {
-
     Eigen::MatrixXd Jc, Nc, Jc_pinv;
     Eigen::VectorXd JcDotQdot, JcpinvJcDotQdot;
-    if(contact_list.empty()){
-        Nc = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_); // num_qdot_ : num active joint
-        JcpinvJcDotQdot = Eigen::VectorXd::Zero(num_qdot_);
-    } else {  
+
+    Jc = Eigen::MatrixXd::Zero(0, num_qdot_);
+    Nc = Eigen::MatrixXd::Identity(num_qdot_, num_qdot_); // num_qdot_ : num active joint
+    JcpinvJcDotQdot = Eigen::VectorXd::Zero(num_qdot_);
+
+    if(!contact_list.empty()){
         _BuildJacobianFromContacts(contact_list, Jc);
         _BuildJdotQdotFromContacts(contact_list, JcDotQdot);
         _PseudoInverse(Jc, Jc_pinv);
         JcpinvJcDotQdot = Jc_pinv*JcDotQdot;
         _BuildProjectionMatrix(Jc, Nc);    
     }
-    
 
     Eigen::VectorXd delta_q, qdot, qddot, JtDotQdot;
     Eigen::MatrixXd Jt, JtPre, JtPre_pinv, N_nx, N_pre;
@@ -207,8 +207,8 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     // qddot = JtPre_pinv * (task->acc_des + Jt * JcpinvJcDotQdot - JtDotQdot); // modified 2021.1.23
     qddot = - JcpinvJcDotQdot + JtPre_pinv * (task->acc_des - JtDotQdot); // modified 2021.2.7
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
-
-    Eigen::VectorXd xdot_c = Jc * delta_q;
+    
+    // Eigen::VectorXd xdot_c = Jc * delta_q;
     // my_utils::saveVector(delta_q, "delta_q0");
     // my_utils::saveVector(task->pos_err, "delta_x0");
     // my_utils::saveVector(xdot_c, "xdot_c0");

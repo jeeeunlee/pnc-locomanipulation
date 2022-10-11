@@ -57,6 +57,7 @@ void JointTrajectoryManager::setJointTrajectory(const double& _start_time,
 
 void JointTrajectoryManager::updateJointTrajectory(const double& current_time) {
   double traj_time = current_time - traj_start_time_;
+
   for (int i = 0; i < joint_dim_; ++i) {
     joint_pos_des_[i] = my_utils::smooth_changing(
         ini_jpos_[i], target_jpos_[i], traj_duration_, traj_time);

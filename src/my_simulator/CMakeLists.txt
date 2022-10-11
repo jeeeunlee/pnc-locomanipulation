@@ -3,6 +3,7 @@ project(my_simulator)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(PYTHON_EXECUTABLE "/usr/bin/python3")
+add_subdirectory(ThirdParty/mujoco_simulate)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -21,12 +22,17 @@ set(CMAKE_MODULE_PATH
 find_package(Eigen3)
 find_package(DART 6.9 REQUIRED COMPONENTS utils-urdf gui-osg CONFIG)
 
+find_package(mujoco REQUIRED)
+set(MUJOCO_INCLUDE_DIRS "/usr/local/include/mujoco")
+set(MUJOCO_LIBRARIES "mujoco::mujoco")
+
 catkin_package(
-  LIBRARIES run_anymal anymal_ros
+  LIBRARIES run_anymal run_anymal_mujoco
   CATKIN_DEPENDS my_utils my_robot_core
 )
 
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+set(ThirdParty_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/ThirdParty/mujoco_simulate)
 
 include_directories(
 # include
@@ -35,18 +41,41 @@ include_directories(
   ${PROJECT_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIR}
   ${DART_INCLUDE_DIRS}
+  ${MUJOCO_INCLUDE_DIRS}
+  ${ThirdParty_INCLUDE_DIR}
 )
 
 
-file(GLOB_RECURSE dart_anymal_sources "src/Dart/ANYmal/*.cpp")
-file(GLOB_RECURSE dart_anymal_headers "src/Dart/ANYmal/*.hpp")
+# file(GLOB_RECURSE dart_anymal_sources "src/Dart/ANYmal/*.cpp")
+# file(GLOB_RECURSE dart_anymal_headers "include/my_simulator//Dart/ANYmal/*.hpp")
+
+# message(STATUS "#############")
+# message(STATUS ${mujoco_anymal_sources})
+# message(STATUS ${mujoco_anymal_headers})
+# message(STATUS "#############")
+# add_executable(run_anymal ${dart_anymal_sources}
+#                           ${dart_anymal_headers})
+# target_link_libraries(run_anymal ${DART_LIBRARIES}
+#                                   my_robot_core
+#                                   my_utils)
 
 
-add_executable(run_anymal ${dart_anymal_sources}
-                          ${dart_anymal_headers})
-target_link_libraries(run_anymal ${DART_LIBRARIES}
-                                  my_robot_core
-                                  my_utils)
+file(GLOB_RECURSE mujoco_anymal_sources "src/Mujoco/ANYmalC/*.cpp")
+file(GLOB_RECURSE mujoco_anymal_headers "include/my_simulator/Mujoco/ANYmalC/*.hpp")
+
+add_executable(run_anymal_mujoco ${mujoco_anymal_sources}
+                                 ${mujoco_anymal_headers})
+
+target_link_libraries(run_anymal_mujoco 
+                        ${MUJOCO_LIBRARIES}
+                        ${CMAKE_DL_LIBS}
+                        libsimulate
+                        my_robot_core
+                        my_utils
+                        glfw
+                        Threads::Threads)
+
+target_include_directories(run_anymal_mujoco PUBLIC ${PROJECT_INCLUDE_DIR})
 
 
 ## Declare a C++ library

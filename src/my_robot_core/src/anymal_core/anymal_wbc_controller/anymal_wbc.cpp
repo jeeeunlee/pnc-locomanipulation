@@ -47,8 +47,10 @@ void ANYmalWBC::_PreProcessing_Command() {
   // Update task and contact list pointers from container object
   task_list_.clear();  
   for (int i = 0; i < ANYMAL_TASK::n_task; i++) {
-    if(ws_container_->b_task_list_[i])
+    if(ws_container_->b_task_list_[i]){
       task_list_.push_back(ws_container_->task_container_[i]);
+      // std::cout << " task " << i << "is added" << std::endl;
+    }     
   }
   contact_list_.clear();  
   for (int i = 0; i < ANYmal::n_leg; i++) {
@@ -84,6 +86,9 @@ void ANYmalWBC::getCommand(void* _cmd) {
   //                               jpos_des_, jvel_des_, jacc_des_); 
   kin_wbc_->FindFullConfiguration(sp_->q, task_list_, contact_list_, 
                                     jpos_des_, jvel_des_, jacc_des_); 
+
+  my_utils::pretty_print(sp_->q, std::cout, "sp_->q");
+  my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
 
   Eigen::VectorXd jacc_des_cmd = jacc_des_;
   for(int i(0); i<ANYmal::n_adof; ++i) {

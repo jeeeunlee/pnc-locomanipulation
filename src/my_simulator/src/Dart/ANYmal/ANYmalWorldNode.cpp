@@ -94,6 +94,8 @@ void ANYmalWorldNode::customPreStep() {
         sensor_data_->virtual_qdot[i] = qdot[ANYmal::idx_vdof[i]];
     }    
 
+    sensor_data_->elapsedtime = t_;
+
     // update contact_distance_
     UpdateContactDistance_();
     // update sensor_data_->b_foot_contact 
@@ -104,7 +106,7 @@ void ANYmalWorldNode::customPreStep() {
     // --------------------------------------------------------------
     //          COMPUTE COMMAND - desired joint acc/trq etc
     // --------------------------------------------------------------
-    ((ANYmalInterface*)interface_)->getCommand(sensor_data_, command_);    
+    ((ANYmalInterface*)interface_)->getCommand(sensor_data_, command_);
 
     // trq_cmd_.setZero();
     // for(int i=0; i< ANYmal::n_adof; ++i) {
