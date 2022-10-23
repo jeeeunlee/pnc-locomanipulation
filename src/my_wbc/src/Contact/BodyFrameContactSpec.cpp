@@ -13,9 +13,9 @@ BodyFramePointContactSpec::~BodyFramePointContactSpec() {}
 
 bool BodyFramePointContactSpec::_UpdateJc() {
     // spacial Jacobian wrt targeting body com frame (J_sb): getBodyNodeJacobian
-    // body Jacobian wrt targeting body com frame (J_bb): getBodyNodeCoMBodyJacobian
+    // body Jacobian wrt targeting body com frame (J_bb): getBodyNodeBodyJacobian
 
-    Eigen::MatrixXd Jtmp = robot_->getBodyNodeCoMBodyJacobian(link_idx_);
+    Eigen::MatrixXd Jtmp = robot_->getBodyNodeBodyJacobian(link_idx_);
     Jc_ = Jtmp.block(dim_contact_, 0, dim_contact_, robot_->getNumDofs());
     return true;
 }
@@ -23,22 +23,16 @@ bool BodyFramePointContactSpec::_UpdateJc() {
 bool BodyFramePointContactSpec::_UpdateJcDotQdot() {
 
     Eigen::VectorXd JcDotQdot_tmp =
-        robot_->getBodyNodeCoMBodyJacobianDot(link_idx_) * robot_->getQdot();
+        robot_->getBodyNodeBodyJacobianDotQDot(link_idx_);
     JcDotQdot_ = JcDotQdot_tmp.tail(dim_contact_);
 
-    // Assum xc_ddot = Jc*qddot + JcdotQdot = 0
-    // Eigen::MatrixXd Jtmp = robot_->getBodyNodeCoMBodyJacobian(link_idx_);
-    // Eigen::VectorXd Jcqddot = Jtmp * robot_->getQddot();
-    // JcDotQdot_= -Jcqddot.tail(dim_contact_);
-
-    // JcDotQdot_.setZero();
-    
     return true;
 }
 
 bool BodyFramePointContactSpec::_UpdateJcQdot() {
+    
     Eigen::VectorXd JcQdot_tmp =
-        robot_->getBodyNodeCoMBodyJacobian(link_idx_) * robot_->getQdot();
+        robot_->getBodyNodeBodyJacobian(link_idx_) * robot_->getQdot();
     JcQdot_ = JcQdot_tmp.tail(dim_contact_);
 
     // JcQdot_.setZero();
@@ -107,7 +101,7 @@ bool BodyFrameSurfaceContactSpec::_UpdateJc() {
 }
 
 bool BodyFrameSurfaceContactSpec::_UpdateJcDotQdot() {
-    JcDotQdot_ = robot_->getBodyNodeBodyJacobianDot(link_idx_) * robot_->getQdot();
+    JcDotQdot_ = robot_->getBodyNodeBodyJacobianDotQDot(link_idx_);
     // JcDotQdot_.setZero();
     return true;
 }

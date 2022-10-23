@@ -1,444 +1,366 @@
 #include <my_robot_system//RobotSystem.hpp>
+#include <my_utils/IO/IOUtilities.hpp>
 #include <chrono>
 
 RobotSystem::RobotSystem(const RobotSystem& robotsys) 
-:RobotSystem(robotsys.num_virtual_dof_, robotsys.skel_file_name_)  {
+:RobotSystem(robotsys.b_fixed_base_, robotsys.urdf_file_)  {
 }
 
-RobotSystem::RobotSystem(int numVirtual_, std::string file) {
+RobotSystem::RobotSystem(bool b_fixed_base_, 
+                        const std::string& file, 
+                        int n_pdof): n_pdof_(n_pdof) {
     my_utils::pretty_constructor(1, "Robot Model");
-    skel_file_name_ = file;
+    urdf_file_ = file;
 
-    dart::utils::DartLoader urdfLoader;
-    skel_ptr_ = urdfLoader.parseSkeleton(file);
-    num_dof_ = skel_ptr_->getNumDofs();
-    num_virtual_dof_ = numVirtual_;
-    num_actuated_dof_ = num_dof_ - num_virtual_dof_;
-    num_body_nodes_ = skel_ptr_->getNumBodyNodes();
+    // set pinocchio model & data
+    if(b_fixed_base_){
+        pinocchio::urdf::buildModel(urdf_file_, model_);
+        n_float_ = 0;
+    }else{
+        pinocchio::urdf::buildModel(urdf_file_, 
+              pinocchio::JointModelFreeFlyer(), model_);
+        n_float_ = 6;
+    }
+    data_ = pinocchio::Data(model_);
+    n_q_ = model_.nq;
+    n_qdot_ = model_.nv;
+    n_adof_ = n_qdot_ - n_float_ - n_pdof_;
+
     I_cent_ = Eigen::MatrixXd::Zero(6, 6);
-    J_cent_ = Eigen::MatrixXd::Zero(6, num_dof_);
-    A_cent_ = Eigen::MatrixXd::Zero(6, num_dof_);
+    J_cent_ = Eigen::MatrixXd::Zero(6, n_qdot_);
+    A_cent_ = Eigen::MatrixXd::Zero(6, n_qdot_);
+    H_cent_ = Eigen::MatrixXd::Zero(6, 1);
+
+    q_ = Eigen::VectorXd::Zero(n_q_);
+    qdot_ = Eigen::VectorXd::Zero(n_qdot_);
+    qddot_ = Eigen::VectorXd::Zero(n_qdot_);
     
     setActuatedJoint();
+    _initializeRobotInfo();
+    // printRobotInfo();
 }
 
 RobotSystem::~RobotSystem() {}
 
 void RobotSystem::setActuatedJoint()  {
     idx_adof_.clear();
-    for(int i=0;i<num_actuated_dof_;++i)    
-        idx_adof_.push_back(num_virtual_dof_ + i); 
+    for(int i=0;i<n_adof_;++i)    
+        idx_adof_.push_back(n_float_ + i); 
 }
 void RobotSystem::setActuatedJoint(const int *_idx_adof)  {
     idx_adof_.clear();
-    for(int i=0;i<num_actuated_dof_;++i)    
+    for(int i=0;i<n_adof_;++i)    
         idx_adof_.push_back(_idx_adof[i]);  
 }
 
 Eigen::VectorXd RobotSystem::getActiveJointValue(const Eigen::VectorXd& q_full)  {
-    Eigen::VectorXd q_a(num_actuated_dof_);
-    for(int i = 0; i < num_actuated_dof_; ++i)        
+    Eigen::VectorXd q_a(n_adof_);
+    for(int i = 0; i < n_adof_; ++i)        
         q_a[i] = q_full[idx_adof_[i]]; 
     return  q_a;
 }
 
-Eigen::MatrixXd RobotSystem::getMassMatrix() {
-    return skel_ptr_->getMassMatrix();
+Eigen::VectorXd RobotSystem::GetTorqueLowerLimits() {
+    if (b_fixed_base_) return -model_.effortLimit;
+    else return -model_.effortLimit.segment(n_float_, n_adof_);
+}
+Eigen::VectorXd RobotSystem::GetTorqueUpperLimits() {
+    if (b_fixed_base_) return model_.effortLimit;
+    else return model_.effortLimit.segment(n_float_, n_adof_);
+}
+Eigen::VectorXd RobotSystem::GetPositionLowerLimits() {
+    if (b_fixed_base_) return model_.lowerPositionLimit;
+    else return model_.lowerPositionLimit.segment(n_float_, n_adof_);
+}
+Eigen::VectorXd RobotSystem::GetPositionUpperLimits() {
+    if (b_fixed_base_) return model_.upperPositionLimit;
+    else return model_.upperPositionLimit.segment(n_float_, n_adof_);
 }
 
-Eigen::MatrixXd RobotSystem::getInvMassMatrix() {
-    return skel_ptr_->getInvMassMatrix();
+Eigen::MatrixXd RobotSystem::getMassMatrix() {
+    data_.M.triangularView<Eigen::StrictlyLower>() =
+        data_.M.transpose().triangularView<Eigen::StrictlyLower>();
+    return data_.M;
 }
+
+Eigen::MatrixXd RobotSystem::getInvMassMatrix() {    
+    data_.Minv.triangularView<Eigen::StrictlyLower>() =
+        data_.Minv.transpose().triangularView<Eigen::StrictlyLower>();
+    return data_.Minv;
+}
+
 Eigen::VectorXd RobotSystem::getCoriolisGravity() {
-    return skel_ptr_->getCoriolisAndGravityForces();
+    return pinocchio::nonLinearEffects(model_, data_, q_, qdot_);
 }
 
 Eigen::VectorXd RobotSystem::getCoriolis() {
-    return skel_ptr_->getCoriolisForces();
+    return pinocchio::nonLinearEffects(model_, data_, q_, qdot_) -
+         pinocchio::computeGeneralizedGravity(model_, data_, q_);
 }
 
 Eigen::VectorXd RobotSystem::getGravity() {
-    return skel_ptr_->getGravityForces();
+    return pinocchio::computeGeneralizedGravity(model_, data_, q_);
 }
 
-Eigen::MatrixXd RobotSystem::getCentroidJacobian() { return J_cent_; }
+Eigen::MatrixXd RobotSystem::getCentroidJacobian() const { return this->J_cent_; }
+Eigen::MatrixXd RobotSystem::getCentroidInertiaTimesJacobian() const  { return this->A_cent_; }
+Eigen::MatrixXd RobotSystem::getCentroidInertia() const { return this->I_cent_; }
+Eigen::VectorXd RobotSystem::getCentroidMomentum() const { return this->H_cent_; }
 
-Eigen::MatrixXd RobotSystem::getCentroidInertiaTimesJacobian() {
-    return A_cent_;
+Eigen::Vector3d RobotSystem::getCoMPosition() { return data_.com[0];}
+Eigen::Vector3d RobotSystem::getCoMVelocity() { return data_.vcom[0];}
+Eigen::Vector3d RobotSystem::getCoMAcceleration() { return data_.acom[0];}
+Eigen::MatrixXd RobotSystem::getCoMJacobian() {
+    pinocchio::jacobianCenterOfMass(model_, data_, q_);
+    return data_.Jcom;
 }
 
-Eigen::MatrixXd RobotSystem::getCentroidInertia() { return I_cent_; }
+Eigen::Isometry3d RobotSystem::getBodyNodeIsometry(const std::string& name) {
+    return this->getBodyNodeIsometry(link_idx_map_[name]); }
 
-Eigen::Vector3d RobotSystem::getCoMPosition(dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getCOM(wrt_);
-}
-
-Eigen::Vector3d RobotSystem::getCoMVelocity(dart::dynamics::Frame* rl_,
-                                            dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getCOMLinearVelocity(rl_, wrt_);
-}
-
-Eigen::Vector3d RobotSystem::getCoMAcceleration(dart::dynamics::Frame* rl_,
-                                            dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getCOMLinearAcceleration(rl_, wrt_);
-}
-
-Eigen::Isometry3d RobotSystem::getBodyNodeIsometry(
-    const std::string& name_, dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(name_)->getTransform(wrt_);
-}
-
-Eigen::Isometry3d RobotSystem::getBodyNodeIsometry(
-    const int& _bn_idx, dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(_bn_idx)->getTransform(wrt_);
-}
-
-Eigen::Isometry3d RobotSystem::getBodyNodeCoMIsometry(
-    const std::string& name_, dart::dynamics::Frame* wrt_) {
-    Eigen::Isometry3d ret = Eigen::Isometry3d::Identity();
-    ret.linear() = getBodyNodeIsometry(name_, wrt_).linear();
-    ret.translation() = skel_ptr_->getBodyNode(name_)->getCOM(wrt_);
+Eigen::Isometry3d RobotSystem::getBodyNodeIsometry(const int& link_idx) {
+    Eigen::Isometry3d ret;
+    const pinocchio::SE3 trans =
+        pinocchio::updateFramePlacement(model_, data_, link_idx);
+    ret.linear() = trans.rotation();
+    ret.translation() = trans.translation();
     return ret;
 }
 
-Eigen::Isometry3d RobotSystem::getBodyNodeCoMIsometry(
-    const int& _bn_idx, dart::dynamics::Frame* wrt_) {
-    Eigen::Isometry3d ret = Eigen::Isometry3d::Identity();
-    ret.linear() = getBodyNodeIsometry(_bn_idx, wrt_).linear();
-    ret.translation() = skel_ptr_->getBodyNode(_bn_idx)->getCOM(wrt_);
+Eigen::Matrix<double, 6, 1> RobotSystem::getBodyNodeSpatialVelocity(const std::string& name) {
+    return this->getBodyNodeSpatialVelocity(link_idx_map_[name]); }
+
+Eigen::Matrix<double, 6, 1> RobotSystem::getBodyNodeSpatialVelocity(const int& link_idx) {
+  Eigen::Matrix<double, 6, 1> ret = Eigen::Matrix<double, 6, 1>::Zero();
+  pinocchio::Motion fv = pinocchio::getFrameVelocity(
+      model_, data_, link_idx, pinocchio::LOCAL_WORLD_ALIGNED);
+  ret.head<3>() = fv.angular();
+  ret.tail<3>() = fv.linear();
+  return ret;
+}
+
+Eigen::MatrixXd RobotSystem::getBodyNodeJacobian(const std::string& name) {
+    return this->getBodyNodeJacobian(link_idx_map_[name]); }
+
+
+Eigen::MatrixXd RobotSystem::getBodyNodeJacobian(const int& link_idx) {
+    // Analytic Jacobian
+  Eigen::Matrix<double, 6, Eigen::Dynamic> jac =
+      Eigen::Matrix<double, 6, Eigen::Dynamic>::Zero(6, n_qdot_);
+  pinocchio::getFrameJacobian(model_, data_, link_idx,
+                              pinocchio::LOCAL_WORLD_ALIGNED, jac);
+  Eigen::Matrix<double, 6, Eigen::Dynamic> ret =
+      Eigen::Matrix<double, 6, Eigen::Dynamic>::Zero(6, n_qdot_);
+  ret.topRows(3) = jac.bottomRows(3);
+  ret.bottomRows(3) = jac.topRows(3);
+  return ret;
+}
+
+Eigen::MatrixXd RobotSystem::getBodyNodeJacobianDotQDot(const std::string& name) {
+    return this->getBodyNodeJacobianDotQDot(link_idx_map_[name]); }
+
+Eigen::MatrixXd RobotSystem::getBodyNodeJacobianDotQDot(const int& link_idx) {
+    // check 
+    // pinocchio::Motion fa = pinocchio::getFrameAcceleration(
+    //     model_, data_, link_idx, pinocchio::LOCAL_WORLD_ALIGNED);
+
+    // pinocchio::forwardKinematics(model_, data_, q_, qdot_, 0 * qdot_);
+    pinocchio::Motion fa = pinocchio::getFrameClassicalAcceleration(
+        model_, data_, link_idx, pinocchio::LOCAL_WORLD_ALIGNED);
+
+    Eigen::Matrix<double, 6, 1> ret = Eigen::Matrix<double, 6, 1>::Zero();
+    ret.segment(0, 3) = fa.angular();
+    ret.segment(3, 3) = fa.linear();
+
     return ret;
 }
 
-Eigen::Vector6d RobotSystem::getBodyNodeSpatialVelocity(
-    const std::string& name_, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(name_)->getSpatialVelocity(rl_, wrt_);
+Eigen::Matrix<double, 6, 1> RobotSystem::getBodyNodeBodyVelocity(const std::string& name) {
+    return this->getBodyNodeBodyVelocity(link_idx_map_[name]);
+}
+Eigen::Matrix<double, 6, 1> RobotSystem::getBodyNodeBodyVelocity(const int& link_idx) {
+
 }
 
-Eigen::Vector6d RobotSystem::getBodyNodeSpatialVelocity(
-    const int& _bn_idx, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(_bn_idx)->getSpatialVelocity(rl_, wrt_);
+
+Eigen::MatrixXd RobotSystem::getBodyNodeBodyJacobian(const std::string& name) {
+    return this->getBodyNodeBodyJacobian(link_idx_map_[name]);
 }
 
-Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialVelocity(
-    const std::string& name_, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(name_)->getCOMSpatialVelocity(rl_, wrt_);
+Eigen::MatrixXd RobotSystem::getBodyNodeBodyJacobian(const int& link_idx) {
+  Eigen::Matrix<double, 6, Eigen::Dynamic> jac =
+      Eigen::Matrix<double, 6, Eigen::Dynamic>::Zero(6, n_qdot_);
+  pinocchio::getFrameJacobian(model_, data_, link_idx, pinocchio::LOCAL, jac);
+  Eigen::Matrix<double, 6, Eigen::Dynamic> ret =
+      Eigen::Matrix<double, 6, Eigen::Dynamic>::Zero(6, n_qdot_);
+  ret.topRows(3) = jac.bottomRows(3);
+  ret.bottomRows(3) = jac.topRows(3);
+  return ret;
 }
 
-Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialVelocity(
-    const int& _bn_idx, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(_bn_idx)->getCOMSpatialVelocity(rl_, wrt_);
+Eigen::MatrixXd RobotSystem::getBodyNodeBodyJacobianDotQDot(const std::string& name) {
+        return this->getBodyNodeBodyJacobianDotQDot(link_idx_map_[name]);
 }
 
-// JE added 2020/2/9
-Eigen::Vector6d RobotSystem::getBodyNodeSpatialAcceleration(
-    const std::string& name_, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(name_)->getSpatialAcceleration(rl_, wrt_);
+Eigen::MatrixXd RobotSystem::getBodyNodeBodyJacobianDotQDot(const int& link_idx) {
+    // pinocchio::forwardKinematics(model_, data_, q_, qdot_, 0 * qdot_);
+    pinocchio::Motion fa = pinocchio::getFrameClassicalAcceleration(
+        model_, data_, link_idx, pinocchio::LOCAL);
+
+    Eigen::Matrix<double, 6, 1> ret = Eigen::Matrix<double, 6, 1>::Zero();
+    ret.segment(0, 3) = fa.angular();
+    ret.segment(3, 3) = fa.linear();
+
+    return ret;
 }
 
-Eigen::Vector6d RobotSystem::getBodyNodeSpatialAcceleration(
-    const int& _bn_idx, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(_bn_idx)->getSpatialAcceleration(rl_, wrt_);
+int RobotSystem::getLinkIdx(const std::string& frame_name) {    
+    return link_idx_map_[frame_name]; }
+
+int RobotSystem::getJointIdx(const std::string& jointName) {    
+    return joint_idx_map_[jointName]; }
+
+std::string RobotSystem::getLinkName(const int& frame_idx) {    
+    return link_idx_map_inv_[frame_idx]; }
+
+std::string RobotSystem::getJointName(const int& joint_idx) {    
+    return joint_idx_map_inv_[joint_idx]; }
+
+void RobotSystem::updateSystem(
+    const Eigen::Vector3d &base_joint_pos, const Eigen::Quaterniond &base_joint_quat,
+    const Eigen::Vector3d &base_joint_lin_vel, const Eigen::Vector3d &base_joint_ang_vel, 
+    const Eigen::VectorXd &joint_pos, const Eigen::VectorXd &joint_vel, 
+    bool b_update_centroid) {
+    // ASSUME FLOATING BASE
+    q_.segment(0, 3) = base_joint_pos;
+    q_.segment(3, 4) << base_joint_quat.normalized().coeffs(); // x,y,z,w order
+    q_.tail(n_q_ - 7) = joint_pos;
+
+    // Eigen::Matrix3d rot_w_basejoint =
+    //     base_joint_quat.normalized().toRotationMatrix();
+    // qdot_.segment(0, 3) = rot_w_basejoint.transpose() * base_joint_lin_vel;
+    // qdot_.segment(3, 3) = rot_w_basejoint.transpose() * base_joint_ang_vel;
+    qdot_.segment(0, 3) =  base_joint_lin_vel;
+    qdot_.segment(3, 3) = base_joint_ang_vel;
+    qdot_.tail(n_qdot_ - n_float_) = joint_vel;
+
+    // update data
+    _updateSystemData();
+    if (b_update_centroid) _updateCentroidFrame();
 }
 
-Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialAcceleration(
-    const std::string& name_, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(name_)->getCOMSpatialAcceleration(rl_, wrt_);
-}
+void RobotSystem::updateSystem(const Eigen::VectorXd &joint_pos,
+                                const Eigen::VectorXd &joint_vel,
+                                bool b_update_centroid){
+    // ASSUME FLOATING BASE
+    Eigen::Quaterniond base_joint_quat;
+    base_joint_quat.coeffs() = joint_pos.segment(3, 4);
+    Eigen::Matrix3d rot_w_basejoint =
+        base_joint_quat.normalized().toRotationMatrix();
+    Eigen::Vector3d base_joint_lin_vel = joint_vel.segment(0, 3);
+    Eigen::Vector3d base_joint_ang_vel = joint_vel.segment(3, 3);
 
-Eigen::Vector6d RobotSystem::getBodyNodeCoMSpatialAcceleration(
-    const int& _bn_idx, dart::dynamics::Frame* rl_,
-    dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getBodyNode(_bn_idx)->getCOMSpatialAcceleration(rl_, wrt_);
-}
-//
+    q_ = joint_pos;
+    qdot_ = joint_vel;
 
-Eigen::VectorXd RobotSystem::getCentroidVelocity() {
-    return J_cent_ * skel_ptr_->getVelocities();
-}
-
-Eigen::VectorXd RobotSystem::getCentroidMomentum() {
-    return A_cent_ * skel_ptr_->getVelocities();
-}
-
-Eigen::MatrixXd RobotSystem::getCoMJacobian(dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getCOMJacobian(wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeJacobian(const std::string& name_,
-                                                 Eigen::Vector3d localOffset_,
-                                                 dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getJacobian(skel_ptr_->getBodyNode(name_), localOffset_,
-                                  wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeJacobian(const int& _bn_idx,
-                                                 Eigen::Vector3d localOffset_,
-                                                 dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getJacobian(skel_ptr_->getBodyNode(_bn_idx), localOffset_,
-                                  wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeJacobianDot(
-    const std::string& name_, Eigen::Vector3d localOffset_,
-    dart::dynamics::Frame* wrt_) {
-    // return skel_ptr_->getJacobianSpatialDeriv(skel_ptr_->getBodyNode(name_),
-    //                                          localOffset_, wrt_);
-
-    return skel_ptr_->getJacobianClassicDeriv(skel_ptr_->getBodyNode(name_),
-                                              localOffset_, wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeJacobianDot(
-    const int& _bn_idx, Eigen::Vector3d localOffset_,
-    dart::dynamics::Frame* wrt_) {
-    // return skel_ptr_->getJacobianSpatialDeriv(skel_ptr_->getBodyNode(name_),
-    // localOffset_,
-    // wrt_);
-
-    return skel_ptr_->getJacobianClassicDeriv(skel_ptr_->getBodyNode(_bn_idx),
-                                              localOffset_, wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeBodyJacobian(const int& _bn_idx, Eigen::Vector3d localOffset_ )
-{
-    return skel_ptr_->getJacobian(skel_ptr_->getBodyNode(_bn_idx), localOffset_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeBodyJacobianDot(const int& _bn_idx,Eigen::Vector3d localOffset_)
-{
-    // return skel_ptr_->getJacobianSpatialDeriv(skel_ptr_->getBodyNode(_bn_idx),
-    //                                           localOffset_);
-    return skel_ptr_->getJacobianClassicDeriv(skel_ptr_->getBodyNode(_bn_idx),
-                                              localOffset_);                                              
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMJacobian(
-    const std::string& name_, dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getJacobian(skel_ptr_->getBodyNode(name_),
-                                  skel_ptr_->getBodyNode(name_)->getLocalCOM(),
-                                  wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMJacobian(
-    const int& _bn_idx, dart::dynamics::Frame* wrt_) {
-    return skel_ptr_->getJacobian(
-        skel_ptr_->getBodyNode(_bn_idx),
-        skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM(), wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMJacobianDot(
-    const std::string& name_, dart::dynamics::Frame* wrt_) {
-    // return skel_ptr_->getJacobianSpatialDeriv(skel_ptr_->getBodyNode(name_),
-    // skel_ptr_->getBodyNode(name_)->getLocalCOM(),
-    // wrt_);
-
-    return skel_ptr_->getJacobianClassicDeriv(
-        skel_ptr_->getBodyNode(name_),
-        skel_ptr_->getBodyNode(name_)->getLocalCOM(), wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMJacobianDot(
-    const int& _bn_idx, dart::dynamics::Frame* wrt_) {
-
-    // return skel_ptr_->getJacobianSpatialDeriv(
-    //     skel_ptr_->getBodyNode(_bn_idx),
-    //     skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM(),
-    //     wrt_);
-
-    return skel_ptr_->getJacobianClassicDeriv(
-        skel_ptr_->getBodyNode(_bn_idx),
-        skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM(), wrt_);
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobian(const std::string& name_) {
-    return skel_ptr_->getJacobian(
-                            skel_ptr_->getBodyNode(name_),
-                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobian(const int& _bn_idx) {
-    return skel_ptr_->getJacobian(
-                            skel_ptr_->getBodyNode(_bn_idx),
-                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
-}
-
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const std::string& name_) {
+    qdot_.segment(0, 3) = rot_w_basejoint.transpose() * base_joint_lin_vel;
+    qdot_.segment(3, 3) = rot_w_basejoint.transpose() * base_joint_ang_vel;
     
-    Eigen::MatrixXd Jacob = skel_ptr_->getJacobian(
-                            skel_ptr_->getBodyNode(name_),
-                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
-    
-    Eigen::MatrixXd SpatialDeriv = skel_ptr_->getJacobianSpatialDeriv(
-                            skel_ptr_->getBodyNode(name_),
-                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
-    Eigen::MatrixXd ClassicDeriv = skel_ptr_->getJacobianClassicDeriv(
-                            skel_ptr_->getBodyNode(name_),
-                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
 
-    Eigen::VectorXd JacobVec(Eigen::Map<Eigen::VectorXd>(Jacob.data(), Jacob.cols()*Jacob.rows()));
-    Eigen::VectorXd SpatialDerivVec(Eigen::Map<Eigen::VectorXd>(SpatialDeriv.data(), SpatialDeriv.cols()*SpatialDeriv.rows()));
-    Eigen::VectorXd ClassicDerivVec(Eigen::Map<Eigen::VectorXd>(ClassicDeriv.data(), ClassicDeriv.cols()*ClassicDeriv.rows()));
-
-
-    // my_utils::saveVector(JacobVec, "JacobVec");
-    // my_utils::saveVector(SpatialDerivVec, "SpatialDerivVec");
-    // my_utils::saveVector(ClassicDerivVec, "ClassicDerivVec");
-        
-    return skel_ptr_->getJacobianClassicDeriv(
-                            skel_ptr_->getBodyNode(name_),
-                            skel_ptr_->getBodyNode(name_)->getLocalCOM());
+    // update data
+    _updateSystemData();
+    if (b_update_centroid) _updateCentroidFrame();
 }
 
-Eigen::MatrixXd RobotSystem::getBodyNodeCoMBodyJacobianDot(const int& _bn_idx) {
-    
-        Eigen::MatrixXd Jacob = skel_ptr_->getJacobian(
-                            skel_ptr_->getBodyNode(_bn_idx),
-                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
-    
-    Eigen::MatrixXd SpatialDeriv = skel_ptr_->getJacobianSpatialDeriv(
-                            skel_ptr_->getBodyNode(_bn_idx),
-                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
-    Eigen::MatrixXd ClassicDeriv = skel_ptr_->getJacobianClassicDeriv(
-                            skel_ptr_->getBodyNode(_bn_idx),
-                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
+void RobotSystem::updateSystem(const Eigen::VectorXd &joint_pos,
+                                const Eigen::VectorXd &joint_vel) {
+    // ASSUME FIXED BASE
+    q_ = joint_pos;
+    qdot_ = joint_vel;
 
-    Eigen::VectorXd JacobVec(Eigen::Map<Eigen::VectorXd>(Jacob.data(), Jacob.cols()*Jacob.rows()));
-    Eigen::VectorXd SpatialDerivVec(Eigen::Map<Eigen::VectorXd>(SpatialDeriv.data(), SpatialDeriv.cols()*SpatialDeriv.rows()));
-    Eigen::VectorXd ClassicDerivVec(Eigen::Map<Eigen::VectorXd>(ClassicDeriv.data(), ClassicDeriv.cols()*ClassicDeriv.rows()));
-
-
-    // my_utils::saveVector(JacobVec, "JacobVec");
-    // my_utils::saveVector(SpatialDerivVec, "SpatialDerivVec");
-    // my_utils::saveVector(ClassicDerivVec, "ClassicDerivVec");
-    
-    return skel_ptr_->getJacobianClassicDeriv(
-                            skel_ptr_->getBodyNode(_bn_idx),
-                            skel_ptr_->getBodyNode(_bn_idx)->getLocalCOM());
+    // update data
+    _updateSystemData();
 }
 
-int RobotSystem::getJointIdx(const std::string& jointName_) {
-    return skel_ptr_->getJoint(jointName_)->getJointIndexInSkeleton();
+void RobotSystem::_updateSystemData(){
+    pinocchio::crba(model_, data_, q_);
+    pinocchio::forwardKinematics(model_, data_, q_, qdot_, 0 * qdot_);
+    pinocchio::centerOfMass(model_, data_, q_, qdot_);
+    pinocchio::computeJointJacobians(model_, data_, q_);
 }
 
-int RobotSystem::getDofIdx(const std::string& dofName_) {
-    return skel_ptr_->getDof(dofName_)->getIndexInSkeleton();
-}
+void RobotSystem::_updateCentroidFrame() {
 
-void RobotSystem::updateSystem(const Eigen::VectorXd& q_,
-                               const Eigen::VectorXd& qdot_,
-                               bool isUpdatingCentroid) {
-    skel_ptr_->setPositions(q_);
-    skel_ptr_->setVelocities(qdot_);
-    if (isUpdatingCentroid) _updateCentroidFrame(q_, qdot_);
-    skel_ptr_->computeForwardKinematics();
-}
+    pinocchio::ccrba(model_, data_, q_, qdot_);
 
-void RobotSystem::_updateCentroidFrame(const Eigen::VectorXd& q_,
-                                       const Eigen::VectorXd& qdot_) {
-    Eigen::MatrixXd Jsp = Eigen::MatrixXd::Zero(6, num_dof_);
-    Eigen::VectorXd p_gl = Eigen::VectorXd::Zero(3);
-    Eigen::MatrixXd R_gl = Eigen::MatrixXd::Zero(3, 3);
-    Eigen::VectorXd pCoM_g = Eigen::VectorXd::Zero(3);
-    Eigen::MatrixXd I = Eigen::MatrixXd::Zero(6, 6);
-    Eigen::Isometry3d T_lc = Eigen::Isometry3d::Identity();
-    Eigen::MatrixXd AdT_lc = Eigen::MatrixXd::Zero(6, 6);
-    I_cent_ = Eigen::MatrixXd::Zero(6, 6);
-    J_cent_ = Eigen::MatrixXd::Zero(6, num_dof_);
-    A_cent_ = Eigen::MatrixXd::Zero(6, num_dof_);
-    pCoM_g = skel_ptr_->getCOM();
-    for (int i = 0; i < skel_ptr_->getNumBodyNodes(); ++i) {
-        dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(i);
-        Jsp = skel_ptr_->getJacobian(bn);
-        p_gl = bn->getWorldTransform().translation();
-        R_gl = bn->getWorldTransform().linear();
-        I = bn->getSpatialInertia();
-        T_lc.linear() = R_gl.transpose();
-        T_lc.translation() = R_gl.transpose() * (pCoM_g - p_gl);
-        AdT_lc = dart::math::getAdTMatrix(T_lc);
-        I_cent_ += AdT_lc.transpose() * I * AdT_lc;
-        A_cent_ += AdT_lc.transpose() * I * Jsp;
-    }
+    I_cent_.block<3, 3>(0, 0) = data_.Ig.matrix().block<3, 3>(3, 3);
+    I_cent_.block<3, 3>(3, 3) = data_.Ig.matrix().block<3, 3>(0, 0);
+
+    H_cent_.segment(0, 3) = data_.hg.angular();
+    H_cent_.segment(3, 3) = data_.hg.linear();
+
+    A_cent_.topRows(3) = data_.Ag.bottomRows(3);
+    A_cent_.bottomRows(3) = data_.Ag.topRows(3);
+
     J_cent_ = I_cent_.inverse() * A_cent_;
 }
 
+void RobotSystem::_initializeRobotInfo() {
+    // UPDATE link_idx_map_, joint_idx_map_
+    for (pinocchio::FrameIndex i(0); // FrameIndex : size_t
+        i < static_cast<pinocchio::FrameIndex>(model_.nframes); ++i) {
+        if(model_.frames[i].type == pinocchio::FrameType::BODY){
+            std::string frame_name = model_.frames[i].name;
+            link_idx_map_[frame_name] = model_.getBodyId(frame_name);
+            link_idx_map_inv_[model_.getBodyId(frame_name)] = frame_name;             
+        }
+    }
+    for (pinocchio::JointIndex i(0);
+        i < static_cast<pinocchio::JointIndex>(model_.njoints); ++i) {
+        total_mass_ += model_.inertias[i].mass();
+        std::string joint_name = model_.names[i];
+        if (joint_name != "universe" && joint_name != "root_joint"){
+            joint_idx_map_[joint_name] = model_.getJointId(joint_name); // i - 2; joint map excluding fixed joint
+            joint_idx_map_inv_[model_.getJointId(joint_name)] = joint_name; // joint map excluding fixed joint
+        }
+            
+    }
+    n_link_ = link_idx_map_.size();
+    assert(n_adof_ == joint_idx_map_.size());
+
+}
+
 void RobotSystem::printRobotInfo() {
+    
     std::cout << " ==== Body Node ====" << std::endl;
-    for (int i = 0; i < skel_ptr_->getNumBodyNodes(); ++i) {
-        dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(i);
-        std::cout << "constexpr int " << bn->getName() << " = "
-                  << std::to_string(i) << ";" << std::endl;
+    for (auto &[idx, name] : link_idx_map_inv_) {
+        std::cout << "constexpr int " << name  << " = "
+                  << std::to_string(idx) << ";" << std::endl;
     }
     std::cout << " ==== DoF ====" << std::endl;
-    for (int i = 0; i < skel_ptr_->getNumDofs(); ++i) {
-        dart::dynamics::DegreeOfFreedom* dof = skel_ptr_->getDof(i);
-        std::cout << "constexpr int " << dof->getName() << " = "
-                  << std::to_string(i) << ";" << std::endl;
+    for (auto &[idx, name] : joint_idx_map_inv_) {
+        std::cout << "constexpr int " << name << " = " 
+                  << std::to_string(idx) << ";" << std::endl;
     }
     std::cout << " ==== Num ====" << std::endl;
     std::cout << "constexpr int n_bodynode = "
-              << std::to_string(skel_ptr_->getNumBodyNodes()) << ";"
+              << std::to_string(n_link_) << ";"
               << std::endl;
-    std::cout << "constexpr int n_dof = " << std::to_string(num_dof_) << ";"
+    std::cout << "constexpr int n_dof = " << std::to_string(n_qdot_) << ";"
               << std::endl;
-    std::cout << "constexpr int n_vdof = " << std::to_string(num_virtual_dof_)
+    std::cout << "constexpr int n_vdof = " << std::to_string(n_pdof_+n_float_)
               << ";" << std::endl;
-    std::cout << "constexpr int n_adof = " << std::to_string(num_actuated_dof_)
+    std::cout << "constexpr int n_adof = " << std::to_string(n_adof_)
               << ";" << std::endl;
 
-    // std::cout << " === MASS ===" << std::endl;
-    // for (int i = 0; i < skel_ptr_->getNumBodyNodes(); ++i) {
-    //     dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(i);
-    //     std::cout << bn->getName() << " : "
-    //               << bn->getMass() << "kg" << std::endl;
-    // }
-
-    // std::cout << " === LocalCOM ===" << std::endl;
-    // for (int i = 0; i < skel_ptr_->getNumBodyNodes(); ++i) {
-    //     dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(i);
-    //     std::cout << bn->getName() << " : "
-    //               << bn->getLocalCOM().transpose() << std::endl;
-    // }
-
-    // dart::dynamics::Inertia;
-    // std::cout << " === Moment ===" << std::endl;
-    // for (int i = 0; i < skel_ptr_->getNumBodyNodes(); ++i) {
-    //     dart::dynamics::BodyNodePtr bn = skel_ptr_->getBodyNode(i);
-    //     std::cout << bn->getName() << " : "
-    //               << bn->getInertia().getMoment() << "kg*m2" << std::endl;
-    // }
+    std::cout << " ==== Just info ====" << std::endl;
+    std::cout << n_link_ <<", "  // 86
+            << n_q_ << ", "  // 25 7 + 12 + 6
+            << n_qdot_ <<", "  // 24  6 + 12 + 6
+            << n_pdof_ << ", "  // 0
+            << n_float_ <<", " // 6
+            << n_adof_ << std::endl; // 18 = 12 + 6
 
 }
 
-// test JE
-void RobotSystem::setRobotMass(){
-    // AL_depth_sensor_link
-    int idx_depth_sensor_link [4] = {9,18,27,36};
-    // gazebo_AL_leg_optical_frame
-    int idx_leg_optical_frame [4] = {10,19,28,37};
 
-    dart::dynamics::BodyNodePtr bn;
-
-    double ratio = 1e-1;
-    double mass_ = ratio*1.;
-    Eigen::VectorXd com_ = Eigen::VectorXd::Zero(3);
-    Eigen::MatrixXd eye3_ = ratio*Eigen::MatrixXd::Identity(3,3); 
-    
-    dart::dynamics::Inertia InertiaSensor(mass_, com_, eye3_);
-    dart::dynamics::Inertia InertiaFrame(mass_, com_, eye3_);
-
-    for(int i=0; i<4; ++i)
-    {
-        bn = skel_ptr_->getBodyNode(idx_depth_sensor_link[i]);
-        bn->setInertia(InertiaSensor);
-
-        bn = skel_ptr_->getBodyNode(idx_leg_optical_frame[i]);
-        bn->setInertia(InertiaFrame);
-    }
-}

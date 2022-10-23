@@ -60,8 +60,9 @@ void CoMStateMachine::firstVisit() {
             ->setBaseOriTrajectory(ctrl_start_time_, ctrl_duration_);
 
   // -- set joint traj
+  Eigen::VectorXd qa_init =  robot_->getActiveQ();
   rg_container_->joint_trajectory_manager_
-            ->setJointTrajectory(ctrl_start_time_, ctrl_duration_, q_init);
+            ->setJointTrajectory(ctrl_start_time_, ctrl_duration_, qa_init);
  
   // -- set task_list in taf with hierachy
   ws_container_->add_task_list(ANYMAL_TASK::COM);

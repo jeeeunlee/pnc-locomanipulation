@@ -33,8 +33,8 @@ class Task {
         kd_ = _kd;
     }
     void PrintInfos() {
-        my_utils::pretty_print(pos_err, std::cout, "pos err");
-        my_utils::pretty_print(Jt_, std::cout, "task jacobian");
+        // my_utils::pretty_print(pos_err, std::cout, "pos err");
+        // my_utils::pretty_print(Jt_, std::cout, "task jacobian");
     }
 
     bool updateTask(const Eigen::VectorXd& pos_des,

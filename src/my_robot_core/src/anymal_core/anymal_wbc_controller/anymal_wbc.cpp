@@ -44,6 +44,8 @@ void ANYmalWBC::_PreProcessing_Command() {
   grav_ = robot_->getGravity();
   coriolis_ = robot_->getCoriolis();
 
+  kin_wbc_->Ainv_=Ainv_;
+
   // Update task and contact list pointers from container object
   task_list_.clear();  
   for (int i = 0; i < ANYMAL_TASK::n_task; i++) {
@@ -84,11 +86,14 @@ void ANYmalWBC::getCommand(void* _cmd) {
   // ---- Solve Inv Kinematics
   // kin_wbc_->FindConfiguration(sp_->q, task_list_, contact_list_, 
   //                               jpos_des_, jvel_des_, jacc_des_); 
+  
   kin_wbc_->FindFullConfiguration(sp_->q, task_list_, contact_list_, 
                                     jpos_des_, jvel_des_, jacc_des_); 
 
-  my_utils::pretty_print(sp_->q, std::cout, "sp_->q");
-  my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
+  // my_utils::pretty_print(sp_->q, std::cout, "sp_->q");
+  // my_utils::pretty_print(jpos_des_, std::cout, "jpos_des_");
+  // my_utils::pretty_print(jacc_des_, std::cout, "jacc_des_");
+  
 
   Eigen::VectorXd jacc_des_cmd = jacc_des_;
   for(int i(0); i<ANYmal::n_adof; ++i) {
@@ -96,6 +101,8 @@ void ANYmalWBC::getCommand(void* _cmd) {
           Kp_[i]*(jpos_des_[ANYmal::idx_adof[i]] - sp_->q[ANYmal::idx_adof[i]])
           + Kd_[i]*(jvel_des_[ANYmal::idx_adof[i]] - sp_->qdot[ANYmal::idx_adof[i]]);
   }
+
+  // my_utils::pretty_print(jacc_des_cmd, std::cout, "jacc_des_cmd");
                                
   // wbmc
   wbc_->updateSetting(A_, Ainv_, coriolis_, grav_);
@@ -149,7 +156,6 @@ void ANYmalWBC::set_grf_des(){
 
 void ANYmalWBC::ctrlInitialization(const YAML::Node& node) {
   // WBC Defaults
-  wbc_dt_ = ANYmalAux::servo_rate;
   b_enable_torque_limits_ = true;  // Enable WBC torque limits
 
   // Joint Integrator Defaults

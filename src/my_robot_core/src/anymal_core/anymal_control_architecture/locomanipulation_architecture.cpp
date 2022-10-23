@@ -177,7 +177,7 @@ void ANYmalLocoManipulationControlArchitecture::getIVDCommand(void* _cmd) {
 
   ws_container_->task_container_[ANYMAL_TASK::JOINT_TASK]->updateTask(q_des, qdot_des, qddot_des);
   ws_container_->task_container_[ANYMAL_TASK::JOINT_TASK]->getCommand(qddot_des);
-  qddot_des = sp_->getFullJointValue(qddot_des);
+  qddot_des = sp_->getFullJointValue(qddot_des, false);
 
   des_jpos = sp_->getActiveJointValue();
   des_jvel = sp_->getActiveJointValue(sp_->qdot);

@@ -68,15 +68,18 @@ void EETrajectoryManager::setEETrajectory(const double& _start_time,
   else // absolute coordinate
     ee_pos_des_ = ee_pos_ini_ + pos_dev_b;
   pos_hermite_curve_.initialize(ee_pos_ini_, zero_vel_, 
-                  ee_pos_des_, zero_vel_, traj_duration_);  
+                  ee_pos_des_, zero_vel_, traj_duration_);
+  my_utils::pretty_print(ee_pos_ini_,std::cout,"ee_pos_ini_");
+  my_utils::pretty_print(ee_pos_des_,std::cout,"ee_pos_des_");
 
   //-----------------------------------------
   //            SET EE ORI
   //-----------------------------------------  
-  ee_quat_ini_ = Eigen::Quaternion<double>( robot_->getBodyNodeIsometry(link_idx_).linear() );
+  ee_quat_ini_ = Eigen::Quaternion<double>( 
+                  robot_->getBodyNodeIsometry(link_idx_).linear() );
   ee_quat_des_ = ee_quat_ini_;
   quat_hermite_curve_.initialize(ee_quat_ini_, zero_vel_,
-                                 ee_quat_des_, zero_vel_,traj_duration_);
+                          ee_quat_des_, zero_vel_, traj_duration_);
 
   sp_->ee_pos_init = ee_pos_ini_;
   sp_->ee_pos_target = ee_pos_des_;
@@ -93,11 +96,16 @@ void EETrajectoryManager::updateEETrajectory(const double& current_time) {
   ee_vel_des_ = pos_hermite_curve_.evaluateFirstDerivative(t);
   ee_acc_des_ = pos_hermite_curve_.evaluateSecondDerivative(t);
 
+  // my_utils::pretty_print(ee_pos_des_,std::cout,"ee_pos_des_(t)");
+  // std::cout << "t = " << t << " = " << current_time <<"-"<<traj_start_time_<<std::endl;
+
   // Get ee orientation
   quat_hermite_curve_.evaluate(t, ee_quat_des_);
   quat_hermite_curve_.getAngularVelocity(t, ee_ori_vel_des_);
   quat_hermite_curve_.getAngularAcceleration(t, ee_ori_acc_des_);
   my_utils::convertQuatDesToOriDes(ee_quat_des_, ee_ori_pos_des_);
+
+  // my_utils::pretty_print(ee_quat_des_,std::cout,"ee_quat_des_(t)");
 
   // my_utils::saveVector(ee_pos_des_, "ee_pos_des_");
   // my_utils::saveVector(ee_vel_des_, "ee_vel_des_");

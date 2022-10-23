@@ -22,27 +22,27 @@ typedef int FootLinkIdx;
 
 namespace ANYMAL_TASK {
 // in priority
-// constexpr int COM = 0;
-// constexpr int BASE_ORI = 1;
-// constexpr int LF_POS = 2;
-// constexpr int LH_POS = 3;
-// constexpr int RF_POS = 4;
-// constexpr int RH_POS = 5;
-// constexpr int LF_ORI = 6;
-// constexpr int LH_ORI = 7;
-// constexpr int RF_ORI = 8;
-// constexpr int RH_ORI = 9;
+constexpr int COM = 0;
+constexpr int BASE_ORI = 1;
+constexpr int LF_POS = 2;
+constexpr int LH_POS = 3;
+constexpr int RF_POS = 4;
+constexpr int RH_POS = 5;
+constexpr int LF_ORI = 6;
+constexpr int LH_ORI = 7;
+constexpr int RF_ORI = 8;
+constexpr int RH_ORI = 9;
 
-constexpr int LF_POS = 0;
-constexpr int LH_POS = 1;
-constexpr int RF_POS = 2;
-constexpr int RH_POS = 3;
-constexpr int LF_ORI = 4;
-constexpr int LH_ORI = 5;
-constexpr int RF_ORI = 6;
-constexpr int RH_ORI = 7;
-constexpr int BASE_ORI = 8;
-constexpr int COM = 9;
+// constexpr int LF_POS = 0;
+// constexpr int LH_POS = 1;
+// constexpr int RF_POS = 2;
+// constexpr int RH_POS = 3;
+// constexpr int LF_ORI = 4;
+// constexpr int LH_ORI = 5;
+// constexpr int RF_ORI = 6;
+// constexpr int RH_ORI = 7;
+// constexpr int BASE_ORI = 8;
+// constexpr int COM = 9;
 constexpr int EE_POS = 10;
 constexpr int EE_ORI = 11;
 constexpr int JOINT_TASK = 12;

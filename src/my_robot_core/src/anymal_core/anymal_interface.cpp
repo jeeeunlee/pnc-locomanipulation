@@ -24,10 +24,9 @@ ANYmalInterface::ANYmalInterface() : EnvInterface() {
     YAML::Node cfg = YAML::LoadFile(THIS_COM "config/ANYmal/INTERFACE.yaml");
 
     // declare
-    robot_ = new RobotSystem(6, THIS_COM 
-            "robot_description/Robot/ANYmal/anymal_ur3.urdf");//ANYmalSim_Dart
+    robot_ = new RobotSystem(false, THIS_COM 
+            "robot_description/Robot/ANYmalwithArm/anymal_ur3.urdf");//ANYmalSim_Dart
     robot_->setActuatedJoint(ANYmal::idx_adof);
-    // robot_->setRobotMass();
     // robot_->printRobotInfo();    
 
     state_estimator_ = new ANYmalStateEstimator(robot_);
@@ -93,12 +92,9 @@ void ANYmalInterface::getCommand(void* _data, void* _command) {
     ANYmalSensorData* data = ((ANYmalSensorData*)_data);
 
     if(!_Initialization(data, cmd)) {
-        std::cout<<"getCommand : Iniitilized"<<std::endl;
         state_estimator_->Update(data); // robot skelPtr in robotSystem updated 
         interrupt_->processInterrupts();
         control_architecture_->getCommand(cmd);
-        
-        
         if(!_CheckCommand(cmd)) { _SetStopCommand(data,cmd); }    
     }   
 
@@ -118,7 +114,9 @@ bool ANYmalInterface::_Initialization(ANYmalSensorData* data,
         test_initialized = true;
     }
     if (count_ < waiting_count_) {
+        std::cout<<"_SetStopCommand"<<std::endl;
          _SetStopCommand(data, _command);
+         std::cout<<"state_estimator_Initialization"<<std::endl;
         state_estimator_->Initialization(data);
         return true;
     }

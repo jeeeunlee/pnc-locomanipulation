@@ -3,6 +3,8 @@
 #include <../my_utils/Configuration.h>
 #include <my_wbc/Task/BasicTask.hpp>
 #include <my_utils/IO/IOUtilities.hpp>
+#include <my_utils/Math/MathUtilities.hpp>
+
 
 BasicTask::BasicTask(RobotSystem* _robot, const BasicTaskType& _taskType,
                      const int& _dim, const int& _link_idx)
@@ -100,7 +102,7 @@ bool BasicTask::_UpdateCommand(const Eigen::VectorXd& _pos_des,
             Eigen::Quaternion<double> quat_ori_err;
             quat_ori_err = ori_des * (ori_act.inverse());
             Eigen::Vector3d ori_err;
-            ori_err = dart::math::quatToExp(quat_ori_err);
+            ori_err = my_utils::convertQuatToExp(quat_ori_err);
             for (int i = 0; i < 3; ++i) {
                 // ori_err[i] = my_utils::bind_half_pi(ori_err[i]);
             }
@@ -181,9 +183,6 @@ bool BasicTask::_UpdateTaskJacobian() {
             break;
         }
         case BasicTaskType::JOINT: {
-            // Jt_ :  ZERO(_dim(numActuatedDofs) X robot_->getNumDofs() )
-            //(Jt_.block(0, robot_->getNumVirtualDofs(), 
-            //            dim_task_, robot_->getNumActuatedDofs())).setIdentity();
             std::vector<int> active_idx;
             robot_->getActuatedJointIdx(active_idx);
             for(int i=0; i< dim_task_; ++i)            
@@ -237,25 +236,14 @@ bool BasicTask::_UpdateTaskJDotQdot() {
             break;
         }
         case BasicTaskType::LINKXYZ: {
-            JtDotQdot_ = robot_->getBodyNodeJacobianDot(link_idx_).block(
-                             3, 0, dim_task_, robot_->getNumDofs()) *
-                         robot_->getQdot();
-
-            // xddot = JdotQdot + J qddot : JdotQdot=xddot-J qddot
-            // Eigen::VectorXd xddot = robot_->getBodyNodeSpatialAcceleration(link_idx_).segment(3,3);
-            // Eigen::VectorXd JtQddot = robot_->getBodyNodeJacobian(link_idx_).block(
-            //                                 3, 0, dim_task_, robot_->getNumDofs()) *
-            //                             robot_->getQddot();
-            // Eigen::VectorXd check_xddot_dev = xddot - (JtDotQdot_ + JtQddot);
-            // my_utils::pretty_print(xddot, std::cout , "xddot");
-            // my_utils::pretty_print(check_xddot_dev, std::cout , "check_xddot_dev");
+            JtDotQdot_ = robot_->getBodyNodeJacobianDotQDot(link_idx_).block(
+                             3, 0, dim_task_, robot_->getNumDofs());
 
             break;
         }
         case BasicTaskType::LINKORI: {
-            JtDotQdot_ = robot_->getBodyNodeJacobianDot(link_idx_).block(
-                             0, 0, dim_task_, robot_->getNumDofs()) *
-                         robot_->getQdot();
+            JtDotQdot_ = robot_->getBodyNodeJacobianDotQDot(link_idx_).block(
+                             0, 0, dim_task_, robot_->getNumDofs());
             break;
         }
         case BasicTaskType::CENTROID: {

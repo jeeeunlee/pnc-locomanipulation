@@ -7,9 +7,8 @@ CoMTask::CoMTask(RobotSystem* robot):Task(robot, 3)
 {
     my_utils::pretty_constructor(3, "COM XYZ Task");
     Jt_ = Eigen::MatrixXd::Zero(dim_task_, robot_->getNumDofs());
-    JtDotQdot_ = Eigen::VectorXd::Zero(dim_task_);
-    
-    control_period = ANYmalAux::servo_rate;
+    JtDotQdot_ = Eigen::VectorXd::Zero(dim_task_);   
+
 }
 
 CoMTask::~CoMTask(){}
@@ -24,7 +23,6 @@ bool CoMTask::_UpdateCommand(const Eigen::VectorXd & _pos_des,
 
     pos_err.setZero();
     pos_err = _pos_des - robot_->getCoMPosition();
-    // pos_err = _vel_des * control_period;
     vel_des = _vel_des;
     acc_des = _acc_des;
 

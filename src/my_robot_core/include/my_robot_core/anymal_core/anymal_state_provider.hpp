@@ -17,14 +17,13 @@ class ANYmalStateProvider {
     ~ANYmalStateProvider() {}
 
     void saveCurrentData();
-    void divideJoints2AnV(const Eigen::VectorXd& q_full, 
-                        Eigen::VectorXd& q_a, Eigen::VectorXd& q_v);    
+
    
     Eigen::VectorXd getActiveJointValue();
     Eigen::VectorXd getVirtualJointValue();
     Eigen::VectorXd getActiveJointValue(const Eigen::VectorXd& q_full);
     Eigen::VectorXd getVirtualJointValue(const Eigen::VectorXd& q_full);
-    Eigen::VectorXd getFullJointValue(const Eigen::VectorXd& q_a);
+    Eigen::VectorXd getFullJointValue(const Eigen::VectorXd& q_a, bool is_config);
     Eigen::VectorXd getFullJointValue(const Eigen::VectorXd& q_a, const Eigen::VectorXd& q_v);
 
     Clock clock;

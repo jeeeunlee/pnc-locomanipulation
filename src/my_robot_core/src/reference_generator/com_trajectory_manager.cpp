@@ -74,7 +74,7 @@ void CoMTrajectoryManager::setCoMTrajectory(double _start_time,
 
 // Computes the swing com trajectory
 void CoMTrajectoryManager::updateCoMTrajectory(double current_time) {
-  double t = (current_time - traj_start_time_ + ANYmalAux::servo_rate) ;
+  double t = (current_time - traj_start_time_) ;
   // Get com position and its derivatives
   // std::cout<<"s = " << s << std::endl;
   com_pos_des_ = pos_traj.evaluate(t);

@@ -3,6 +3,11 @@ project(my_robot_system)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(PYTHON_EXECUTABLE "/usr/bin/python3")
+set(PINOCCHIO_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/pinocchio)
+
+MESSAGE(STATUS "====== pinocchio path ===== ")
+MESSAGE(STATUS ${PINOCCHIO_PATH})
+MESSAGE(STATUS "====== pinocchio path ===== ")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -29,19 +34,25 @@ include_directories(
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIR}
+  ${PINOCCHIO_PATH}/include
 )
 
+link_directories(
+  ${PINOCCHIO_PATH}/lib
+)
 
+file(GLOB LIB_PINOCCHIO ${PINOCCHIO_PATH}/lib/libpinocchio.so)
 file(GLOB sources "src/*.cpp")
 file(GLOB robot_system_headers "include/my_robot_system/*.hpp")
 
 add_library(my_robot_system SHARED ${sources}
-                                 ${robot_system_headers})
+                                 ${robot_system_headers} )
 
-target_link_libraries(my_robot_system ${DART_LIBRARIES}
+target_link_libraries(my_robot_system ${LIB_PINOCCHIO}
                                     my_utils)
 target_include_directories(my_robot_system PUBLIC   
-                      ${PROJECT_INCLUDE_DIR})
+                      ${PROJECT_INCLUDE_DIR}
+                      ${PINOCCHIO_PATH}/include)
 
 # install(TARGETS my_robot_system DESTINATION "${INSTALL_LIB_DIR}")
 # install(FILES ${robot_system_headers} DESTINATION

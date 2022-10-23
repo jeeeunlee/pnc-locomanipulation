@@ -20,8 +20,6 @@ set(CMAKE_MODULE_PATH
       ${PROJECT_SOURCE_DIR}/cmake)
 # message(${CMAKE_MODULE_PATH})
 find_package(Eigen3)
-find_package(DART 6.9 REQUIRED COMPONENTS utils-urdf gui-osg CONFIG)
-
 find_package(mujoco REQUIRED)
 set(MUJOCO_INCLUDE_DIRS "/usr/local/include/mujoco")
 set(MUJOCO_LIBRARIES "mujoco::mujoco")
@@ -40,7 +38,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIR}
-  ${DART_INCLUDE_DIRS}
   ${MUJOCO_INCLUDE_DIRS}
   ${ThirdParty_INCLUDE_DIR}
 )

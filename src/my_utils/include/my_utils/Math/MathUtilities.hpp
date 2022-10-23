@@ -26,6 +26,8 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row);
 
 void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in,  
                             Eigen::VectorXd& ori_out);
+Eigen::Vector3d convertQuatToExp(const Eigen::Quaterniond& q);
+Eigen::Vector3d convertQuatToEulerAngles(const Eigen::Quaterniond& q);
 
 
 // =============================================================================

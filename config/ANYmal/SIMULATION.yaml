@@ -6,7 +6,7 @@ show_link_frame: true #false
 plot_result: true # true
 
 # --configuration settings
-robot: robot_description/Robot/ANYmal/anymal_ur3.urdf
+robot: robot_description/Robot/ANYmalwithArm/anymal_ur3.urdf
 
 ground: robot_description/Ground/ground.urdf
 initial_pose: [ 0.0, 0.0, 0.52, 0.0, 0.0, 0.0 ] # x,y,z, rx,ry,rz

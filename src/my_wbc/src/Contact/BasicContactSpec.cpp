@@ -9,14 +9,14 @@ PointContactSpec::PointContactSpec(RobotSystem* robot,
 PointContactSpec::~PointContactSpec() {}
 
 bool PointContactSpec::_UpdateJc() {
-    Eigen::MatrixXd Jtmp = robot_->getBodyNodeCoMJacobian(link_idx_);
+    Eigen::MatrixXd Jtmp = robot_->getBodyNodeJacobian(link_idx_);
     Jc_ = Jtmp.block(dim_contact_, 0, dim_contact_, robot_->getNumDofs());
     return true;
 }
 
 bool PointContactSpec::_UpdateJcDotQdot() {
     Eigen::VectorXd JcDotQdot_tmp =
-        robot_->getBodyNodeCoMJacobianDot(link_idx_) * robot_->getQdot();
+        robot_->getBodyNodeJacobianDotQDot(link_idx_);
     JcDotQdot_ = JcDotQdot_tmp.tail(dim_contact_);
 
     // JcDotQdot_.setZero();
@@ -25,7 +25,7 @@ bool PointContactSpec::_UpdateJcDotQdot() {
 
 bool PointContactSpec::_UpdateJcQdot() {
     Eigen::VectorXd JcQdot_tmp =
-        robot_->getBodyNodeCoMJacobian(link_idx_) * robot_->getQdot();
+        robot_->getBodyNodeJacobian(link_idx_) * robot_->getQdot();
     JcQdot_ = JcQdot_tmp.tail(dim_contact_);
 
     // JcQdot_.setZero();
@@ -34,7 +34,7 @@ bool PointContactSpec::_UpdateJcQdot() {
 
 bool PointContactSpec::_UpdateUf() {
     Eigen::MatrixXd rot = Eigen::MatrixXd::Zero(dim_contact_, dim_contact_);
-    rot = (robot_->getBodyNodeCoMIsometry(link_idx_).linear()).transpose();
+    rot = (robot_->getBodyNodeIsometry(link_idx_).linear()).transpose();
 
     Uf_ = Eigen::MatrixXd::Zero(6, dim_contact_);
     // Fx(0), Fy(1), Fz(2)
@@ -117,13 +117,13 @@ bool SurfaceContactSpec::_UpdateJc() {
 }
 
 bool SurfaceContactSpec::_UpdateJcDotQdot() {
-    JcDotQdot_ = robot_->getBodyNodeJacobianDot(link_idx_) * robot_->getQdot();
+    JcDotQdot_ = robot_->getBodyNodeJacobianDotQDot(link_idx_);
     // JcDotQdot_.setZero();
     return true;
 }
 
 bool SurfaceContactSpec::_UpdateJcQdot() {
-    JcQdot_ = robot_->getBodyNodeCoMJacobian(link_idx_) * robot_->getQdot();
+    JcQdot_ = robot_->getBodyNodeJacobian(link_idx_) * robot_->getQdot();
     // JcQdot_.setZero();
     return true;
 }

@@ -138,6 +138,37 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row_) {
 //     a.block(arow, acol, b.rows(), b.cols()) = b;
 // }
 
+Eigen::Vector3d convertQuatToExp(const Eigen::Quaterniond& q){
+    Eigen::AngleAxisd aa = Eigen::AngleAxisd(q);
+    return aa.axis() * aa.angle(); 
+}
+
+Eigen::Vector3d convertQuatToEulerAngles(const Eigen::Quaterniond& q) {
+    Eigen::Vector3d angles;    //yaw pitch roll
+    const auto x = q.x();
+    const auto y = q.y();
+    const auto z = q.z();
+    const auto w = q.w();
+
+    // roll (x-axis rotation)
+    double sinr_cosp = 2 * (w * x + y * z);
+    double cosr_cosp = 1 - 2 * (x * x + y * y);
+    angles[2] = std::atan2(sinr_cosp, cosr_cosp);
+
+    // pitch (y-axis rotation)
+    double sinp = 2 * (w * y - z * x);
+    if (std::abs(sinp) >= 1)
+        angles[1] = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    else
+        angles[1] = std::asin(sinp);
+
+    // yaw (z-axis rotation)
+    double siny_cosp = 2 * (w * z + x * y);
+    double cosy_cosp = 1 - 2 * (y * y + z * z);
+    angles[0] = std::atan2(siny_cosp, cosy_cosp);
+    return angles;
+}
+
 
 void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in,  
                             Eigen::VectorXd& ori_out) {
@@ -179,17 +210,17 @@ double smooth_changing_vel(double ini, double end, double moving_duration,
 }
 double smooth_changing_acc(double ini, double end, double moving_duration,
                            double curr_time) {
-  double ret;
-if(moving_duration<1e-5){
-    ret = 0.;
-  }else{
-    ret = (end - ini) * 0.5 * (M_PI / moving_duration) *
-            (M_PI / moving_duration) * cos(curr_time / moving_duration * M_PI);
-    if (curr_time > moving_duration) {
-        ret = 0.0;
-    }
-    return ret;
+    double ret;
+    if(moving_duration<1e-5){
+        ret = 0.;
+    }else{
+        ret = (end - ini) * 0.5 * (M_PI / moving_duration) *
+                (M_PI / moving_duration) * cos(curr_time / moving_duration * M_PI);
+        if (curr_time > moving_duration) {
+            ret = 0.0;
+    }    
   }
+  return ret;
 }
 
 double smoothing(double ini, double fin, double rat) {

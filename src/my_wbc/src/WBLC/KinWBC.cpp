@@ -4,8 +4,8 @@
 
 KinWBC::KinWBC(const std::vector<bool>& act_joint)
     : num_act_joint_(0),
-      threshold_(0.001)
-    // threshold_(0.005)
+    //   threshold_(0.001)
+    threshold_(0.005)
     // threshold_(0.0005)
 {
     my_utils::pretty_constructor(3, "Kin WBC");
@@ -203,15 +203,18 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
     _PseudoInverse(JtPre, JtPre_pinv);
     delta_q = JtPre_pinv * (task->pos_err);
     qdot = JtPre_pinv * (task->vel_des);
-    // qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
+    qddot = JtPre_pinv * (task->acc_des - JtDotQdot);
     // qddot = JtPre_pinv * (task->acc_des + Jt * JcpinvJcDotQdot - JtDotQdot); // modified 2021.1.23
-    qddot = - JcpinvJcDotQdot + JtPre_pinv * (task->acc_des - JtDotQdot); // modified 2021.2.7
+    // qddot = - JcpinvJcDotQdot + JtPre_pinv * (task->acc_des - JtDotQdot); // modified 2021.2.7
     // qddot = JtPre_pinv * (task->op_cmd - JtDotQdot);
+
+    // my_utils::pretty_print(qddot, std::cout, "qddot0" );
+    // my_utils::pretty_print(task->acc_des, std::cout, "task->acc_des" );
     
-    // Eigen::VectorXd xdot_c = Jc * delta_q;
-    // my_utils::saveVector(delta_q, "delta_q0");
-    // my_utils::saveVector(task->pos_err, "delta_x0");
-    // my_utils::saveVector(xdot_c, "xdot_c0");
+    Eigen::VectorXd xdot_c = Jc * delta_q;
+    my_utils::saveVector(delta_q, "delta_q0");
+    my_utils::saveVector(task->pos_err, "delta_x0");
+    my_utils::saveVector(xdot_c, "xdot_c0");
 
     Eigen::VectorXd prev_delta_q = delta_q;
     Eigen::VectorXd prev_qdot = qdot;
@@ -235,10 +238,10 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         qddot = prev_qddot +
                     JtPre_pinv * (task->acc_des - JtDotQdot - Jt * prev_qddot);
 
-        // my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-        // my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
-        // xdot_c = Jc * delta_q;
-        // my_utils::saveVector(xdot_c, "xdot_c"+ std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        my_utils::saveVector(delta_q, "delta_q" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        my_utils::saveVector(task->pos_err, "delta_x" + std::to_string(i) + "_" + std::to_string(task_list.size()) );
+        xdot_c = Jc * delta_q;
+        my_utils::saveVector(xdot_c, "xdot_c"+ std::to_string(i) + "_" + std::to_string(task_list.size()) );
 
         // For the next task
         _BuildProjectionMatrix(JtPre, N_nx);
@@ -246,6 +249,9 @@ bool KinWBC::FindFullConfiguration(const Eigen::VectorXd& curr_config,
         prev_delta_q = delta_q;
         prev_qdot = qdot;
         prev_qddot = qddot;
+
+        // my_utils::pretty_print(task->acc_des, std::cout, "task->acc_des_i" );
+        // my_utils::pretty_print(qddot, std::cout, "qddot_i" );
     }
 
     jpos_cmd = curr_config + delta_q;
@@ -297,10 +303,10 @@ void KinWBC::_BuildProjectionMatrix(const Eigen::MatrixXd& J,
 }
 
 void KinWBC::_PseudoInverse(const Eigen::MatrixXd J, Eigen::MatrixXd& Jinv) {
-    my_utils::pseudoInverse(J, threshold_, Jinv);
+    // my_utils::pseudoInverse(J, threshold_, Jinv);
 
-    // mx Lambda_inv = J * Ainv_ * J.transpose();
-    // mx Lambda;
-    // dynacore::pseudoInverse(Lambda_inv, threshold_, Lambda);
-    // Jinv = Ainv_ * J.transpose() * Lambda;
+    Eigen::MatrixXd Lambda_inv = J * Ainv_ * J.transpose();
+    Eigen::MatrixXd Lambda;
+    my_utils::pseudoInverse(Lambda_inv, threshold_, Lambda);
+    Jinv = Ainv_ * J.transpose() * Lambda;
 }

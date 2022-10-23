@@ -1140,7 +1140,7 @@ void uiEvent(mjuiState* state) {
     else if (it && it->sectionid==SECT_SIMULATION) {
       switch (it->itemid) {
       case 1:             // Reset
-        if (m) {
+        if (m) {          
           mj_resetData(m, d);
           mj_forward(m, d);
           profilerupdate(sim);

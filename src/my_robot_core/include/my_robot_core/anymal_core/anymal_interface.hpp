@@ -21,7 +21,7 @@ class ANYmalSensorData {
         elapsedtime = 0.;
         q = Eigen::VectorXd::Zero(ANYmal::n_adof);
         qdot = Eigen::VectorXd::Zero(ANYmal::n_adof);
-        virtual_q = Eigen::VectorXd::Zero(ANYmal::n_vdof);
+        virtual_q = Eigen::VectorXd::Zero(ANYmal::n_vdof+1);
         virtual_qdot = Eigen::VectorXd::Zero(ANYmal::n_vdof);
 
         foot_wrench = {Eigen::VectorXd::Zero(6),Eigen::VectorXd::Zero(6),

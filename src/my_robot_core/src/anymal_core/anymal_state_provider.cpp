@@ -93,15 +93,19 @@ void ANYmalStateProvider::saveCurrentData() {
 
 // functions
 
-Eigen::VectorXd ANYmalStateProvider::getActiveJointValue()
-{
+Eigen::VectorXd ANYmalStateProvider::getActiveJointValue(){
     return getActiveJointValue(q);
 }
 
 Eigen::VectorXd ANYmalStateProvider::getActiveJointValue(const Eigen::VectorXd& q_full){
     Eigen::VectorXd q_a(ANYmal::n_adof);
-    for(int i = 0; i < ANYmal::n_adof; ++i)        
-        q_a[i] = q_full[ANYmal::idx_adof[i]]; 
+    if(q_full.size() == ANYmal::n_dof){
+        for(int i = 0; i < ANYmal::n_adof; ++i)        
+            q_a[i] = q_full[ANYmal::idx_adof[i]]; 
+    }else if(q_full.size() == ANYmal::n_dof+1){
+        for(int i = 0; i < ANYmal::n_adof+1; ++i)        
+                q_a[i] = q_full[ANYmal::idx_adof_config[i]]; 
+    }    
     return  q_a;
 }
 
@@ -110,36 +114,42 @@ Eigen::VectorXd ANYmalStateProvider::getVirtualJointValue(){
 }
 
 Eigen::VectorXd ANYmalStateProvider::getVirtualJointValue(const Eigen::VectorXd& q_full){
-    Eigen::VectorXd q_v(ANYmal::n_vdof);
-    for(int i = 0; i < ANYmal::n_vdof; ++i)    
-        q_v[i] = q_full[ANYmal::idx_vdof[i]];
+    Eigen::VectorXd q_v;
+    if(q_full.size() == ANYmal::n_dof){
+        q_v = Eigen::VectorXd::Zero(ANYmal::n_vdof);
+        for(int i = 0; i < ANYmal::n_vdof; ++i)    
+            q_v[i] = q_full[ANYmal::idx_vdof[i]];
+    }
+    else if(q_full.size() == ANYmal::n_dof+1){
+        q_v = Eigen::VectorXd::Zero(ANYmal::n_vdof+1);
+        for(int i = 0; i < ANYmal::n_vdof; ++i)    
+            q_v[i] = q_full[ANYmal::idx_vdof_config[i]];
+    }  
     return q_v;
 }
 
-Eigen::VectorXd ANYmalStateProvider::getFullJointValue(const Eigen::VectorXd& q_a)
+Eigen::VectorXd ANYmalStateProvider::getFullJointValue(const Eigen::VectorXd& q_a, bool is_config)
 {
-    Eigen::VectorXd q_full(ANYmal::n_dof);
-    for(int i = 0; i < ANYmal::n_vdof; ++i)    
-        q_full[ANYmal::idx_vdof[i]] = 0.0;
-    for(int i = 0; i < ANYmal::n_adof; ++i)        
-        q_full[ANYmal::idx_adof[i]] = q_a[i]; 
-    return q_full;
+    if(is_config) return getFullJointValue(q_a, Eigen::VectorXd::Zero(ANYmal::n_vdof+1));
+    else return getFullJointValue(q_a, Eigen::VectorXd::Zero(ANYmal::n_vdof));
 }
 
 Eigen::VectorXd ANYmalStateProvider::getFullJointValue(const Eigen::VectorXd& q_a, const Eigen::VectorXd& q_v)
 {
-    Eigen::VectorXd q_full(ANYmal::n_dof);
-    for(int i = 0; i < ANYmal::n_vdof; ++i)    
-        q_full[ANYmal::idx_vdof[i]] = q_v[i];
-    for(int i = 0; i < ANYmal::n_adof; ++i)        
-        q_full[ANYmal::idx_adof[i]] = q_a[i]; 
+    Eigen::VectorXd q_full;
+    if(q_v.size()==ANYmal::n_vdof){
+        q_full=Eigen::VectorXd::Zero(ANYmal::n_dof);
+        for(int i = 0; i < ANYmal::n_vdof; ++i)    
+            q_full[ANYmal::idx_vdof[i]] = q_v[i];
+        for(int i = 0; i < ANYmal::n_adof; ++i)        
+            q_full[ANYmal::idx_adof[i]] = q_a[i]; 
+    }else if(q_v.size()==ANYmal::n_vdof+1){
+        q_full=Eigen::VectorXd::Zero(ANYmal::n_dof+1);
+        for(int i = 0; i < ANYmal::n_vdof+1; ++i)    
+            q_full[ANYmal::idx_vdof_config[i]] = q_v[i];
+        for(int i = 0; i < ANYmal::n_adof; ++i)        
+            q_full[ANYmal::idx_adof_config[i]] = q_a[i]; 
+    }   
     return q_full;
 }
 
-void ANYmalStateProvider::divideJoints2AnV(const Eigen::VectorXd& q_full, Eigen::VectorXd& q_a, Eigen::VectorXd& q_v) {
-    if(q_full.size() == ANYmal::n_dof)
-    {
-        q_a = getActiveJointValue(q_full);
-        q_v = getVirtualJointValue(q_full);
-    }    
-}
