@@ -29,6 +29,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIR}
+  ${DART_INCLUDE_DIRS}
 )
 
 
@@ -41,7 +42,8 @@ add_library(my_robot_system SHARED ${sources}
 target_link_libraries(my_robot_system ${DART_LIBRARIES}
                                     my_utils)
 target_include_directories(my_robot_system PUBLIC   
-                      ${PROJECT_INCLUDE_DIR})
+                      ${PROJECT_INCLUDE_DIR}
+                      ${DART_INCLUDE_DIRS})
 
 # install(TARGETS my_robot_system DESTINATION "${INSTALL_LIB_DIR}")
 # install(FILES ${robot_system_headers} DESTINATION

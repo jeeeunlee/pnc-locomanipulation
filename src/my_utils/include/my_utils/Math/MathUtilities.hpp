@@ -24,6 +24,8 @@ Eigen::MatrixXd deleteRow(const Eigen::MatrixXd& a_, int row);
 // void vStackConserve(Eigen::VectorXd& a, const Eigen::VectorXd& b);
 // void dStackConserve(Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
 
+Eigen::Vector3d convertQuatToExp(const Eigen::Quaterniond& q);
+Eigen::Vector3d convertQuatToEulerAngles(const Eigen::Quaterniond& q);
 void convertQuatDesToOriDes(const Eigen::Quaterniond& quat_in,  
                             Eigen::VectorXd& ori_out);
 
