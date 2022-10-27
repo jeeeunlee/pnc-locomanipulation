@@ -16,7 +16,7 @@ $ rosrun my_simulator run_anymal
 ```
 
 ### Install Required Dependancies
-- run ```source install_sim.sh``` for [Dart 6.9.0](https://dartsim.github.io/install_dart_on_mac.html) and [pybullet](https://pybullet.org/wordpress/)
+- pinocchio & mujoco
 
 ### Compile the Code
 ```
